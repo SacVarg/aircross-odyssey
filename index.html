@@ -7,9 +7,13 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Three.js for 3D Elements -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -19,824 +23,903 @@
                         space: ['Space Grotesk', 'sans-serif'],
                     },
                     colors: {
-                        space: '#050505',
+                        space: '#020205',
                         brand: {
                             cyan: '#00f0ff',
-                            blue: '#00d2ff',
-                            purple: '#9d4edd'
+                            blue: '#0077ff',
+                            purple: '#9d4edd',
+                            dark: '#050508'
                         }
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 20px rgba(0, 240, 255, 0.4), 0 0 40px rgba(0, 240, 255, 0.2)',
+                        'neon-purple': '0 0 20px rgba(157, 78, 221, 0.4), 0 0 40px rgba(157, 78, 221, 0.2)',
                     }
                 }
             }
         }
     </script>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-
     <style>
         body {
-            background-color: #050505;
+            background-color: #020205;
             color: #ffffff;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Glassmorphism Utilities */
+        /* Preloader */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #020205;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.8, 0, 0.2, 1);
+        }
+        .loader-line {
+            width: 200px;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .loader-line::after {
+            content: '';
+            position: absolute;
+            left: -50%;
+            top: 0;
+            height: 100%;
+            width: 50%;
+            background: #00f0ff;
+            animation: loadAnim 1.5s infinite ease-in-out;
+        }
+        @keyframes loadAnim {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
+
+        /* Glassmorphism & Effects */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            background: rgba(10, 10, 15, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 240, 255, 0.1);
+            box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        .glass-panel:hover {
+            border-color: rgba(0, 240, 255, 0.4);
+            box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.1), 0 0 30px rgba(0, 240, 255, 0.2);
         }
 
         .text-gradient {
-            background: linear-gradient(to right, #00d2ff, #9d4edd);
+            background: linear-gradient(135deg, #00f0ff 0%, #0077ff 50%, #9d4edd 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: textGradientAnim 5s linear infinite;
+        }
+        @keyframes textGradientAnim {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
 
-        /* Animations */
-        .animate-pulse-slow {
-            animation: pulse-slow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .glitch-text {
+            position: relative;
         }
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -2px 0 #00f0ff;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -2px 0 #9d4edd;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim2 5s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim {
+            0% { clip: rect(32px, 9999px, 28px, 0); }
+            20% { clip: rect(12px, 9999px, 54px, 0); }
+            40% { clip: rect(74px, 9999px, 93px, 0); }
+            60% { clip: rect(43px, 9999px, 12px, 0); }
+            80% { clip: rect(82px, 9999px, 45px, 0); }
+            100% { clip: rect(54px, 9999px, 23px, 0); }
+        }
+        @keyframes glitch-anim2 {
+            0% { clip: rect(12px, 9999px, 83px, 0); }
+            20% { clip: rect(65px, 9999px, 23px, 0); }
+            40% { clip: rect(43px, 9999px, 73px, 0); }
+            60% { clip: rect(21px, 9999px, 14px, 0); }
+            80% { clip: rect(94px, 9999px, 52px, 0); }
+            100% { clip: rect(32px, 9999px, 64px, 0); }
         }
 
-        .float-animation {
-            animation: float 4s ease-in-out infinite;
+        /* 3D Map Utilities */
+        .map-3d-container {
+            perspective: 1200px;
+            transform-style: preserve-3d;
         }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        .map-terrain {
+            transform: rotateX(60deg) rotateZ(-45deg);
+            transform-style: preserve-3d;
+            transition: transform 1s ease;
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.2);
+            border: 1px solid rgba(0,240,255,0.3);
+            background: linear-gradient(to bottom, rgba(0, 240, 255, 0.05), rgba(157, 78, 221, 0.05));
+        }
+        .map-terrain:hover {
+            transform: rotateX(55deg) rotateZ(-40deg);
+        }
+        
+        .terrain-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: translateZ(-1px);
         }
 
-        .scroll-bg {
-            background-image: repeating-linear-gradient(to bottom, transparent, transparent 48px, rgba(255,255,255,0.1) 48px, rgba(255,255,255,0.1) 50px);
-            background-size: 100% 50px;
-            animation: scrollBgAnim 2s linear infinite;
+        .map-marker {
+            transform-style: preserve-3d;
+            transition: all 0.5s ease;
         }
-        @keyframes scrollBgAnim {
-            from { background-position: 0 0; }
-            to { background-position: 0 50px; }
+        .map-marker-pin {
+            transform: rotateX(-90deg) rotateY(45deg) translateY(-20px);
+            transform-origin: bottom center;
+            filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.8));
+        }
+        .map-marker.active .map-marker-pin {
+            transform: rotateX(-90deg) rotateY(45deg) translateY(-30px) scale(1.2);
+            filter: drop-shadow(0 0 20px #00f0ff);
         }
 
-        /* SVG Route Animations */
-        .route-line {
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 1000;
+        .route-path {
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            filter: drop-shadow(0 0 8px #00f0ff);
         }
-        .route-line.active {
-            animation: drawRoute 3s ease-out forwards;
+        .route-path.active {
+            animation: dashDraw 4s ease-in-out forwards;
         }
-        @keyframes drawRoute {
+        @keyframes dashDraw {
             to { stroke-dashoffset: 0; }
-        }
-
-        .route-vehicle {
-            animation: moveCar 6s infinite alternate ease-in-out;
-        }
-        @keyframes moveCar {
-            0% { transform: translate(20px, 80px); }
-            50% { transform: translate(50px, 50px); }
-            100% { transform: translate(85px, 20px); }
         }
 
         /* Scroll Reveal Utility */
         .reveal {
             opacity: 0;
-            transform: translateY(40px);
-            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(60px) scale(0.95);
+            transition: all 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            filter: blur(10px);
         }
-        .reveal.reveal-left { transform: translateX(-40px); }
-        .reveal.reveal-right { transform: translateX(40px); }
-        .reveal.reveal-scale { transform: scale(0.95); }
-        
         .reveal.active {
             opacity: 1;
             transform: translate(0) scale(1);
+            filter: blur(0);
         }
 
-        /* Map Stop Indicator */
-        .map-node { transition: all 0.3s ease; }
-        .map-node:hover circle:nth-child(2) { fill: #00f0ff; }
-        .map-node:hover text { fill: #ffffff; }
-        .map-node.active circle:nth-child(2) { fill: #00f0ff; }
-        .map-node.active text { fill: #ffffff; }
+        /* Canvas Containers */
+        #hero-canvas-container {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        #hero-canvas-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, #020205 80%);
+            pointer-events: none;
+        }
+
+        #machine-canvas-container {
+            width: 100%;
+            height: 400px;
+            cursor: grab;
+        }
+        #machine-canvas-container:active {
+            cursor: grabbing;
+        }
+        @media (min-width: 768px) {
+            #machine-canvas-container { height: 500px; }
+        }
+
     </style>
 </head>
-<body class="selection:bg-cyan-500/30">
+<body class="selection:bg-cyan-500/40">
 
-    <div class="fixed inset-0 z-[-1] overflow-hidden bg-space">
-        <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/20 blur-[120px] rounded-full mix-blend-screen animate-pulse-slow"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-cyan-900/20 blur-[150px] rounded-full mix-blend-screen animate-pulse-slow" style="animation-delay: 2s;"></div>
-        <canvas id="starfield" class="absolute inset-0 opacity-60"></canvas>
+    <!-- Preloader -->
+    <div id="loader">
+        <div class="text-cyan-500 font-space tracking-[0.3em] text-sm animate-pulse">ODYSSEY PROTOCOL INITIATING</div>
+        <div class="loader-line"></div>
     </div>
 
-    <section class="relative min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-10 overflow-hidden">
-        <div class="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/20 via-[#050505]/80 to-[#050505] pointer-events-none"></div>
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-space/50 backdrop-blur-md border-b border-white/5">
+        <div class="font-space font-bold text-xl tracking-widest text-white">
+            AX<span class="text-cyan-400">7</span>
+        </div>
+        <div class="flex gap-6 text-xs font-space tracking-widest text-gray-400 hidden md:flex">
+            <a href="#mission" class="hover:text-cyan-400 transition-colors">MISSION</a>
+            <a href="#crew" class="hover:text-cyan-400 transition-colors">CREW</a>
+            <a href="#machine" class="hover:text-cyan-400 transition-colors">MACHINE</a>
+            <a href="#route" class="hover:text-cyan-400 transition-colors">ROUTE</a>
+        </div>
+        <button class="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-space tracking-widest rounded-full hover:bg-cyan-500/20 hover:shadow-neon-cyan transition-all">
+            ENGAGE
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="mission" class="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-10 overflow-hidden">
         
-        <div class="z-10 flex flex-col items-center text-center reveal reveal-scale">
-            <div class="mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-sm font-space tracking-widest backdrop-blur-md">
-                <i data-lucide="rocket" class="w-4 h-4"></i> MISSION LAUNCH: 11 JULY 2026
+        <!-- 3D Background Canvas -->
+        <div id="hero-canvas-container"></div>
+        
+        <div class="z-10 flex flex-col items-center text-center px-4 w-full max-w-6xl mt-12">
+            <div class="mb-6 inline-flex items-center gap-2 px-5 py-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-xs font-space tracking-[0.2em] backdrop-blur-md shadow-neon-cyan">
+                <i data-lucide="crosshair" class="w-4 h-4 animate-spin-slow" style="animation-duration: 4s;"></i> LAUNCH DATE: 11 JULY 2026
             </div>
             
-            <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold font-space mb-4 tracking-tighter">
-                AIRCROSS <span class="text-gradient">ODYSSEY</span>
+            <h1 class="text-6xl md:text-8xl lg:text-[140px] font-black font-space mb-2 tracking-tighter leading-none glitch-text" data-text="AIRCROSS">
+                AIRCROSS
             </h1>
-            
-            <h2 class="text-xl md:text-3xl text-gray-300 font-light mb-8 flex items-center justify-center gap-3">
-                Angamaly <i data-lucide="chevron-down" class="-rotate-90 text-cyan-500 w-6 h-6"></i> 
-                Mysore <i data-lucide="chevron-down" class="-rotate-90 text-purple-500 w-6 h-6"></i> 
-                Bangalore
+            <h2 class="text-5xl md:text-7xl lg:text-8xl font-black font-space mb-8 tracking-tighter leading-none text-gradient uppercase">
+                Odyssey
             </h2>
             
-            <p class="max-w-2xl text-gray-400 text-lg md:text-xl leading-relaxed mb-12">
-                "6 Friends. 1 Citroën Aircross X 7-Seater. Hundreds of Kilometers.<br>One Unforgettable Journey."
+            <div class="flex flex-col md:flex-row items-center gap-4 text-sm md:text-base font-space tracking-[0.2em] text-gray-400 mb-12 bg-white/5 border border-white/10 px-8 py-3 rounded-full backdrop-blur-sm">
+                <span class="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">ANGAMALY</span>
+                <div class="w-8 h-px bg-cyan-500/50 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-cyan-500"></div></div>
+                <i data-lucide="chevron-down" class="md:hidden text-cyan-500 w-4 h-4"></i>
+                <span class="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">MYSORE</span>
+                <div class="w-8 h-px bg-purple-500/50 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-purple-500"></div></div>
+                <i data-lucide="chevron-down" class="md:hidden text-purple-500 w-4 h-4"></i>
+                <span class="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">BANGALORE</span>
+            </div>
+
+            <p class="max-w-2xl text-gray-400 text-lg md:text-xl font-light leading-relaxed mb-12 drop-shadow-md">
+                6 Friends. 1 Citroën Aircross X 7-Seater.<br>Hundreds of kilometers mapping the ultimate adventure.
             </p>
 
-            <a href="#countdown-section" class="group relative inline-flex px-8 py-4 bg-transparent overflow-hidden rounded-lg border border-cyan-500/50 transition-all hover:border-cyan-400 hover:shadow-[0_0_40px_rgba(0,240,255,0.4)] cursor-pointer">
-                <div class="absolute inset-0 bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-all"></div>
-                <span class="relative font-space font-semibold tracking-widest text-cyan-50 flex items-center gap-2">
-                    BEGIN JOURNEY <i data-lucide="chevron-down" class="group-hover:translate-y-1 transition-transform w-5 h-5"></i>
+            <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-transparent overflow-hidden rounded-xl border border-cyan-500/50 transition-all hover:border-cyan-400 shadow-neon-cyan cursor-pointer z-20">
+                <div class="absolute inset-0 bg-cyan-500/10 group-hover:bg-cyan-500/30 transition-all duration-300"></div>
+                <div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-45deg] group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                <span class="relative font-space font-bold tracking-[0.2em] text-white flex items-center gap-3 text-sm md:text-base">
+                    INITIALIZE SEQUENCE <i data-lucide="arrow-down-circle" class="group-hover:translate-y-1 transition-transform w-5 h-5"></i>
                 </span>
             </a>
         </div>
-
-        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-gray-600 pointer-events-none">
-            <i data-lucide="chevron-down" class="w-8 h-8"></i>
-        </div>
     </section>
 
-    <section id="countdown-section" class="py-24 relative px-4">
-        <div class="max-w-5xl mx-auto">
-            <div class="text-center mb-12 reveal">
-                <h3 class="text-cyan-500 font-space tracking-[0.2em] text-sm mb-2">ROAD TRIP LAUNCH SEQUENCE</h3>
-                <h2 class="text-3xl md:text-4xl font-bold font-space">T-Minus Countdown</h2>
+    <!-- Countdown Section -->
+    <section id="countdown-section" class="py-24 relative px-4 z-10">
+        <div class="absolute inset-0 bg-gradient-to-b from-[#020205] via-[#050510] to-[#020205] -z-10"></div>
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h3 class="text-cyan-500 font-space tracking-[0.3em] text-xs font-bold mb-3">SYSTEM CLOCK</h3>
+                <h2 class="text-4xl md:text-5xl font-black font-space uppercase">T-Minus Launch</h2>
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 0ms;">
-                    <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <span id="cd-days" class="text-5xl md:text-7xl font-space font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 tabular-nums tracking-tighter">00</span>
-                    <span class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Days</span>
+                <!-- Days -->
+                <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <span id="cd-days" class="text-6xl md:text-8xl font-black font-space text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">00</span>
+                    <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Days</span>
                 </div>
-                <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 100ms;">
-                    <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <span id="cd-hours" class="text-5xl md:text-7xl font-space font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 tabular-nums tracking-tighter">00</span>
-                    <span class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Hours</span>
+                <!-- Hours -->
+                <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 100ms;">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <span id="cd-hours" class="text-6xl md:text-8xl font-black font-space text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">00</span>
+                    <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Hours</span>
                 </div>
-                <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 200ms;">
-                    <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <span id="cd-minutes" class="text-5xl md:text-7xl font-space font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 tabular-nums tracking-tighter">00</span>
-                    <span class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Minutes</span>
+                <!-- Minutes -->
+                <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 200ms;">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <span id="cd-minutes" class="text-6xl md:text-8xl font-black font-space text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">00</span>
+                    <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Minutes</span>
                 </div>
-                <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 300ms;">
-                    <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <span id="cd-seconds" class="text-5xl md:text-7xl font-space font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 tabular-nums tracking-tighter">00</span>
-                    <span class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Seconds</span>
+                <!-- Seconds -->
+                <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 300ms;">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <span id="cd-seconds" class="text-6xl md:text-8xl font-black font-space text-cyan-300 tracking-tighter drop-shadow-[0_0_20px_rgba(0,240,255,0.5)]">00</span>
+                    <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Seconds</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="py-20 bg-gradient-to-b from-transparent via-cyan-900/5 to-transparent border-y border-white/5" id="stats-section">
-        <div class="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-5 gap-8">
-            <div class="text-center reveal">
-                <div class="text-3xl md:text-4xl font-space font-bold text-white mb-2 stat-counter" data-target="6">0</div>
-                <div class="text-cyan-500/80 text-xs uppercase tracking-widest">Crew Members</div>
-            </div>
-            <div class="text-center reveal" style="transition-delay: 100ms;">
-                <div class="text-3xl md:text-4xl font-space font-bold text-white mb-2 stat-counter" data-target="3">0</div>
-                <div class="text-cyan-500/80 text-xs uppercase tracking-widest">Cities</div>
-            </div>
-            <div class="text-center reveal" style="transition-delay: 200ms;">
-                <div class="text-3xl md:text-4xl font-space font-bold text-white mb-2 stat-counter" data-target="1">0</div>
-                <div class="text-cyan-500/80 text-xs uppercase tracking-widest">Vehicle</div>
-            </div>
-            <div class="text-center reveal" style="transition-delay: 300ms;">
-                <div class="text-3xl md:text-4xl font-space font-bold text-white mb-2">Multi</div>
-                <div class="text-cyan-500/80 text-xs uppercase tracking-widest">Travel Days</div>
-            </div>
-            <div class="text-center reveal" style="transition-delay: 400ms;">
-                <div class="text-3xl md:text-4xl font-space font-bold text-white mb-2">MAX</div>
-                <div class="text-cyan-500/80 text-xs uppercase tracking-widest">Adventure Level</div>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-32 px-4 relative">
-        <div class="absolute right-0 top-1/4 w-96 h-96 bg-blue-600/10 blur-[100px] rounded-full pointer-events-none"></div>
-        <div class="max-w-6xl mx-auto">
-            <div class="mb-16 md:mb-24 flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-6 reveal">
+    <!-- The Machine (3D) -->
+    <section id="machine" class="py-32 px-4 relative border-y border-white/5 bg-[#020205] overflow-hidden">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-900/10 blur-[150px] rounded-full pointer-events-none"></div>
+        
+        <div class="max-w-7xl mx-auto relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 reveal">
                 <div>
-                    <h2 class="text-4xl md:text-5xl font-space font-bold mb-4">Meet The Crew</h2>
-                    <p class="text-gray-400 max-w-xl">Six unique personalities. One shared destination. Assemble the squad.</p>
+                    <h3 class="text-cyan-500 font-space tracking-[0.3em] text-xs font-bold mb-3">HARDWARE ASSET</h3>
+                    <h2 class="text-4xl md:text-6xl font-black font-space uppercase">Citroën Aircross X</h2>
                 </div>
-                <div class="flex items-center gap-2 text-cyan-400 text-sm font-space bg-cyan-400/10 px-4 py-2 rounded-full">
-                    <i data-lucide="users" class="w-4 h-4"></i> CREW CAPACITY: 100%
+                <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-5 py-2 rounded-full text-xs font-space tracking-widest text-white backdrop-blur-md">
+                    <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-cyan-400"></i> DRAG TO ROTATE
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="glass-panel p-6 rounded-2xl group hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] transition-all duration-500 reveal">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center shadow-inner group-hover:border-cyan-500/50 transition-colors">
-                            <span class="text-2xl font-space text-gray-400">A</span>
-                        </div>
-                        <div class="p-2 rounded-full bg-white/5 border border-white/5 group-hover:bg-cyan-500/10 transition-colors">
-                            <i data-lucide="crosshair" class="w-5 h-5 text-cyan-400"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-cyan-300 transition-colors">Anoop</h3>
-                        <p class="text-sm text-gray-400 uppercase tracking-wider">Mission Commander</p>
-                    </div>
-                </div>
-                <div class="glass-panel p-6 rounded-2xl group hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] transition-all duration-500 reveal" style="transition-delay: 100ms;">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center shadow-inner group-hover:border-blue-500/50 transition-colors">
-                            <span class="text-2xl font-space text-gray-400">B</span>
-                        </div>
-                        <div class="p-2 rounded-full bg-white/5 border border-white/5 group-hover:bg-blue-500/10 transition-colors">
-                            <i data-lucide="compass" class="w-5 h-5 text-blue-400"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-blue-300 transition-colors">Binto</h3>
-                        <p class="text-sm text-gray-400 uppercase tracking-wider">Chief Navigator</p>
-                    </div>
-                </div>
-                <div class="glass-panel p-6 rounded-2xl group hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] transition-all duration-500 reveal" style="transition-delay: 200ms;">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center shadow-inner group-hover:border-purple-500/50 transition-colors">
-                            <span class="text-2xl font-space text-gray-400">A</span>
-                        </div>
-                        <div class="p-2 rounded-full bg-white/5 border border-white/5 group-hover:bg-purple-500/10 transition-colors">
-                            <i data-lucide="map-pin" class="w-5 h-5 text-purple-400"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-purple-300 transition-colors">Aalwyn</h3>
-                        <p class="text-sm text-gray-400 uppercase tracking-wider">Route Strategist</p>
-                    </div>
-                </div>
-                <div class="glass-panel p-6 rounded-2xl group hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] transition-all duration-500 reveal" style="transition-delay: 300ms;">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center shadow-inner group-hover:border-pink-500/50 transition-colors">
-                            <span class="text-2xl font-space text-gray-400">V</span>
-                        </div>
-                        <div class="p-2 rounded-full bg-white/5 border border-white/5 group-hover:bg-pink-500/10 transition-colors">
-                            <i data-lucide="activity" class="w-5 h-5 text-pink-400"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-pink-300 transition-colors">Vignesh</h3>
-                        <p class="text-sm text-gray-400 uppercase tracking-wider">Entertainment Director</p>
-                    </div>
-                </div>
-                <div class="glass-panel p-6 rounded-2xl group hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] transition-all duration-500 reveal" style="transition-delay: 400ms;">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center shadow-inner group-hover:border-green-500/50 transition-colors">
-                            <span class="text-2xl font-space text-gray-400">S</span>
-                        </div>
-                        <div class="p-2 rounded-full bg-white/5 border border-white/5 group-hover:bg-green-500/10 transition-colors">
-                            <i data-lucide="battery" class="w-5 h-5 text-green-400"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-green-300 transition-colors">Sachin</h3>
-                        <p class="text-sm text-gray-400 uppercase tracking-wider">Food Operations Lead</p>
-                    </div>
-                </div>
-                <div class="glass-panel p-6 rounded-2xl group hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] transition-all duration-500 reveal" style="transition-delay: 500ms;">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center shadow-inner group-hover:border-yellow-500/50 transition-colors">
-                            <span class="text-2xl font-space text-gray-400">A</span>
-                        </div>
-                        <div class="p-2 rounded-full bg-white/5 border border-white/5 group-hover:bg-yellow-500/10 transition-colors">
-                            <i data-lucide="zap" class="w-5 h-5 text-yellow-400"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-yellow-300 transition-colors">Abraham</h3>
-                        <p class="text-sm text-gray-400 uppercase tracking-wider">Chief Chaos Officer</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-24 px-4 overflow-hidden bg-gradient-to-b from-transparent to-[#0a0a0c]">
-        <div class="max-w-7xl mx-auto relative">
-            <div class="text-center mb-16 reveal">
-                <h3 class="text-purple-500 font-space tracking-[0.2em] text-sm mb-2">THE MACHINE</h3>
-                <h2 class="text-4xl md:text-5xl font-bold font-space">Citroën Aircross X</h2>
-            </div>
-
-            <div class="relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent overflow-hidden aspect-[4/3] md:aspect-[21/9] flex flex-col items-center justify-center p-8 reveal">
+            <div class="relative glass-panel rounded-[2rem] overflow-hidden border border-cyan-500/20 shadow-neon-cyan reveal">
                 
-                <div class="absolute inset-0 opacity-20 scroll-bg"></div>
-
-                <div class="relative z-10 w-full max-w-2xl float-animation">
-                    <svg viewBox="0 0 800 300" class="w-full drop-shadow-[0_0_30px_rgba(0,240,255,0.3)]">
-                        <defs>
-                            <linearGradient id="carGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#00d2ff" stop-opacity="0.2" />
-                                <stop offset="50%" stop-color="#9d4edd" stop-opacity="0.5" />
-                                <stop offset="100%" stop-color="#00d2ff" stop-opacity="0.2" />
-                            </linearGradient>
-                        </defs>
-                        <path d="M 150 200 L 180 120 Q 250 80 400 80 Q 550 80 650 140 L 700 200 Q 750 220 750 250 L 50 250 Q 50 220 150 200 Z" fill="url(#carGrad)" stroke="rgba(0, 240, 255, 0.6)" stroke-width="2" />
-                        <circle cx="220" cy="250" r="30" fill="#050505" stroke="rgba(0, 240, 255, 0.4)" stroke-width="4" />
-                        <circle cx="620" cy="250" r="30" fill="#050505" stroke="rgba(0, 240, 255, 0.4)" stroke-width="4" />
-                        <line x1="400" y1="80" x2="400" y2="40" stroke="rgba(255,255,255,0.3)" stroke-dasharray="4 4"/>
-                        <text x="400" y="30" fill="white" font-size="14" text-anchor="middle" font-family="'Space Grotesk', sans-serif">AIRCROSS X 7-SEATER</text>
-                    </svg>
-                </div>
-
-                <div class="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 md:right-auto md:w-80 glass-panel p-5 rounded-xl z-20">
-                    <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
-                        <span class="text-xs uppercase text-gray-400">System Status</span>
-                        <span class="text-xs text-green-400 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> READY</span>
+                <!-- 3D Canvas Container for Car -->
+                <div id="machine-canvas-container" class="w-full bg-gradient-to-b from-[#050510] to-[#020205]"></div>
+                
+                <!-- Overlay HUD -->
+                <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between">
+                    <div class="flex justify-between items-start w-full">
+                        <div class="text-cyan-400 font-space text-xs tracking-[0.3em] font-bold">
+                            <span class="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></span> REC
+                        </div>
+                        <div class="text-right">
+                            <div class="text-white font-space font-bold text-lg">AX-7 PLATFORM</div>
+                            <div class="text-gray-500 font-space text-xs tracking-widest">7-SEATER CONFIG</div>
+                        </div>
                     </div>
-                    <ul class="space-y-2 text-sm text-gray-300">
-                        <li class="flex justify-between"><span>Capacity</span><span class="text-white">7 Seats</span></li>
-                        <li class="flex justify-between"><span>Crew</span><span class="text-white">6 Members</span></li>
-                        <li class="flex justify-between"><span>Destinations</span><span class="text-white">3 Cities</span></li>
-                    </ul>
+                    
+                    <div class="flex justify-between items-end w-full">
+                        <div class="glass-panel p-4 rounded-xl pointer-events-auto max-w-[250px]">
+                            <div class="text-xs font-space text-gray-400 tracking-widest mb-2 border-b border-white/10 pb-2">SPECS</div>
+                            <ul class="space-y-2 text-sm font-space">
+                                <li class="flex justify-between"><span class="text-cyan-500">CREW</span> <span class="font-bold">06/07</span></li>
+                                <li class="flex justify-between"><span class="text-purple-500">RANGE</span> <span class="font-bold">OPTIMAL</span></li>
+                                <li class="flex justify-between"><span class="text-blue-500">MODE</span> <span class="font-bold">ODYSSEY</span></li>
+                            </ul>
+                        </div>
+                        <div class="hidden md:block text-right pointer-events-auto">
+                            <button id="reset-car-btn" class="text-xs font-space tracking-widest bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/50 px-4 py-2 rounded-full transition-all">
+                                RESET VIEW
+                            </button>
+                        </div>
+                    </div>
                 </div>
+                
+                <!-- Scanning Line -->
+                <div class="absolute top-0 left-0 w-full h-1 bg-cyan-500/50 shadow-[0_0_20px_#00f0ff] z-20 pointer-events-none opacity-50" style="animation: scan 4s linear infinite;"></div>
             </div>
         </div>
     </section>
 
-    <section class="py-24 px-4 relative" id="map-section">
-        <div class="max-w-6xl mx-auto">
-            <div class="mb-16 reveal">
-                <h2 class="text-4xl md:text-5xl font-space font-bold mb-4">Route Trajectory</h2>
-                <p class="text-gray-400 max-w-xl">Mapping the coordinates for the ultimate adventure.</p>
+    <!-- Abstract Terrain Map Section -->
+    <section id="route" class="py-32 px-4 relative overflow-hidden bg-[#050508]">
+        <div class="max-w-7xl mx-auto relative z-10">
+            <div class="text-center mb-24 reveal">
+                <h3 class="text-purple-500 font-space tracking-[0.3em] text-xs font-bold mb-3">TOPOLOGICAL DATA</h3>
+                <h2 class="text-4xl md:text-6xl font-black font-space uppercase">Route Trajectory</h2>
+                <p class="text-gray-400 mt-4 font-space tracking-widest text-sm">3 CITIES // 1 JOURNEY</p>
             </div>
 
-            <div class="flex flex-col lg:flex-row gap-12 items-center">
-                <div class="w-full lg:w-3/5 glass-panel rounded-3xl p-4 md:p-8 relative reveal">
-                    <svg viewBox="0 0 100 100" class="w-full h-auto drop-shadow-2xl overflow-visible">
-                        <g stroke="rgba(255,255,255,0.05)" stroke-width="0.5">
-                            <line x1="20" y1="0" x2="20" y2="100" /><line x1="0" y1="20" x2="100" y2="20" />
-                            <line x1="40" y1="0" x2="40" y2="100" /><line x1="0" y1="40" x2="100" y2="40" />
-                            <line x1="60" y1="0" x2="60" y2="100" /><line x1="0" y1="60" x2="100" y2="60" />
-                            <line x1="80" y1="0" x2="80" y2="100" /><line x1="0" y1="80" x2="100" y2="80" />
-                        </g>
-
-                        <path d="M 20 80 C 20 60, 40 50, 50 50 C 60 50, 75 35, 85 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
-                        <path d="M 20 80 C 20 60, 40 50, 50 50 C 60 50, 75 35, 85 20" fill="none" stroke="url(#routeGrad)" stroke-width="1.5" class="route-line" id="map-route-line" />
-
+            <div class="relative w-full h-[600px] flex items-center justify-center map-3d-container reveal">
+                
+                <!-- Isometric Plane -->
+                <div class="map-terrain w-full max-w-[800px] aspect-square relative rounded-3xl overflow-hidden" id="map-plane">
+                    <div class="terrain-grid"></div>
+                    
+                    <!-- SVG Route Line -->
+                    <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                         <defs>
-                            <linearGradient id="routeGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#00d2ff" />
+                            <linearGradient id="glowLine" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00f0ff" />
                                 <stop offset="50%" stop-color="#9d4edd" />
                                 <stop offset="100%" stop-color="#00f0ff" />
                             </linearGradient>
+                            <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="2" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
                         </defs>
-
-                        <g class="cursor-pointer map-node active" data-stop="0" transform="translate(20, 80)">
-                            <circle r="4" fill="#050505" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
-                            <circle r="2.5" fill="#fff" />
-                            <text x="6" y="-6" fill="rgba(255,255,255,0.5)" font-size="3.5" class="font-space font-semibold shadow-black drop-shadow-md">Angamaly</text>
-                        </g>
-                        <g class="cursor-pointer map-node" data-stop="1" transform="translate(50, 50)">
-                            <circle r="4" fill="#050505" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
-                            <circle r="2.5" fill="#fff" />
-                            <text x="6" y="-6" fill="rgba(255,255,255,0.5)" font-size="3.5" class="font-space font-semibold shadow-black drop-shadow-md">Mysore</text>
-                        </g>
-                        <g class="cursor-pointer map-node" data-stop="2" transform="translate(85, 20)">
-                            <circle r="4" fill="#050505" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
-                            <circle r="2.5" fill="#fff" />
-                            <text x="6" y="-6" fill="rgba(255,255,255,0.5)" font-size="3.5" class="font-space font-semibold shadow-black drop-shadow-md">Bangalore</text>
-                        </g>
+                        <!-- Topographical decorative lines -->
+                        <path d="M -10 20 Q 30 10 50 40 T 110 30" fill="none" stroke="rgba(0,240,255,0.05)" stroke-width="0.2"/>
+                        <path d="M -10 40 Q 40 30 60 60 T 110 50" fill="none" stroke="rgba(157,78,221,0.05)" stroke-width="0.2"/>
+                        <path d="M -10 60 Q 20 50 40 80 T 110 70" fill="none" stroke="rgba(0,240,255,0.05)" stroke-width="0.2"/>
                         
-                        <g class="route-vehicle">
-                            <circle r="2" fill="#00d2ff" filter="blur(1px)"/>
-                            <circle r="1" fill="#fff" />
-                        </g>
+                        <!-- Base Track -->
+                        <path d="M 20 80 C 20 50, 45 45, 50 40 C 60 30, 70 30, 80 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="2 2" />
+                        
+                        <!-- Animated Glowing Route -->
+                        <path d="M 20 80 C 20 50, 45 45, 50 40 C 60 30, 70 30, 80 20" fill="none" stroke="url(#glowLine)" stroke-width="1" class="route-path" id="animated-route" filter="url(#neonGlow)"/>
                     </svg>
+
+                    <!-- Nodes (positioned via left/top % to match SVG) -->
+                    <div class="absolute map-marker active" style="left: 20%; top: 80%;" data-index="0" onmouseenter="updateMapInfo(0)">
+                        <div class="map-marker-pin flex flex-col items-center cursor-pointer group">
+                            <div class="px-3 py-1 bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-[10px] font-space font-bold rounded shadow-[0_0_15px_#00f0ff] mb-1 backdrop-blur-sm whitespace-nowrap group-hover:scale-110 transition-transform">ANGAMALY</div>
+                            <div class="w-px h-8 bg-gradient-to-t from-cyan-500 to-transparent"></div>
+                            <div class="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_#fff]"></div>
+                            <div class="w-8 h-8 rounded-full border border-cyan-500/50 absolute bottom-[-14px] rotate-X-90 animate-ping"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute map-marker" style="left: 50%; top: 40%;" data-index="1" onmouseenter="updateMapInfo(1)">
+                        <div class="map-marker-pin flex flex-col items-center cursor-pointer group">
+                            <div class="px-3 py-1 bg-purple-500/20 border border-purple-400 text-purple-300 text-[10px] font-space font-bold rounded shadow-[0_0_15px_#9d4edd] mb-1 backdrop-blur-sm whitespace-nowrap group-hover:scale-110 transition-transform">MYSORE</div>
+                            <div class="w-px h-12 bg-gradient-to-t from-purple-500 to-transparent"></div>
+                            <div class="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_#fff]"></div>
+                        </div>
+                    </div>
+
+                    <div class="absolute map-marker" style="left: 80%; top: 20%;" data-index="2" onmouseenter="updateMapInfo(2)">
+                        <div class="map-marker-pin flex flex-col items-center cursor-pointer group">
+                            <div class="px-3 py-1 bg-blue-500/20 border border-blue-400 text-blue-300 text-[10px] font-space font-bold rounded shadow-[0_0_15px_#0077ff] mb-1 backdrop-blur-sm whitespace-nowrap group-hover:scale-110 transition-transform">BANGALORE</div>
+                            <div class="w-px h-16 bg-gradient-to-t from-blue-500 to-transparent"></div>
+                            <div class="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_#fff]"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="w-full lg:w-2/5 reveal reveal-right">
-                    <div class="glass-panel p-8 rounded-3xl min-h-[250px] relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                            <i data-lucide="map-pin" class="w-24 h-24"></i>
-                        </div>
-                        <div class="relative z-10 transition-all duration-300" id="map-info-container">
+                <!-- Info HUD -->
+                <div class="absolute top-0 right-0 w-full md:w-80 glass-panel p-6 rounded-2xl md:translate-x-1/4 z-20 shadow-2xl transition-all duration-300" id="map-hud">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Crew Section (Stylized Grid) -->
+    <section id="crew" class="py-24 px-4 bg-gradient-to-b from-[#050508] to-[#020205] border-t border-white/5 relative">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal">
+                <div>
+                    <h3 class="text-cyan-500 font-space tracking-[0.3em] text-xs font-bold mb-3">BIOMETRIC DATA</h3>
+                    <h2 class="text-4xl md:text-5xl font-black font-space uppercase">The Crew</h2>
+                </div>
+                <div class="text-xs font-space tracking-widest border border-white/20 px-4 py-2 rounded-full text-gray-400">
+                    SQUAD CAPACITY: <span class="text-green-400 font-bold">100%</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-8">
+                <!-- Generate 6 cards -->
+                <script>
+                    const crew = [
+                        {name: "ANOOP", role: "CMDR", icon: "crosshair", color: "cyan"},
+                        {name: "BINTO", role: "NAV", icon: "compass", color: "blue"},
+                        {name: "AALWYN", role: "ROUTE", icon: "map-pin", color: "purple"},
+                        {name: "VIGNESH", role: "ENT", icon: "radio", color: "pink"},
+                        {name: "SACHIN", role: "RATIONS", icon: "coffee", color: "green"},
+                        {name: "ABRAHAM", role: "CHAOS", icon: "zap", color: "yellow"}
+                    ];
+                    crew.forEach((c, i) => {
+                        document.write(`
+                            <div class="glass-panel p-6 rounded-2xl group hover:-translate-y-2 transition-all duration-500 reveal border-t-2 border-t-${c.color}-500/50" style="transition-delay: ${i*100}ms">
+                                <div class="flex justify-between items-start mb-8">
+                                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-[#050510] border border-white/10 flex items-center justify-center text-xl md:text-2xl font-black font-space text-gray-500 group-hover:text-${c.color}-400 group-hover:border-${c.color}-400/50 transition-all shadow-inner relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-${c.color}-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        ${c.name.charAt(0)}
+                                    </div>
+                                    <div class="p-2 rounded bg-white/5 text-${c.color}-400">
+                                        <i data-lucide="${c.icon}" class="w-4 h-4 md:w-5 md:h-5"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-gray-500 font-space tracking-[0.2em] mb-1">ID: ${String(i+1).padStart(3, '0')}</div>
+                                    <h3 class="text-lg md:text-2xl font-black font-space tracking-tight group-hover:text-white transition-colors">${c.name}</h3>
+                                    <p class="text-xs font-space text-${c.color}-400 uppercase tracking-widest mt-1 opacity-80">${c.role}</p>
+                                </div>
                             </div>
-                        
-                        <div class="flex gap-2 mt-8 absolute bottom-8 left-8" id="map-indicators">
-                            <button class="w-12 h-1 rounded-full transition-all bg-cyan-400 map-btn" data-target="0"></button>
-                            <button class="w-12 h-1 rounded-full transition-all bg-white/20 map-btn" data-target="1"></button>
-                            <button class="w-12 h-1 rounded-full transition-all bg-white/20 map-btn" data-target="2"></button>
-                        </div>
-                    </div>
-                </div>
+                        `);
+                    });
+                </script>
             </div>
         </div>
     </section>
 
-    <section class="py-24 px-4 bg-black/50 border-t border-white/5 relative">
-        <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent -translate-x-1/2 hidden md:block"></div>
+    <!-- Footer -->
+    <footer class="pt-24 pb-12 px-4 border-t border-white/10 text-center relative overflow-hidden bg-[#020205]">
+        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-gradient-to-t from-cyan-900/40 to-transparent blur-[80px] pointer-events-none"></div>
         <div class="max-w-4xl mx-auto relative z-10">
-            <div class="text-center mb-20 reveal">
-                <h2 class="text-4xl md:text-5xl font-space font-bold mb-4">Mission Log</h2>
+            <h2 class="text-4xl font-black font-space tracking-tighter mb-6 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-600">AIRCROSS <span class="text-cyan-400">ODYSSEY</span></h2>
+            <div class="flex flex-wrap justify-center gap-4 text-[10px] md:text-xs text-gray-500 font-space tracking-[0.3em] mb-12">
+                <span>ANOOP</span> // <span>BINTO</span> // <span>AALWYN</span> // <span>VIGNESH</span> // <span>SACHIN</span> // <span>ABRAHAM</span>
             </div>
-
-            <div class="space-y-12 md:space-y-24">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div class="hidden md:block w-5/12"></div>
-                    <div class="w-8 h-8 rounded-full bg-[#050505] border-2 border-cyan-500 shadow-[0_0_15px_rgba(0,240,255,0.5)] z-10 relative flex items-center justify-center shrink-0">
-                        <div class="w-2 h-2 rounded-full bg-white"></div>
-                    </div>
-                    <div class="w-full md:w-5/12 glass-panel p-6 md:p-8 rounded-2xl relative group hover:border-white/20 transition-colors reveal reveal-right">
-                        <div class="text-cyan-400 text-sm font-space tracking-wider mb-2">Day 1 — July 11</div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-cyan-200 transition-colors">Launch Day</h3>
-                        <div class="text-purple-400 text-sm mb-4 font-medium">Angamaly → Mysore</div>
-                        <p class="text-gray-400 text-sm leading-relaxed">Departure from Anoop's house. Early morning start as the crew assembles and the adventure begins. Evening arrival and stay at Mysore Infosys DC.</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-col md:flex-row-reverse items-center justify-between gap-8">
-                    <div class="hidden md:block w-5/12"></div>
-                    <div class="w-8 h-8 rounded-full bg-[#050505] border-2 border-cyan-500 shadow-[0_0_15px_rgba(0,240,255,0.5)] z-10 relative flex items-center justify-center shrink-0">
-                        <div class="w-2 h-2 rounded-full bg-white"></div>
-                    </div>
-                    <div class="w-full md:w-5/12 glass-panel p-6 md:p-8 rounded-2xl relative group hover:border-white/20 transition-colors reveal reveal-left">
-                        <div class="text-cyan-400 text-sm font-space tracking-wider mb-2">Day 2 — July 12</div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-cyan-200 transition-colors">Explore Mysore</h3>
-                        <div class="text-purple-400 text-sm mb-4 font-medium">Mysore Sightseeing</div>
-                        <p class="text-gray-400 text-sm leading-relaxed">Full day adventure exploring the cultural capital. Local food exploration, photography, and experiencing the city's heritage.</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div class="hidden md:block w-5/12"></div>
-                    <div class="w-8 h-8 rounded-full bg-[#050505] border-2 border-cyan-500 shadow-[0_0_15px_rgba(0,240,255,0.5)] z-10 relative flex items-center justify-center shrink-0">
-                        <div class="w-2 h-2 rounded-full bg-white"></div>
-                    </div>
-                    <div class="w-full md:w-5/12 glass-panel p-6 md:p-8 rounded-2xl relative group hover:border-white/20 transition-colors reveal reveal-right">
-                        <div class="text-cyan-400 text-sm font-space tracking-wider mb-2">Day 3 — July 13</div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-cyan-200 transition-colors">Tech Campus</h3>
-                        <div class="text-purple-400 text-sm mb-4 font-medium">Infosys Mysore</div>
-                        <p class="text-gray-400 text-sm leading-relaxed">Office visit and campus exploration. Team experiences within one of the world's largest corporate training centers.</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-col md:flex-row-reverse items-center justify-between gap-8">
-                    <div class="hidden md:block w-5/12"></div>
-                    <div class="w-8 h-8 rounded-full bg-[#050505] border-2 border-cyan-500 shadow-[0_0_15px_rgba(0,240,255,0.5)] z-10 relative flex items-center justify-center shrink-0">
-                        <div class="w-2 h-2 rounded-full bg-white"></div>
-                    </div>
-                    <div class="w-full md:w-5/12 glass-panel p-6 md:p-8 rounded-2xl relative group hover:border-white/20 transition-colors reveal reveal-left">
-                        <div class="text-cyan-400 text-sm font-space tracking-wider mb-2">Day 4 — July 14</div>
-                        <h3 class="text-2xl font-bold font-space mb-1 group-hover:text-cyan-200 transition-colors">The Next Leg</h3>
-                        <div class="text-purple-400 text-sm mb-4 font-medium">Drive to Bangalore</div>
-                        <p class="text-gray-400 text-sm leading-relaxed">Hitting the highway towards the Silicon Valley of India. Evening arrival and settling into the dynamic city.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-24 px-4">
-        <div class="max-w-6xl mx-auto">
-            <div class="mb-12 reveal">
-                <h2 class="text-3xl font-space font-bold flex items-center gap-3">
-                    <i data-lucide="activity" class="text-cyan-500 w-8 h-8"></i> Telemetry & Status
-                </h2>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="glass-panel p-5 rounded-xl border-l-2 border-l-purple-500 hover:bg-white/5 transition-colors reveal">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="rocket" class="text-purple-400 w-6 h-6"></i>
-                        <div class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
-                    </div>
-                    <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Mission Status</div>
-                    <div class="text-lg font-space font-semibold">AWAITING LAUNCH</div>
-                </div>
-                <div class="glass-panel p-5 rounded-xl border-l-2 border-l-green-500 hover:bg-white/5 transition-colors reveal" style="transition-delay: 100ms;">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="battery" class="text-green-400 w-6 h-6"></i>
-                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    </div>
-                    <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Systems Check</div>
-                    <div class="text-lg font-space font-semibold">ALL GREEN</div>
-                </div>
-                <div class="glass-panel p-5 rounded-xl border-l-2 border-l-cyan-500 hover:bg-white/5 transition-colors reveal" style="transition-delay: 200ms;">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="map-pin" class="text-cyan-400 w-6 h-6"></i>
-                        <div class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
-                    </div>
-                    <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Route Integrity</div>
-                    <div class="text-lg font-space font-semibold">VERIFIED</div>
-                </div>
-                <div class="glass-panel p-5 rounded-xl border-l-2 border-l-yellow-500 hover:bg-white/5 transition-colors reveal" style="transition-delay: 300ms;">
-                    <div class="flex justify-between items-start mb-4">
-                        <i data-lucide="users" class="text-yellow-400 w-6 h-6"></i>
-                        <div class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
-                    </div>
-                    <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Crew Morale</div>
-                    <div class="text-lg font-space font-semibold">OPTIMAL</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-24 px-4 relative bg-gradient-to-t from-[#050505] via-cyan-900/10 to-[#050505]">
-        <div class="max-w-7xl mx-auto text-center">
-            <div class="mb-16 reveal">
-                <h2 class="text-4xl md:text-5xl font-space font-bold mb-4">Memory Vault</h2>
-                <p class="text-gray-400">Future memories will be archived here upon mission completion.</p>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[200px] md:auto-rows-[300px]">
-                <div class="col-span-1 row-span-1 reveal">
-                    <div class="w-full h-full glass-panel rounded-2xl flex flex-col items-center justify-center group relative overflow-hidden cursor-pointer">
-                        <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
-                        <i data-lucide="image" class="w-8 h-8 text-gray-600 group-hover:scale-110 group-hover:text-cyan-500 transition-all duration-500 mb-3"></i>
-                        <span class="text-xs font-space text-gray-500 tracking-widest relative z-20 group-hover:text-white transition-colors">IMG_001.RAW</span>
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm">
-                            <span class="border border-white/20 px-4 py-2 rounded-full text-xs font-space tracking-widest text-white">AWAITING UPLOAD</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-1 row-span-2 reveal" style="transition-delay: 100ms;">
-                    <div class="w-full h-full glass-panel rounded-2xl flex flex-col items-center justify-center group relative overflow-hidden cursor-pointer">
-                        <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
-                        <i data-lucide="video" class="w-8 h-8 text-gray-600 group-hover:scale-110 group-hover:text-cyan-500 transition-all duration-500 mb-3"></i>
-                        <span class="text-xs font-space text-gray-500 tracking-widest relative z-20 group-hover:text-white transition-colors">VID_LAUNCH.MP4</span>
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm">
-                            <span class="border border-white/20 px-4 py-2 rounded-full text-xs font-space tracking-widest text-white">AWAITING UPLOAD</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-1 row-span-1 reveal" style="transition-delay: 200ms;">
-                    <div class="w-full h-full glass-panel rounded-2xl flex flex-col items-center justify-center group relative overflow-hidden cursor-pointer">
-                        <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
-                        <i data-lucide="image" class="w-8 h-8 text-gray-600 group-hover:scale-110 group-hover:text-cyan-500 transition-all duration-500 mb-3"></i>
-                        <span class="text-xs font-space text-gray-500 tracking-widest relative z-20 group-hover:text-white transition-colors">IMG_042.RAW</span>
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm">
-                            <span class="border border-white/20 px-4 py-2 rounded-full text-xs font-space tracking-widest text-white">AWAITING UPLOAD</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-2 md:col-span-1 row-span-1 reveal">
-                    <div class="w-full h-full glass-panel rounded-2xl flex flex-col items-center justify-center group relative overflow-hidden cursor-pointer">
-                        <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
-                        <i data-lucide="image" class="w-8 h-8 text-gray-600 group-hover:scale-110 group-hover:text-cyan-500 transition-all duration-500 mb-3"></i>
-                        <span class="text-xs font-space text-gray-500 tracking-widest relative z-20 group-hover:text-white transition-colors">IMG_089.RAW</span>
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm">
-                            <span class="border border-white/20 px-4 py-2 rounded-full text-xs font-space tracking-widest text-white">AWAITING UPLOAD</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-1 md:col-span-2 row-span-1 reveal" style="transition-delay: 100ms;">
-                    <div class="w-full h-full glass-panel rounded-2xl flex flex-col items-center justify-center group relative overflow-hidden cursor-pointer">
-                        <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
-                        <i data-lucide="image" class="w-8 h-8 text-gray-600 group-hover:scale-110 group-hover:text-cyan-500 transition-all duration-500 mb-3"></i>
-                        <span class="text-xs font-space text-gray-500 tracking-widest relative z-20 group-hover:text-white transition-colors">GROUP_SHOT.RAW</span>
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm">
-                            <span class="border border-white/20 px-4 py-2 rounded-full text-xs font-space tracking-widest text-white">AWAITING UPLOAD</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="pt-24 pb-12 px-4 border-t border-white/5 text-center relative overflow-hidden">
-        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-cyan-900/30 blur-[100px] rounded-[100%] pointer-events-none"></div>
-        <div class="max-w-4xl mx-auto relative z-10">
-            <h2 class="text-3xl font-bold font-space tracking-widest mb-6">AIRCROSS <span class="text-gradient">ODYSSEY</span></h2>
-            <p class="text-gray-400 italic mb-8 max-w-lg mx-auto">
-                "Made for highways, friendships, late-night conversations, and unforgettable memories."
-            </p>
-            <div class="flex flex-wrap justify-center items-center gap-3 text-sm text-gray-500 font-space tracking-widest mb-12">
-                <span>ANOOP</span> • <span>BINTO</span> • <span>AALWYN</span> • <span>VIGNESH</span> • <span>SACHIN</span> • <span>ABRAHAM</span>
-            </div>
-            <div class="text-xs text-gray-600 flex items-center justify-center gap-2">
-                <i data-lucide="car-front" class="w-4 h-4"></i> SYSTEM SHUTDOWN INITIATED
+            <div class="text-xs text-cyan-500/50 font-space tracking-widest flex items-center justify-center gap-2">
+                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> SYSTEM SHUTDOWN PENDING
             </div>
         </div>
     </footer>
 
-    <script>
-        // Initialize Icons
-        lucide.createIcons();
-
-        // --- Starfield Background ---
-        const canvas = document.getElementById('starfield');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initParticles();
+    <style>
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(500px); }
         }
+        @keyframes shimmer {
+            100% { left: 200%; }
+        }
+    </style>
 
-        function initParticles() {
-            particles = [];
-            const numParticles = window.innerWidth < 768 ? 50 : 150;
-            for (let i = 0; i < numParticles; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 1.5,
-                    vx: (Math.random() - 0.5) * 0.2,
-                    vy: Math.random() * -0.5 - 0.1,
-                    alpha: Math.random() * 0.5 + 0.1
-                });
+    <script>
+        // --- 1. Init & Preloader ---
+        lucide.createIcons();
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                loader.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    document.body.classList.remove('overflow-hidden');
+                    // Trigger initial reveals immediately
+                    reveal();
+                }, 800);
+            }, 1500); // Fake load time for effect
+        });
+
+        // --- 2. Scroll Reveal Logic ---
+        function reveal() {
+            var reveals = document.querySelectorAll(".reveal");
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                var elementVisible = 100;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                    // If map section, trigger route animation
+                    if(reveals[i].id === 'map-plane' || reveals[i].closest('#route')) {
+                        document.getElementById('animated-route').classList.add('active');
+                    }
+                }
             }
         }
+        window.addEventListener("scroll", reveal);
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
+        // --- 3. Map Data & Logic ---
+        const mapData = [
+            { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-cyan-400", border: "border-cyan-500/30" },
+            { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-purple-400", border: "border-purple-500/30" },
+            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved.", color: "text-blue-400", border: "border-blue-500/30" }
+        ];
 
-                if (p.y < 0) {
-                    p.y = canvas.height;
-                    p.x = Math.random() * canvas.width;
-                }
-                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        function updateMapInfo(index) {
+            const markers = document.querySelectorAll('.map-marker');
+            markers.forEach((m, i) => m.classList.toggle('active', i === index));
 
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(0, 240, 255, ${p.alpha})`;
-                ctx.fill();
-            });
-            requestAnimationFrame(draw);
+            const hud = document.getElementById('map-hud');
+            const data = mapData[index];
+            
+            hud.style.opacity = '0';
+            hud.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                hud.innerHTML = `
+                    <div class="flex justify-between items-start mb-4 border-b border-white/10 pb-4">
+                        <div class="font-space text-xs tracking-[0.2em] text-gray-500">NAV PNT ${data.id}</div>
+                        <div class="${data.color} text-[10px] tracking-widest font-bold border ${data.border} px-2 py-1 rounded bg-white/5">${data.status}</div>
+                    </div>
+                    <h3 class="text-3xl font-black font-space mb-2 tracking-tight">${data.name}</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed font-space">${data.desc}</p>
+                `;
+                hud.style.opacity = '1';
+                hud.style.transform = 'translateY(0)';
+            }, 200);
         }
+        updateMapInfo(0); // init
 
-        window.addEventListener('resize', resize);
-        resize();
-        draw();
-
-        // --- Countdown Timer ---
-        // Target Date: 11 July 2026, 06:00 AM IST (IST is UTC+5:30)
+        // --- 4. Countdown Timer ---
         const targetDate = new Date("2026-07-11T00:30:00Z").getTime();
-        
-        const daysEl = document.getElementById('cd-days');
-        const hoursEl = document.getElementById('cd-hours');
-        const minsEl = document.getElementById('cd-minutes');
-        const secsEl = document.getElementById('cd-seconds');
-
         function updateCountdown() {
             const now = new Date().getTime();
             const distance = targetDate - now;
+            
+            const daysEl = document.getElementById('cd-days');
+            if(!daysEl) return;
 
             if (distance < 0) {
-                daysEl.innerText = "00";
-                hoursEl.innerText = "00";
-                minsEl.innerText = "00";
-                secsEl.innerText = "00";
+                daysEl.innerText = "00"; document.getElementById('cd-hours').innerText = "00";
+                document.getElementById('cd-minutes').innerText = "00"; document.getElementById('cd-seconds').innerText = "00";
                 return;
             }
 
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            daysEl.innerText = days.toString().padStart(2, '0');
-            hoursEl.innerText = hours.toString().padStart(2, '0');
-            minsEl.innerText = minutes.toString().padStart(2, '0');
-            secsEl.innerText = seconds.toString().padStart(2, '0');
+            daysEl.innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+            document.getElementById('cd-hours').innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            document.getElementById('cd-minutes').innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            document.getElementById('cd-seconds').innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
         }
         setInterval(updateCountdown, 1000);
         updateCountdown();
 
-        // --- Scroll Reveals ---
-        const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
+        // ==========================================
+        // THREE.JS IMPLEMENTATIONS
+        // ==========================================
+        
+        // --- A. Hero Background (Moving Terrain) ---
+        const initHeroThreeJS = () => {
+            const container = document.getElementById('hero-canvas-container');
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x020205, 0.02);
 
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 20);
+            camera.lookAt(0, 0, 0);
 
-        // --- Map Interaction ---
-        const mapData = [
-            { 
-                name: "Angamaly", 
-                desc: "Departure point. Systems green.",
-                details: [
-                    { icon: "clock", text: "Early morning departure" },
-                    { icon: "users", text: "Crew assembly point" }
-                ]
-            },
-            { 
-                name: "Mysore", 
-                desc: "Waypoint reached. Exploration active.",
-                details: [
-                    { icon: "calendar", text: "Arrive: Evening/Night" },
-                    { icon: "map-pin", text: "Stay: Mysore Infosys DC" }
-                ]
-            },
-            { 
-                name: "Bangalore", 
-                desc: "Final destination. Mission success.",
-                details: [
-                    { icon: "activity", text: "Tech Hub Exploration" },
-                    { icon: "car-front", text: "City traversal" }
-                ]
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Create Grid Terrain
+            const geometry = new THREE.PlaneGeometry(200, 200, 40, 40);
+            
+            // Add slight randomness to vertices to make it look like terrain
+            const vertices = geometry.attributes.position.array;
+            for (let i = 0; i < vertices.length; i += 3) {
+                vertices[i + 2] = (Math.random() - 0.5) * 2; // z axis becomes y after rotation
             }
-        ];
-
-        const mapInfoContainer = document.getElementById('map-info-container');
-        const mapNodes = document.querySelectorAll('.map-node');
-        const mapBtns = document.querySelectorAll('.map-btn');
-
-        function updateMapInfo(index) {
-            // Update Nodes visually
-            mapNodes.forEach(n => n.classList.remove('active'));
-            mapNodes[index].classList.add('active');
-
-            // Update Buttons visually
-            mapBtns.forEach((b, i) => {
-                b.className = `w-12 h-1 rounded-full transition-all map-btn ${i == index ? 'bg-cyan-400' : 'bg-white/20'}`;
+            
+            const material = new THREE.MeshBasicMaterial({ 
+                color: 0x00f0ff, 
+                wireframe: true,
+                transparent: true,
+                opacity: 0.15
             });
+            
+            const plane = new THREE.Mesh(geometry, material);
+            plane.rotation.x = -Math.PI / 2;
+            plane.position.y = -5;
+            scene.add(plane);
 
-            // Inject Content
-            const data = mapData[index];
-            let detailsHTML = data.details.map(d => `
-                <div class="flex gap-3 text-sm text-gray-400">
-                    <i data-lucide="${d.icon}" class="w-4 h-4"></i> ${d.text}
-                </div>
-            `).join('');
-
-            mapInfoContainer.style.opacity = '0';
-            setTimeout(() => {
-                mapInfoContainer.innerHTML = `
-                    <div class="text-cyan-500 font-space text-sm tracking-widest mb-2">STOP ${parseInt(index) + 1}</div>
-                    <h3 class="text-3xl font-bold font-space mb-4">${data.name}</h3>
-                    <p class="text-gray-300 leading-relaxed mb-6">${data.desc}</p>
-                    <div class="space-y-3">${detailsHTML}</div>
-                `;
-                lucide.createIcons(); // Re-init icons for injected HTML
-                mapInfoContainer.style.opacity = '1';
-            }, 300);
-        }
-
-        mapNodes.forEach(node => {
-            node.addEventListener('mouseenter', (e) => {
-                updateMapInfo(e.currentTarget.getAttribute('data-stop'));
-            });
-        });
-
-        mapBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                updateMapInfo(e.currentTarget.getAttribute('data-target'));
-            });
-        });
-
-        // Initialize first map stop
-        updateMapInfo(0);
-
-        // Animate Map route on scroll
-        const mapRouteObserver = new IntersectionObserver((entries) => {
-            if(entries[0].isIntersecting) {
-                document.getElementById('map-route-line').classList.add('active');
+            // Particles/Stars
+            const starsGeo = new THREE.BufferGeometry();
+            const starsCount = 500;
+            const posArray = new Float32Array(starsCount * 3);
+            for(let i=0; i<starsCount*3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 100;
             }
-        }, { threshold: 0.5 });
-        mapRouteObserver.observe(document.getElementById('map-section'));
+            starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const starsMat = new THREE.PointsMaterial({ size: 0.1, color: 0x9d4edd, transparent: true, opacity: 0.8 });
+            const starsMesh = new THREE.Points(starsGeo, starsMat);
+            scene.add(starsMesh);
 
-        // --- Animated Counters ---
-        const counterObserver = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-                document.querySelectorAll('.stat-counter').forEach(counter => {
-                    const updateCount = () => {
-                        const target = +counter.getAttribute('data-target');
-                        const count = +counter.innerText;
-                        const speed = 200; 
-                        const inc = target / speed;
+            function animate() {
+                requestAnimationFrame(animate);
+                // Move plane towards camera to simulate driving/flying
+                plane.position.z += 0.05;
+                if (plane.position.z > 5) plane.position.z = 0; // seamless loop
+                
+                starsMesh.rotation.y += 0.0005;
+                starsMesh.rotation.x += 0.0002;
+                
+                renderer.render(scene, camera);
+            }
+            animate();
 
-                        if (count < target) {
-                            counter.innerText = Math.ceil(count + inc);
-                            setTimeout(updateCount, 20);
-                        } else {
-                            counter.innerText = target;
-                        }
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        };
+
+        // --- B. Machine Canvas (Procedural 3D Car) ---
+        const initMachineThreeJS = () => {
+            const container = document.getElementById('machine-canvas-container');
+            const scene = new THREE.Scene();
+            
+            // Create a slight gradient background effect in ThreeJS via fog
+            scene.fog = new THREE.Fog(0x050510, 10, 40);
+
+            const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(-6, 4, 8);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            // Enhance rendering for shiny car
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            container.appendChild(renderer.domElement);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+            scene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0x00f0ff, 2);
+            dirLight.position.set(5, 5, 5);
+            scene.add(dirLight);
+
+            const backLight = new THREE.DirectionalLight(0x9d4edd, 2);
+            backLight.position.set(-5, 5, -5);
+            scene.add(backLight);
+
+            // --- BUILD PROCEDURAL CAR ---
+            const carGroup = new THREE.Group();
+
+            // Materials
+            const bodyMat = new THREE.MeshStandardMaterial({ 
+                color: 0x050505, 
+                roughness: 0.1, 
+                metalness: 0.9,
+            });
+            const glassMat = new THREE.MeshStandardMaterial({ 
+                color: 0x000000, 
+                roughness: 0.0, 
+                metalness: 1.0, 
+                transparent: true, 
+                opacity: 0.8
+            });
+            const neonMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.5 });
+
+            // 1. Lower Body
+            const lowerBodyGeo = new THREE.BoxGeometry(4.8, 1.2, 2.2);
+            const lowerBody = new THREE.Mesh(lowerBodyGeo, bodyMat);
+            lowerBody.position.y = 0.8;
+            
+            // Add neon edges
+            const edgesGeo1 = new THREE.EdgesGeometry(lowerBodyGeo);
+            const bodyLines = new THREE.LineSegments(edgesGeo1, neonMat);
+            lowerBody.add(bodyLines);
+            carGroup.add(lowerBody);
+
+            // 2. Cabin (Top part)
+            const cabinGeo = new THREE.BoxGeometry(2.6, 0.9, 1.9);
+            const cabin = new THREE.Mesh(cabinGeo, glassMat);
+            // Position slightly back
+            cabin.position.set(-0.3, 1.85, 0);
+            
+            const edgesGeo2 = new THREE.EdgesGeometry(cabinGeo);
+            const cabinLines = new THREE.LineSegments(edgesGeo2, new THREE.LineBasicMaterial({ color: 0x9d4edd, opacity: 0.5, transparent: true }));
+            cabin.add(cabinLines);
+            carGroup.add(cabin);
+
+            // 3. Wheels
+            const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.6, 32);
+            wheelGeo.rotateX(Math.PI / 2);
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x020202, roughness: 0.9 });
+            
+            const wheelPositions = [
+                [1.5, 0.55, 1.1],   // Front Right
+                [-1.5, 0.55, 1.1],  // Back Right
+                [1.5, 0.55, -1.1],  // Front Left
+                [-1.5, 0.55, -1.1]  // Back Left
+            ];
+
+            wheelPositions.forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                wheel.position.set(...pos);
+                // Hubcap neon
+                const hubGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.62, 16);
+                hubGeo.rotateX(Math.PI / 2);
+                const hub = new THREE.Mesh(hubGeo, new THREE.MeshBasicMaterial({color: 0x00f0ff, wireframe: true}));
+                wheel.add(hub);
+                carGroup.add(wheel);
+            });
+
+            // 4. Headlights / Taillights
+            const hlGeo = new THREE.BoxGeometry(0.1, 0.3, 0.6);
+            const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Bright white
+            
+            const hlRight = new THREE.Mesh(hlGeo, hlMat);
+            hlRight.position.set(2.4, 1.0, 0.8);
+            carGroup.add(hlRight);
+            
+            const hlLeft = new THREE.Mesh(hlGeo, hlMat);
+            hlLeft.position.set(2.4, 1.0, -0.8);
+            carGroup.add(hlLeft);
+
+            const tlMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red
+            const tlRight = new THREE.Mesh(hlGeo, tlMat);
+            tlRight.position.set(-2.4, 1.0, 0.8);
+            carGroup.add(tlRight);
+            
+            const tlLeft = new THREE.Mesh(hlGeo, tlMat);
+            tlLeft.position.set(-2.4, 1.0, -0.8);
+            carGroup.add(tlLeft);
+
+            // Add Ground Grid
+            const gridHelper = new THREE.GridHelper(20, 20, 0x00f0ff, 0x222222);
+            gridHelper.position.y = 0;
+            gridHelper.material.opacity = 0.2;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
+
+            scene.add(carGroup);
+
+            // Animation & Interaction
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            let autoRotate = true;
+
+            container.addEventListener('mousedown', () => { isDragging = true; autoRotate = false; });
+            document.addEventListener('mouseup', () => { isDragging = false; });
+            
+            container.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaMove = {
+                        x: e.offsetX - previousMousePosition.x,
+                        y: e.offsetY - previousMousePosition.y
                     };
-                    updateCount();
-                });
-                counterObserver.disconnect();
+                    carGroup.rotation.y += deltaMove.x * 0.01;
+                    carGroup.rotation.x += deltaMove.y * 0.01;
+                    // Limit X rotation
+                    carGroup.rotation.x = Math.max(-Math.PI/4, Math.min(Math.PI/4, carGroup.rotation.x));
+                }
+                previousMousePosition = { x: e.offsetX, y: e.offsetY };
+            });
+
+            // Touch support
+            container.addEventListener('touchstart', (e) => { 
+                isDragging = true; autoRotate = false; 
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }, {passive: true});
+            document.addEventListener('touchend', () => { isDragging = false; });
+            container.addEventListener('touchmove', (e) => {
+                if(isDragging) {
+                    const deltaMove = {
+                        x: e.touches[0].clientX - previousMousePosition.x,
+                        y: e.touches[0].clientY - previousMousePosition.y
+                    };
+                    carGroup.rotation.y += deltaMove.x * 0.01;
+                    carGroup.rotation.x += deltaMove.y * 0.01;
+                    carGroup.rotation.x = Math.max(-Math.PI/4, Math.min(Math.PI/4, carGroup.rotation.x));
+                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            }, {passive: true});
+
+            document.getElementById('reset-car-btn').addEventListener('click', () => {
+                carGroup.rotation.set(0,0,0);
+                autoRotate = true;
+            });
+
+            // Add slight bobbing motion
+            let time = 0;
+
+            function animateMachine() {
+                requestAnimationFrame(animateMachine);
+                time += 0.02;
+                
+                if (autoRotate) {
+                    carGroup.rotation.y += 0.005;
+                }
+                
+                // Bobbing suspension effect
+                carGroup.position.y = Math.sin(time) * 0.05;
+
+                renderer.render(scene, camera);
             }
-        }, { threshold: 0.5 });
-        counterObserver.observe(document.getElementById('stats-section'));
+            animateMachine();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        };
+
+        // Initialize ThreeJS after a tiny delay to ensure containers are sized
+        setTimeout(() => {
+            initHeroThreeJS();
+            initMachineThreeJS();
+        }, 100);
 
     </script>
 </body>
