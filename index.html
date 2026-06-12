@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VOYAGERS | Mission Control</title>
+    <title>VOYAGER | Mission Control</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,6 +74,7 @@
             color: #0f172a;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            /* Futuristic Tech Grid & Gradients */
             background-image: 
                 linear-gradient(to right, rgba(16, 185, 129, 0.05) 1px, transparent 1px),
                 linear-gradient(to bottom, rgba(16, 185, 129, 0.05) 1px, transparent 1px),
@@ -162,29 +163,30 @@
         /* SKY AESTHETICS (Shooting Stars & Satellite) */
         .shooting-star {
             position: absolute;
-            width: 150px; height: 2px;
-            background: linear-gradient(90deg, rgba(6,182,212,0.8), transparent);
+            width: 150px; height: 3px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.9), transparent);
             border-radius: 50%;
             animation: shooting 4s linear infinite;
             opacity: 0; z-index: 5;
+            box-shadow: 0 0 15px rgba(6,182,212,0.8);
         }
         @keyframes shooting {
             0% { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 1; }
-            30% { opacity: 1; }
+            20% { opacity: 1; }
             100% { transform: translateX(-800px) translateY(800px) rotate(-45deg); opacity: 0; }
         }
-        .star-1 { top: 10%; right: 10%; animation-delay: 0s; }
-        .star-2 { top: 5%; right: 30%; animation-delay: 2.5s; width: 100px; }
-        .star-3 { top: 20%; right: 5%; animation-delay: 1.2s; width: 200px; background: linear-gradient(90deg, rgba(16,185,129,0.8), transparent); }
+        .star-1 { top: 10%; right: 5%; animation-delay: 0s; width: 100px; }
+        .star-2 { top: -5%; right: 40%; animation-delay: 2.5s; width: 80px; }
+        .star-3 { top: 20%; right: 10%; animation-delay: 1.2s; width: 200px; background: linear-gradient(90deg, rgba(16,185,129,0.9), transparent); box-shadow: 0 0 15px rgba(16,185,129,0.8); }
 
         .satellite-drift {
-            position: absolute; top: 12%; left: -10%; z-index: 4;
-            color: rgba(16, 185, 129, 0.2);
-            animation: orbit 50s linear infinite;
+            position: absolute; top: 15%; left: -10%; z-index: 4;
+            color: rgba(16, 185, 129, 0.4);
+            animation: orbit 45s linear infinite;
         }
         @keyframes orbit {
             0% { transform: translateX(0) translateY(0) rotate(15deg) scale(0.8); }
-            50% { transform: translateX(60vw) translateY(-50px) rotate(20deg) scale(1); }
+            50% { transform: translateX(60vw) translateY(-40px) rotate(20deg) scale(1.1); }
             100% { transform: translateX(120vw) translateY(50px) rotate(25deg) scale(0.8); }
         }
 
@@ -353,9 +355,9 @@
 
         <!-- Navigation with NEW LOGO -->
         <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/50 backdrop-blur-xl border-b border-white/60 shadow-sm transition-all duration-300">
-            <!-- HYPERDRIVE TRIGGER: Click VOYAGERS Logo 3 times quickly -->
+            <!-- HYPERDRIVE TRIGGER: Click VOYAGER Logo 3 times quickly -->
             <div class="font-space font-bold text-xl tracking-[0.2em] text-slate-800 flex items-center gap-2 cursor-pointer select-none" onclick="window.triggerHyperdrive()">
-                <i data-lucide="compass" class="w-5 h-5 text-emerald-500 animate-pulse"></i> VOYAGER<span class="text-emerald-500">S</span>
+                <i data-lucide="compass" class="w-5 h-5 text-emerald-500 animate-pulse"></i> VOYAGE<span class="text-emerald-500">R</span>
             </div>
             <div class="flex gap-8 text-xs font-space font-bold tracking-widest text-slate-500 hidden md:flex">
                 <a href="#mission" class="hover:text-emerald-500 transition-colors" onclick="window.location.hash='';">MISSION</a>
@@ -783,7 +785,7 @@
         <!-- Footer -->
         <footer class="pt-24 pb-12 px-4 border-t border-emerald-200/50 text-center relative z-10 bg-white/60 backdrop-blur-xl shadow-[0_-10px_40px_rgba(16,185,129,0.05)]">
             <div class="max-w-4xl mx-auto relative z-10">
-                <h2 class="text-4xl font-black font-space tracking-tighter mb-6 text-slate-800 hover:scale-105 transition-transform cursor-default">VOYAGERS <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-500">ODYSSEY</span></h2>
+                <h2 class="text-4xl font-black font-space tracking-tighter mb-6 text-slate-800 hover:scale-105 transition-transform cursor-default">VOYAGER <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-500">ODYSSEY</span></h2>
                 <div class="flex flex-wrap justify-center gap-4 text-[10px] md:text-xs font-bold text-slate-500 font-space tracking-[0.3em] mb-12">
                     <span class="hover:text-pink-500 transition-colors">ANOOP</span> // 
                     <span class="hover:text-orange-500 transition-colors">BINTO</span> // 
@@ -812,7 +814,7 @@
         <!-- Login Screen -->
         <div id="loginScreen" class="login-container animate-in">
             <div class="text-center">
-                <h1 class="text-glow-cyan text-4xl font-space font-black mb-2 tracking-widest">VOYAGERS</h1>
+                <h1 class="text-glow-cyan text-4xl font-space font-black mb-2 tracking-widest">VOYAGER</h1>
                 <p class="text-glow-emerald text-2xl font-space font-bold mb-8 tracking-widest">MISSION CONTROL</p>
                 <div class="glass-admin p-8 rounded-2xl max-w-sm w-full login-box mx-auto">
                     <div>
@@ -965,7 +967,7 @@
     <!-- ============================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Setup
@@ -987,12 +989,16 @@
         let publicComms = [];
         let isAuthenticated = false;
         let mapInitialized = false;
-        let hyperdriveMode = false;
-
+        
         let activeBannerIndex = 0;
         let bannerInterval = null;
 
-        // Audio Recording Variables
+        // Hyperdrive Variables
+        let hyperdriveMode = false;
+        let logoClicks = 0;
+        let clickTimer = null;
+
+        // Audio Variables
         let mediaRecorder;
         let audioChunks = [];
         let audioBase64 = null;
@@ -1059,12 +1065,17 @@
             }
         });
 
+        // Initialize Anonymous Auth so public can write Comms
+        const initAuth = async () => {
+            try { await signInAnonymously(auth); } catch (error) { console.log(error); }
+        };
+        initAuth();
+
         // ==========================================
         // EXTERNAL APIS (Weather)
         // ==========================================
         async function fetchWeather() {
             try {
-                // Fetch for Angamaly, Mysore, Bangalore
                 const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=10.2191,12.2958,12.9716&longitude=76.2506,76.6394,77.5946&current_weather=true');
                 const data = await res.json();
                 const cities = ['ANGAMALY', 'MYSORE', 'BANGALORE'];
@@ -1186,7 +1197,6 @@
             const btn = document.getElementById('recordBtn');
             const status = document.getElementById('recordStatus');
 
-            // STOP RECORDING
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
                 btn.innerHTML = `<i data-lucide="mic" class="w-5 h-5"></i>`;
@@ -1197,7 +1207,6 @@
                 return;
             }
 
-            // START RECORDING
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
@@ -1214,7 +1223,7 @@
                         status.classList.remove('text-slate-400', 'text-red-500');
                         status.classList.add('text-emerald-500');
                     };
-                    stream.getTracks().forEach(track => track.stop()); // release mic
+                    stream.getTracks().forEach(track => track.stop()); 
                 };
 
                 mediaRecorder.start();
@@ -1227,7 +1236,6 @@
                 btn.classList.add('animate-pulse', 'bg-red-500', 'text-white', 'border-red-600');
                 lucide.createIcons();
 
-                // 15 sec limit to protect Firebase quota
                 recordingTimer = setTimeout(() => {
                     if (mediaRecorder.state === 'recording') {
                         window.toggleRecord();
@@ -1241,9 +1249,6 @@
             }
         };
 
-        // ==========================================
-        // CREW COMMS POSTING (PUBLIC)
-        // ==========================================
         window.postComm = async () => {
             const author = document.getElementById('commAuthor').value;
             const msg = document.getElementById('commMessage').value.trim();
@@ -1259,13 +1264,8 @@
             const id = Date.now().toString();
             try {
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'comms', id), {
-                    id: id,
-                    author: author,
-                    message: msg,
-                    audio: audioBase64 || null,
-                    timestamp: Date.now()
+                    id: id, author: author, message: msg, audio: audioBase64 || null, timestamp: Date.now()
                 });
-                // Reset form
                 document.getElementById('commMessage').value = '';
                 document.getElementById('commPin').value = '';
                 audioBase64 = null;
@@ -1290,7 +1290,7 @@
                 activateHyperdrive();
                 logoClicks = 0;
             } else {
-                clickTimer = setTimeout(()=>logoClicks=0, 1000);
+                clickTimer = setTimeout(()=> { logoClicks=0; }, 1000);
             }
         };
 
@@ -1308,7 +1308,7 @@
         }
 
         // ==========================================
-        // ADMIN AUTHENTICATION
+        // ADMIN AUTHENTICATION & ACTIONS
         // ==========================================
         window.authenticateAdmin = async () => {
             const email = document.getElementById('emailInput').value.trim();
@@ -1339,9 +1339,6 @@
             window.location.reload();
         };
 
-        // ==========================================
-        // ADMIN ACTIONS
-        // ==========================================
         window.addBanner = async () => {
             if(!isAuthenticated) return showToast('Not authenticated', 'error');
             const text = document.getElementById('bannerText').value.trim();
@@ -1349,7 +1346,9 @@
 
             const id = Date.now().toString();
             try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id), { id: id, text: text, visible: true, timestamp: Date.now() });
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id), {
+                    id: id, text: text, visible: true, timestamp: Date.now()
+                });
                 document.getElementById('bannerText').value = '';
                 showToast('Broadcast live synced', 'success');
             } catch (e) { showToast('Sync failed', 'error'); }
