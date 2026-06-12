@@ -5,24 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIRCROSS ODYSSEY | Mission Launch</title>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- Leaflet CSS for Real Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Three.js (Used ONLY for Hero Background) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Leaflet JS for Real Map -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
@@ -220,13 +214,11 @@
 </head>
 <body class="selection:bg-cyan-500/40">
 
-    <!-- Preloader -->
     <div id="loader">
         <div class="text-cyan-500 font-space tracking-[0.3em] text-sm animate-pulse">ODYSSEY PROTOCOL INITIATING</div>
         <div class="loader-line"></div>
     </div>
 
-    <!-- Navigation -->
     <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-space/50 backdrop-blur-md border-b border-white/5">
         <div class="font-space font-bold text-xl tracking-widest text-white">
             AX<span class="text-cyan-400">7</span>
@@ -243,10 +235,8 @@
         </button>
     </nav>
 
-    <!-- Hero Section -->
     <section id="mission" class="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-10 overflow-hidden">
         
-        <!-- 3D Background Canvas -->
         <div id="hero-canvas-container"></div>
         
         <div class="z-10 flex flex-col items-center text-center px-4 w-full max-w-6xl mt-12">
@@ -285,7 +275,6 @@
         </div>
     </section>
 
-    <!-- Countdown Section -->
     <section id="countdown-section" class="py-24 relative px-4 z-10">
         <div class="absolute inset-0 bg-gradient-to-b from-[#020205] via-[#050510] to-[#020205] -z-10"></div>
         <div class="max-w-6xl mx-auto">
@@ -315,7 +304,6 @@
         </div>
     </section>
 
-    <!-- The Machine (360 Embed) -->
     <section id="machine" class="py-32 px-4 relative border-y border-white/5 bg-[#020205] overflow-hidden">
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-900/10 blur-[150px] rounded-full pointer-events-none"></div>
         
@@ -330,33 +318,24 @@
                 </div>
             </div>
 
-            <!-- Embedded 360 Viewer Container -->
-            <div class="relative w-full aspect-square md:aspect-video rounded-[2rem] overflow-hidden border border-cyan-500/20 shadow-neon-cyan reveal bg-black">
+            <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2rem] overflow-hidden border border-cyan-500/20 shadow-neon-cyan reveal bg-black cursor-grab active:cursor-grabbing">
                 
-                <!-- 
-                ====================================================================
-                PASTE YOUR 360 CAR LINK HERE:
-                Replace the 'src' URL below with your actual 360 viewer or iframe link.
-                (Currently using a placeholder Sketchfab 3D SUV model for demonstration) 
-                ====================================================================
-                -->
-                <iframe 
-                    title="Car 360 View" 
-                    frameborder="0" 
-                    allowfullscreen 
-                    mozallowfullscreen="true" 
-                    webkitallowfullscreen="true" 
-                    allow="autoplay; fullscreen; xr-spatial-tracking" 
-                    xr-spatial-tracking 
-                    execution-while-out-of-viewport 
-                    execution-while-not-rendered 
-                    web-share 
-                    class="w-full h-full"
-                    src="https://www.cartrade.com/citroen-cars/aircross-x/360-view/">
-                </iframe>
+                <video 
+                    id="car-video" 
+                    class="w-full h-full object-cover pointer-events-none" 
+                    src="./assets/aircross-spin.mp4" 
+                    muted 
+                    playsinline 
+                    preload="auto">
+                </video>
+                
+                <div id="drag-overlay" class="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-500 pointer-events-none z-30">
+                    <div class="bg-black/60 border border-cyan-500/50 px-6 py-3 rounded-full text-cyan-400 font-space tracking-widest text-sm flex items-center gap-3 backdrop-blur-md shadow-neon-cyan">
+                        <i data-lucide="move-horizontal" class="w-5 h-5 animate-pulse"></i> DRAG TO INSPECT
+                    </div>
+                </div>
 
-                <!-- Overlay Tactical HUD (Sits on top of the iframe) -->
-                <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between">
+                <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between z-20">
                     <div class="flex justify-between items-start w-full">
                         <div class="text-cyan-400 font-space text-xs tracking-[0.3em] font-bold drop-shadow-md">
                             <span class="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></span> LIVE FEED
@@ -371,21 +350,19 @@
                         <div class="glass-panel p-4 rounded-xl pointer-events-auto max-w-[250px] bg-black/40">
                             <div class="text-xs font-space text-gray-400 tracking-widest mb-2 border-b border-white/10 pb-2">VEHICLE SPECS</div>
                             <ul class="space-y-2 text-sm font-space">
-                                <li class="flex justify-between"><span class="text-cyan-500">CREW LIMIT</span> <span class="font-bold">06/07</span></li>
-                                <li class="flex justify-between"><span class="text-purple-500">CARGO</span> <span class="font-bold">MAX CAPACITY</span></li>
+                                <li class="flex justify-between"><span class="text-cyan-500">CREW LIMIT</span> <span class="font-bold text-white">06/07</span></li>
+                                <li class="flex justify-between"><span class="text-purple-500">CARGO</span> <span class="font-bold text-white">MAX CAPACITY</span></li>
                                 <li class="flex justify-between"><span class="text-blue-500">SYSTEM STATUS</span> <span class="font-bold text-green-400">OPTIMAL</span></li>
                             </ul>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Scanning Line Effect -->
                 <div class="absolute top-0 left-0 w-full h-1 bg-cyan-500/50 shadow-[0_0_20px_#00f0ff] z-20 pointer-events-none opacity-50" style="animation: scan 4s linear infinite;"></div>
             </div>
         </div>
     </section>
 
-    <!-- Real Geographic Map Section -->
     <section id="route" class="py-32 px-4 relative overflow-hidden bg-[#050508]">
         <div class="max-w-7xl mx-auto relative z-10">
             <div class="text-center mb-16 reveal">
@@ -396,18 +373,14 @@
 
             <div class="relative w-full h-[600px] md:h-[700px] rounded-[2rem] overflow-hidden border border-cyan-500/20 shadow-neon-cyan reveal">
                 
-                <!-- Leaflet Map Container -->
                 <div id="real-map" class="w-full h-full z-0 relative"></div>
 
-                <!-- Floating Info HUD over the Map -->
                 <div class="absolute top-6 right-6 w-[85%] max-w-sm glass-panel p-6 rounded-2xl z-20 shadow-2xl transition-all duration-300 pointer-events-auto" id="map-hud">
-                    <!-- Dynamic content injected via JS -->
-                </div>
+                    </div>
             </div>
         </div>
     </section>
 
-    <!-- Crew Section -->
     <section id="crew" class="py-24 px-4 bg-gradient-to-b from-[#050508] to-[#020205] border-t border-white/5 relative">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal">
@@ -421,7 +394,6 @@
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-8">
-                <!-- Crew Cards -->
                 <script>
                     const crew = [
                         {name: "ANOOP", role: "CMDR", icon: "crosshair", color: "cyan"},
@@ -456,7 +428,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="pt-24 pb-12 px-4 border-t border-white/10 text-center relative overflow-hidden bg-[#020205]">
         <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-gradient-to-t from-cyan-900/40 to-transparent blur-[80px] pointer-events-none"></div>
         <div class="max-w-4xl mx-auto relative z-10">
@@ -568,7 +539,6 @@
                 hud.style.transform = 'translateY(0)';
             }, 200);
 
-            // Pan map to location when clicked
             if (realMap) {
                 realMap.setView(data.coords, 8, {
                     animate: true,
@@ -578,12 +548,10 @@
         }
 
         function initLeafletMap() {
-            // Center map between Kerala and Karnataka
             realMap = L.map('real-map', {
-                zoomControl: false // Custom position later if needed
+                zoomControl: false 
             }).setView([11.6, 76.8], 7);
 
-            // Add Dark Matter Tile Layer for Cyberpunk Vibe
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
@@ -592,10 +560,8 @@
 
             L.control.zoom({ position: 'bottomright' }).addTo(realMap);
 
-            // Draw Route Polyline (Glowing effect using two lines)
             const latlngs = mapData.map(d => d.coords);
             
-            // Outer glow line
             L.polyline(latlngs, {
                 color: '#00f0ff',
                 weight: 8,
@@ -604,7 +570,6 @@
                 lineJoin: 'round'
             }).addTo(realMap);
 
-            // Inner solid dash line
             L.polyline(latlngs, {
                 color: '#fff',
                 weight: 2,
@@ -614,7 +579,6 @@
                 lineJoin: 'round'
             }).addTo(realMap);
 
-            // Custom Neon Markers
             mapData.forEach((loc, index) => {
                 let markerColor = index === 0 ? '#00f0ff' : (index === 1 ? '#9d4edd' : '#0077ff');
                 
@@ -632,7 +596,6 @@
 
                 const marker = L.marker(loc.coords, { icon: neonIcon }).addTo(realMap);
                 
-                // Add tooltip on hover
                 marker.bindTooltip(`<div class="font-space font-bold tracking-widest text-xs">${loc.name}</div>`, {
                     direction: 'top',
                     offset: [0, -10],
@@ -642,7 +605,6 @@
                 marker.on('click', () => updateMapInfo(index));
             });
 
-            // Init HUD with first location
             updateMapInfo(0);
         }
 
@@ -661,7 +623,6 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
-            // Grid Terrain
             const geometry = new THREE.PlaneGeometry(200, 200, 40, 40);
             const vertices = geometry.attributes.position.array;
             for (let i = 0; i < vertices.length; i += 3) {
@@ -678,7 +639,6 @@
             plane.position.y = -5;
             scene.add(plane);
 
-            // Stars
             const starsGeo = new THREE.BufferGeometry();
             const starsCount = 500;
             const posArray = new Float32Array(starsCount * 3);
@@ -709,11 +669,69 @@
             });
         };
 
-        // Initialize ThreeJS Background immediately
         setTimeout(() => {
             initHeroThreeJS();
         }, 100);
 
+        // --- 6. Custom 360 Video Scrubbing Logic ---
+        const videoContainer = document.getElementById('video-360-container');
+        const carVideo = document.getElementById('car-video');
+        const dragOverlay = document.getElementById('drag-overlay');
+
+        if (videoContainer && carVideo) {
+            let isDraggingVideo = false;
+            let startX = 0;
+            let startVideoTime = 0;
+
+            // Adjust this to change how fast the car spins relative to mouse movement
+            const sensitivity = 0.005; 
+
+            // Ensure video data is loaded before allowing interaction
+            carVideo.addEventListener('loadedmetadata', () => {
+                
+                const handleDragStart = (e) => {
+                    isDraggingVideo = true;
+                    startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+                    startVideoTime = carVideo.currentTime;
+                    if(dragOverlay) dragOverlay.style.opacity = '0'; // Hide the overlay
+                };
+
+                const handleDragMove = (e) => {
+                    if (!isDraggingVideo) return;
+                    e.preventDefault(); 
+                    
+                    const currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+                    const diffX = currentX - startX;
+                    
+                    // Calculate new time based on drag distance
+                    let newTime = startVideoTime + (diffX * sensitivity);
+                    
+                    // Loop the video seamlessly
+                    if (newTime < 0) {
+                        newTime = carVideo.duration + newTime;
+                    } else if (newTime > carVideo.duration) {
+                        newTime = newTime - carVideo.duration;
+                    }
+                    
+                    carVideo.currentTime = newTime;
+                };
+
+                const handleDragEnd = () => {
+                    isDraggingVideo = false;
+                };
+
+                // Mouse Events
+                videoContainer.addEventListener('mousedown', handleDragStart);
+                window.addEventListener('mousemove', handleDragMove);
+                window.addEventListener('mouseup', handleDragEnd);
+
+                // Touch Events for Mobile
+                videoContainer.addEventListener('touchstart', handleDragStart, { passive: false });
+                window.addEventListener('touchmove', handleDragMove, { passive: false });
+                window.addEventListener('touchend', handleDragEnd);
+            });
+        }
     </script>
 </body>
 </html>
+
