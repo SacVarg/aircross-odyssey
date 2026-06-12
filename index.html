@@ -297,7 +297,7 @@
         </div>
     </section>
 
-    <!-- The Machine (Custom MP4 360 Scrubbing) -->
+    <!-- The Machine (Looping Video Display) -->
     <section id="machine" class="py-32 px-4 relative z-10">
         <div class="max-w-7xl mx-auto relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 reveal">
@@ -306,14 +306,14 @@
                     <h2 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800">Citroën Aircross X</h2>
                 </div>
                 <div class="flex items-center gap-3 glass-panel px-6 py-3 rounded-full text-xs font-space font-bold tracking-widest text-slate-700">
-                    <i data-lucide="hand" class="w-4 h-4 text-violet-500"></i> INTERACTIVE 360° VIEW
+                    <i data-lucide="video" class="w-4 h-4 text-violet-500"></i> LIVE VISUAL FEED
                 </div>
             </div>
 
-            <!-- Custom 360 Video Drag Container -->
-            <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-white cursor-grab active:cursor-grabbing">
+            <!-- Video Display Container -->
+            <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-white">
                 
-                <!-- THE VIDEO TAG (Loads the local MP4 file, autoplay and loop added) -->
+                <!-- THE VIDEO TAG (Auto-loops with no drag interaction) -->
                 <video 
                     id="car-video" 
                     class="w-full h-full object-cover pointer-events-none" 
@@ -321,17 +321,9 @@
                     muted 
                     playsinline 
                     autoplay
-                    loop
-                    preload="auto">
+                    loop>
                 </video>
                 
-                <!-- Drag Instruction Overlay -->
-                <div id="drag-overlay" class="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-sm transition-opacity duration-500 pointer-events-none z-30">
-                    <div class="bg-white/90 border border-slate-200 px-8 py-4 rounded-full text-slate-800 font-space font-bold tracking-widest text-sm flex items-center gap-3 shadow-lg">
-                        <i data-lucide="move-horizontal" class="w-5 h-5 text-violet-500 animate-pulse"></i> DRAG TO INSPECT
-                    </div>
-                </div>
-
                 <!-- Overlay HUD -->
                 <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between z-20">
                     <div class="flex justify-between items-start w-full">
@@ -365,7 +357,7 @@
             <div class="text-center mb-16 reveal">
                 <h3 class="text-cyan-500 font-space font-bold tracking-[0.3em] text-xs mb-3">GEOLOCATION DATA</h3>
                 <h2 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800">Route Trajectory</h2>
-                <p class="text-slate-500 mt-4 font-space font-medium tracking-widest text-sm">INTERACTIVE MAP</p>
+                <p class="text-slate-500 mt-4 font-space font-medium tracking-widest text-sm">INTERACTIVE MAP WITH RETURN TRACE</p>
             </div>
 
             <div class="relative w-full h-[600px] md:h-[700px] rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-white p-2">
@@ -449,9 +441,17 @@
     </style>
 
     <script>
+        // --- 0. Force scroll to top on page load ---
+        // This ensures the site always starts at the Hero "Aircross Odyssey" section.
+        if (history.scrollRestoration) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+
         // --- 1. Init & Preloader ---
         lucide.createIcons();
         window.addEventListener('load', () => {
+            window.scrollTo(0, 0); // Double ensure scroll is at the very top
             setTimeout(() => {
                 const loader = document.getElementById('loader');
                 loader.style.opacity = '0';
@@ -502,11 +502,11 @@
         setInterval(updateCountdown, 1000);
         updateCountdown();
 
-        // --- 4. REAL GEOGRAPHIC MAP (LEAFLET - LIGHT THEME) ---
+        // --- 4. REAL GEOGRAPHIC MAP (LEAFLET - LIGHT THEME WITH RETURN TRACE) ---
         const mapData = [
             { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-pink-500", bg: "bg-pink-100", coords: [10.1960, 76.3860], markerHex: '#ec4899' },
             { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-orange-500", bg: "bg-orange-100", coords: [12.2958, 76.6394], markerHex: '#f97316' },
-            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved.", color: "text-violet-500", bg: "bg-violet-100", coords: [12.9716, 77.5946], markerHex: '#8b5cf6' }
+            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved. Preparing for return trace.", color: "text-violet-500", bg: "bg-violet-100", coords: [12.9716, 77.5946], markerHex: '#8b5cf6' }
         ];
 
         let realMap;
@@ -557,22 +557,33 @@
 
             L.control.zoom({ position: 'bottomright' }).addTo(realMap);
 
-            const latlngs = mapData.map(d => d.coords);
+            const forwardLatLngs = mapData.map(d => d.coords);
+            const returnLatLngs = [mapData[2].coords, mapData[0].coords]; // Bangalore back to Angamaly
             
-            // Vibrant Route Line
-            L.polyline(latlngs, {
-                color: '#ec4899', // Pink
+            // Forward Route (Pink Solid Glow)
+            L.polyline(forwardLatLngs, {
+                color: '#ec4899', 
                 weight: 6,
                 opacity: 0.6,
                 lineCap: 'round',
                 lineJoin: 'round'
             }).addTo(realMap);
 
-            L.polyline(latlngs, {
+            L.polyline(forwardLatLngs, {
                 color: '#fff',
                 weight: 2,
                 opacity: 1,
                 dashArray: '6, 10',
+                lineCap: 'round',
+                lineJoin: 'round'
+            }).addTo(realMap);
+
+            // Return Route Trace (Violet Dashed Line)
+            L.polyline(returnLatLngs, {
+                color: '#8b5cf6', // Violet color for return trip
+                weight: 4,
+                opacity: 0.5,
+                dashArray: '10, 15', // Distinct dashed pattern
                 lineCap: 'round',
                 lineJoin: 'round'
             }).addTo(realMap);
@@ -608,7 +619,6 @@
         const initHeroThreeJS = () => {
             const container = document.getElementById('hero-canvas-container');
             const scene = new THREE.Scene();
-            // Light fog to blend into the white background
             scene.fog = new THREE.FogExp2(0xf8fafc, 0.025);
 
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -618,7 +628,6 @@
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
-            // Ensure clear background
             renderer.setClearColor(0x000000, 0);
             container.appendChild(renderer.domElement);
 
@@ -627,7 +636,6 @@
             for (let i = 0; i < vertices.length; i += 3) {
                 vertices[i + 2] = (Math.random() - 0.5) * 2.5; 
             }
-            // Vibrant Violet Wireframe
             const material = new THREE.MeshBasicMaterial({ 
                 color: 0x8b5cf6, 
                 wireframe: true,
@@ -639,18 +647,15 @@
             plane.position.y = -6;
             scene.add(plane);
 
-            // Bright Particles
             const starsGeo = new THREE.BufferGeometry();
             const starsCount = 400;
             const posArray = new Float32Array(starsCount * 3);
             for(let i=0; i<starsCount*3; i++) {
                 posArray[i] = (Math.random() - 0.5) * 100;
-                // keep particles mostly above the grid
                 if(i%3===1) posArray[i] = Math.abs(posArray[i]); 
             }
             starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
             
-            // Multiple colors for particles
             const colors = [0xec4899, 0xf97316, 0x06b6d4];
             colors.forEach(color => {
                 const mat = new THREE.PointsMaterial({ size: 0.15, color: color, transparent: true, opacity: 0.6 });
@@ -687,64 +692,6 @@
             initHeroThreeJS();
         }, 100);
 
-        // --- 6. Custom 360 Video Scrubbing Logic ---
-        const videoContainer = document.getElementById('video-360-container');
-        const carVideo = document.getElementById('car-video');
-        const dragOverlay = document.getElementById('drag-overlay');
-
-        if (videoContainer && carVideo) {
-            let isDraggingVideo = false;
-            let startX = 0;
-            let startVideoTime = 0;
-
-            const sensitivity = 0.005; 
-
-            carVideo.addEventListener('loadedmetadata', () => {
-                
-                const handleDragStart = (e) => {
-                    isDraggingVideo = true;
-                    // Pause the auto-looping so the user can control the spin
-                    carVideo.pause();
-                    
-                    startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
-                    startVideoTime = carVideo.currentTime;
-                    if(dragOverlay) dragOverlay.style.opacity = '0'; 
-                };
-
-                const handleDragMove = (e) => {
-                    if (!isDraggingVideo) return;
-                    e.preventDefault(); 
-                    
-                    const currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
-                    const diffX = currentX - startX;
-                    
-                    let newTime = startVideoTime + (diffX * sensitivity);
-                    
-                    // Improved modulo math for seamless looping during fast scrubs
-                    if (newTime < 0) {
-                        newTime = carVideo.duration + (newTime % carVideo.duration);
-                    } else if (newTime >= carVideo.duration) {
-                        newTime = newTime % carVideo.duration;
-                    }
-                    
-                    carVideo.currentTime = newTime;
-                };
-
-                const handleDragEnd = () => {
-                    isDraggingVideo = false;
-                    // Optional: If you want it to resume spinning automatically after dragging, uncomment below
-                    // carVideo.play();
-                };
-
-                videoContainer.addEventListener('mousedown', handleDragStart);
-                window.addEventListener('mousemove', handleDragMove);
-                window.addEventListener('mouseup', handleDragEnd);
-
-                videoContainer.addEventListener('touchstart', handleDragStart, { passive: false });
-                window.addEventListener('touchmove', handleDragMove, { passive: false });
-                window.addEventListener('touchend', handleDragEnd);
-            });
-        }
     </script>
 </body>
 </html>
