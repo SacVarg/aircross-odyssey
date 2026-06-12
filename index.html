@@ -75,10 +75,10 @@
             -webkit-font-smoothing: antialiased;
             /* Futuristic Subliminal Grid & Gradients */
             background-image: 
-                linear-gradient(to right, rgba(139, 92, 246, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(to right, rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(16, 185, 129, 0.03) 1px, transparent 1px),
                 radial-gradient(at 0% 0%, hsla(328,100%,84%,0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, hsla(253,100%,84%,0.15) 0px, transparent 50%);
+                radial-gradient(at 100% 0%, hsla(160,100%,84%,0.15) 0px, transparent 50%);
             background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
             background-attachment: fixed;
         }
@@ -95,7 +95,7 @@
         }
         .loader-line::after {
             content: ''; position: absolute; left: -50%; top: 0; height: 100%; width: 50%;
-            background: linear-gradient(90deg, #ec4899, #f97316, #eab308);
+            background: linear-gradient(90deg, #ec4899, #f97316, #10b981);
             animation: loadAnim 1.5s infinite ease-in-out; border-radius: 4px;
         }
         @keyframes loadAnim { 0% { left: -50%; } 100% { left: 100%; } }
@@ -107,7 +107,7 @@
             animation: floatBlob 25s infinite alternate ease-in-out;
         }
         .blob-1 { background: radial-gradient(circle, #fbcfe8, #fbcfe800); top: -20%; left: -10%; }
-        .blob-2 { background: radial-gradient(circle, #c4b5fd, #bfdbfe00); bottom: -10%; right: -10%; animation-delay: -5s; }
+        .blob-2 { background: radial-gradient(circle, #a7f3d0, #a7f3d000); bottom: -10%; right: -10%; animation-delay: -5s; }
         .blob-3 { background: radial-gradient(circle, #fef08a, #fef08a00); top: 40%; left: 30%; animation-delay: -10s; }
 
         @keyframes floatBlob {
@@ -129,7 +129,7 @@
         }
 
         .text-gradient {
-            background: linear-gradient(135deg, #ec4899 0%, #f97316 50%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #ec4899 0%, #f97316 50%, #10b981 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% auto;
             animation: textGradientAnim 6s linear infinite;
         }
@@ -139,7 +139,7 @@
         .reveal.active { opacity: 1; transform: translate(0) scale(1); }
 
         #hero-canvas-container {
-            position: absolute; inset: 0; z-index: 0; overflow: hidden; opacity: 0.95;
+            position: absolute; inset: 0; z-index: 0; overflow: hidden; opacity: 1;
             mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
         }
@@ -201,18 +201,18 @@
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; }
         .gallery-item { position: relative; overflow: hidden; border-radius: 1.5rem; aspect-ratio: 1; cursor: pointer; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid white; }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; filter: brightness(0.95); }
-        .gallery-item:hover { transform: translateY(-10px) scale(1.02); box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3); border-color: #f8fafc; }
+        .gallery-item:hover { transform: translateY(-10px) scale(1.02); box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3); border-color: #f8fafc; }
         .gallery-item:hover img { transform: scale(1.1); filter: brightness(1.1); }
 
         /* HUD Scanner & Brackets */
         .scanline {
-            width: 100%; height: 6px; background: linear-gradient(to right, transparent, rgba(139, 92, 246, 0.9), transparent);
+            width: 100%; height: 6px; background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.9), transparent);
             position: absolute; top: 0; left: 0; z-index: 30; opacity: 0.7;
-            animation: scan 4s cubic-bezier(0.4, 0, 0.6, 1) infinite; box-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
+            animation: scan 4s cubic-bezier(0.4, 0, 0.6, 1) infinite; box-shadow: 0 0 20px rgba(16, 185, 129, 0.8);
         }
         @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
         
-        .hud-bracket { position: absolute; width: 50px; height: 50px; border-color: rgba(139, 92, 246, 0.8); border-style: solid; z-index: 25; pointer-events: none; transition: all 0.5s ease; }
+        .hud-bracket { position: absolute; width: 50px; height: 50px; border-color: rgba(16, 185, 129, 0.8); border-style: solid; z-index: 25; pointer-events: none; transition: all 0.5s ease; }
         .hud-tl { top: 20px; left: 20px; border-width: 4px 0 0 4px; border-radius: 16px 0 0 0; }
         .hud-tr { top: 20px; right: 20px; border-width: 4px 4px 0 0; border-radius: 0 16px 0 0; }
         .hud-bl { bottom: 20px; left: 20px; border-width: 0 0 4px 4px; border-radius: 0 0 0 16px; }
@@ -297,7 +297,7 @@
         <!-- Navigation -->
         <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/50 backdrop-blur-xl border-b border-white/60 shadow-sm transition-all duration-300">
             <div class="font-space font-bold text-xl tracking-widest text-slate-800 flex items-center gap-2">
-                <i data-lucide="compass" class="w-5 h-5 text-pink-500 animate-pulse"></i> AX<span class="text-pink-500">7</span>
+                <i data-lucide="compass" class="w-5 h-5 text-emerald-500 animate-pulse"></i> AX<span class="text-emerald-500">7</span>
             </div>
             <div class="flex gap-8 text-xs font-space font-bold tracking-widest text-slate-500 hidden md:flex">
                 <a href="#mission" class="hover:text-pink-500 transition-colors" onclick="window.location.hash='';">MISSION</a>
@@ -306,7 +306,7 @@
                 <a href="#route" class="hover:text-cyan-500 transition-colors" onclick="window.location.hash='';">ROUTE</a>
                 <a href="#crew" class="hover:text-emerald-500 transition-colors" onclick="window.location.hash='';">CREW</a>
             </div>
-            <a href="#admin" class="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-space font-bold tracking-widest rounded-full hover:shadow-glow-pink hover:scale-105 transition-all flex items-center gap-2">
+            <a href="#admin" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-space font-bold tracking-widest rounded-full hover:shadow-glow-cyan hover:scale-105 transition-all flex items-center gap-2">
                 <i data-lucide="satellite" class="w-4 h-4"></i> ADMIN
             </a>
         </nav>
@@ -343,7 +343,7 @@
             <div id="hero-canvas-container"></div>
             
             <div class="z-10 flex flex-col items-center text-center px-4 w-full max-w-6xl mt-12">
-                <div class="mb-8 inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-pink-200 bg-white/70 text-pink-600 text-xs font-space font-bold tracking-[0.2em] backdrop-blur-md shadow-sm hover:shadow-glow-pink transition-all cursor-default">
+                <div class="mb-8 inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-emerald-200 bg-white/70 text-emerald-600 text-xs font-space font-bold tracking-[0.2em] backdrop-blur-md shadow-sm hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-default">
                     <i data-lucide="sun" class="w-4 h-4 animate-spin-slow" style="animation-duration: 6s;"></i> DEPARTURE: 11 JULY 2026
                 </div>
                 
@@ -355,13 +355,13 @@
                 </h2>
                 
                 <div class="flex flex-col md:flex-row items-center gap-4 text-sm md:text-base font-space font-bold tracking-[0.2em] text-slate-500 mb-12 bg-white/60 border border-white/80 px-8 py-4 rounded-3xl shadow-sm backdrop-blur-sm hover:bg-white/80 transition-colors">
-                    <span class="text-slate-800 hover:text-pink-500 transition-colors cursor-default">ANGAMALY</span>
-                    <div class="w-8 h-px bg-pink-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-pink-400"></div></div>
-                    <i data-lucide="chevrons-down" class="md:hidden text-pink-400 w-4 h-4"></i>
+                    <span class="text-slate-800 hover:text-emerald-500 transition-colors cursor-default">ANGAMALY</span>
+                    <div class="w-8 h-px bg-emerald-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-emerald-400"></div></div>
+                    <i data-lucide="chevrons-down" class="md:hidden text-emerald-400 w-4 h-4"></i>
                     <span class="text-slate-800 hover:text-orange-500 transition-colors cursor-default">MYSORE</span>
                     <div class="w-8 h-px bg-orange-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-orange-400"></div></div>
                     <i data-lucide="chevrons-down" class="md:hidden text-orange-400 w-4 h-4"></i>
-                    <span class="text-slate-800 hover:text-violet-500 transition-colors cursor-default">BANGALORE</span>
+                    <span class="text-slate-800 hover:text-cyan-500 transition-colors cursor-default">BANGALORE</span>
                 </div>
 
                 <p class="max-w-2xl text-slate-600 text-lg md:text-xl font-medium leading-relaxed mb-12 bg-white/30 backdrop-blur-md p-4 rounded-xl border border-white/40 shadow-sm">
@@ -369,10 +369,10 @@
                 </p>
 
                 <!-- Start Button -->
-                <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-white overflow-hidden rounded-2xl border border-pink-200 transition-all hover:border-pink-400 shadow-soft-color hover:shadow-glow-pink">
-                    <div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-pink-100 to-transparent skew-x-[-45deg] group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                    <span class="relative font-space font-bold tracking-[0.2em] text-slate-800 flex items-center gap-3 text-sm md:text-base group-hover:text-pink-600 transition-colors">
-                        START THE JOURNEY <i data-lucide="arrow-down-circle" class="text-pink-500 group-hover:translate-y-1 transition-transform w-5 h-5"></i>
+                <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-white overflow-hidden rounded-2xl border border-emerald-200 transition-all hover:border-emerald-400 shadow-soft-color hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                    <div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-emerald-100 to-transparent skew-x-[-45deg] group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                    <span class="relative font-space font-bold tracking-[0.2em] text-slate-800 flex items-center gap-3 text-sm md:text-base group-hover:text-emerald-600 transition-colors">
+                        START THE JOURNEY <i data-lucide="arrow-down-circle" class="text-emerald-500 group-hover:translate-y-1 transition-transform w-5 h-5"></i>
                     </span>
                 </a>
             </div>
@@ -388,9 +388,9 @@
                     <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">T-Minus Launch</h2>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal hover:border-pink-300">
-                        <span id="cd-days" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter group-hover:text-pink-500 transition-colors">00</span>
-                        <span class="text-pink-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Days</span>
+                    <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal hover:border-emerald-300">
+                        <span id="cd-days" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter group-hover:text-emerald-500 transition-colors">00</span>
+                        <span class="text-emerald-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Days</span>
                     </div>
                     <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal hover:border-orange-300" style="transition-delay: 100ms;">
                         <span id="cd-hours" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter group-hover:text-orange-500 transition-colors">00</span>
@@ -413,13 +413,13 @@
             <div class="max-w-7xl mx-auto relative z-10">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 reveal">
                     <div>
-                        <h3 class="text-violet-500 font-space font-bold tracking-[0.3em] text-xs mb-3 flex items-center gap-2">
+                        <h3 class="text-emerald-500 font-space font-bold tracking-[0.3em] text-xs mb-3 flex items-center gap-2">
                             <i data-lucide="cpu" class="w-4 h-4"></i> THE CHARIOT
                         </h3>
                         <h2 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800">Citroën Aircross X</h2>
                     </div>
-                    <div class="flex items-center gap-3 glass-panel px-6 py-3 rounded-full text-xs font-space font-bold tracking-widest text-slate-700 hover:shadow-glow-violet transition-all cursor-default">
-                        <i data-lucide="video" class="w-4 h-4 text-violet-500 animate-pulse"></i> LIVE VISUAL FEED
+                    <div class="flex items-center gap-3 glass-panel px-6 py-3 rounded-full text-xs font-space font-bold tracking-widest text-slate-700 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-default">
+                        <i data-lucide="video" class="w-4 h-4 text-emerald-500 animate-pulse"></i> LIVE VISUAL FEED
                     </div>
                 </div>
 
@@ -450,23 +450,23 @@
                     <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between z-20">
                         <div class="flex justify-between items-start w-full">
                             <div class="text-white bg-black/40 backdrop-blur-md px-4 py-2 rounded-full font-space text-xs tracking-[0.3em] font-bold shadow-sm flex items-center border border-white/20">
-                                <span class="inline-block w-2 h-2 bg-pink-500 rounded-full animate-pulse mr-2 shadow-[0_0_10px_#ec4899]"></span> CAM_01
+                                <span class="inline-block w-2 h-2 bg-emerald-500 rounded-full animate-pulse mr-2 shadow-[0_0_10px_#10b981]"></span> CAM_01
                             </div>
                             <div class="text-right bg-black/40 backdrop-blur-md px-5 py-2 rounded-2xl shadow-sm border border-white/20">
-                                <div class="font-space font-black text-lg text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">AX-7 PLATFORM</div>
+                                <div class="font-space font-black text-lg text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">AX-7 PLATFORM</div>
                                 <div class="text-slate-300 font-space font-bold text-xs tracking-widest">7-SEATER CONFIG</div>
                             </div>
                         </div>
                         
                         <div class="flex justify-between items-end w-full">
-                            <div class="bg-black/50 backdrop-blur-md border border-violet-500/50 p-5 rounded-2xl pointer-events-auto max-w-[280px] shadow-lg transform transition-transform hover:scale-105 cursor-default group/stats">
-                                <div class="text-xs font-space font-bold text-violet-400 tracking-widest mb-3 border-b border-white/20 pb-2 flex items-center gap-2">
+                            <div class="bg-black/50 backdrop-blur-md border border-emerald-500/50 p-5 rounded-2xl pointer-events-auto max-w-[280px] shadow-lg transform transition-transform hover:scale-105 cursor-default group/stats">
+                                <div class="text-xs font-space font-bold text-emerald-400 tracking-widest mb-3 border-b border-white/20 pb-2 flex items-center gap-2">
                                     <i data-lucide="bar-chart-2" class="w-4 h-4"></i> VEHICLE SPECS
                                 </div>
                                 <ul class="space-y-3 text-sm font-space font-medium text-white">
                                     <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">CREW LIMIT</span> <span class="font-bold">06/07</span></li>
                                     <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">CARGO</span> <span class="font-bold">MAX CAPACITY</span></li>
-                                    <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">SYSTEM STATUS</span> <span class="font-bold text-emerald-400 bg-emerald-900/50 px-2 py-0.5 rounded border border-emerald-500/50 animate-pulse">OPTIMAL</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">SYSTEM STATUS</span> <span class="font-bold text-cyan-400 bg-cyan-900/50 px-2 py-0.5 rounded border border-cyan-500/50 animate-pulse">OPTIMAL</span></li>
                                 </ul>
                             </div>
                         </div>
@@ -612,7 +612,7 @@
         <!-- Footer -->
         <footer class="pt-24 pb-12 px-4 border-t border-slate-200 text-center relative z-10 bg-white/50 backdrop-blur-md">
             <div class="max-w-4xl mx-auto relative z-10">
-                <h2 class="text-4xl font-black font-space tracking-tighter mb-6 text-slate-800 hover:scale-105 transition-transform cursor-default">AIRCROSS <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400">ODYSSEY</span></h2>
+                <h2 class="text-4xl font-black font-space tracking-tighter mb-6 text-slate-800 hover:scale-105 transition-transform cursor-default">AIRCROSS <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-500">ODYSSEY</span></h2>
                 <div class="flex flex-wrap justify-center gap-4 text-[10px] md:text-xs font-bold text-slate-500 font-space tracking-[0.3em] mb-12">
                     <span class="hover:text-pink-500 transition-colors">ANOOP</span> // 
                     <span class="hover:text-orange-500 transition-colors">BINTO</span> // 
@@ -626,7 +626,7 @@
                         <i data-lucide="check-circle" class="w-4 h-4"></i> SYSTEMS READY
                     </div>
                     <a href="#admin" class="px-5 py-2.5 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-full hover:shadow-lg hover:-translate-y-1 transition-all inline-flex items-center gap-2 border border-slate-700">
-                        <i data-lucide="terminal" class="w-4 h-4 text-cyan-400"></i> MISSION CONTROL
+                        <i data-lucide="terminal" class="w-4 h-4 text-emerald-400"></i> MISSION CONTROL
                     </a>
                 </div>
             </div>
@@ -651,7 +651,7 @@
                         <p class="text-xs text-slate-500 mb-8">Authenticating via Firebase Auth</p>
                     </div>
                     
-                    <!-- NEW EXPLICIT EMAIL FIELD -->
+                    <!-- EXPLICIT EMAIL FIELD -->
                     <div class="flex flex-col gap-2 text-left mb-4">
                         <label class="text-sm font-semibold text-glow-cyan flex items-center gap-2"><i data-lucide="mail" class="w-3 h-3"></i> ADMIN EMAIL</label>
                         <input type="email" id="emailInput" class="login-input" placeholder="admin@aircross.com" autocomplete="off">
@@ -769,34 +769,17 @@
         let publicBanners = [];
         let publicGallery = [];
         let isAuthenticated = false;
-        let currentUser = null;
         let mapInitialized = false;
 
         // Banner Rotation Variables
         let activeBannerIndex = 0;
         let bannerInterval = null;
 
-        // 1. Initialize Default Anonymous Auth (For public viewing)
-        const initAuth = async () => {
-            try {
-                await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Auth Error:", error);
-            }
-        };
-
-        // Listen for auth state
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                isAuthenticated = !user.isAnonymous;
-                setupFirestoreListeners();
-            }
-        });
-
-        // 2. Setup Realtime Listeners
+        // 1. Setup Realtime Listeners IMMEDIATELY (Decoupled from Auth to fix visibility bug)
+        let listenersSetup = false;
         function setupFirestoreListeners() {
-            if (!currentUser) return;
+            if (listenersSetup) return;
+            listenersSetup = true;
             
             const bannersRef = collection(db, 'artifacts', appId, 'public', 'data', 'banners');
             const galleryRef = collection(db, 'artifacts', appId, 'public', 'data', 'gallery');
@@ -805,14 +788,39 @@
                 publicBanners = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
                 renderPublicBanners();
                 if(isAuthenticated) renderAdminBanners();
-            }, (error) => console.error("Banner sync error:", error));
+            }, (error) => console.error("Banner sync error (Check rules if persists):", error));
 
             onSnapshot(galleryRef, (snapshot) => {
                 publicGallery = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
                 renderPublicGallery();
                 if(isAuthenticated) renderAdminGallery();
-            }, (error) => console.error("Gallery sync error:", error));
+            }, (error) => console.error("Gallery sync error (Check rules if persists):", error));
         }
+
+        // Call immediately for public viewers
+        setupFirestoreListeners();
+
+        // 2. Auth State Listener (Only for determining Admin privileges)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                isAuthenticated = !user.isAnonymous;
+                if(isAuthenticated) {
+                    renderAdminBanners();
+                    renderAdminGallery();
+                }
+            } else {
+                isAuthenticated = false;
+            }
+        });
+
+        const initAuth = async () => {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.log("Anonymous Auth Note: This is safe to ignore if data is public.", error);
+            }
+        };
+        initAuth();
 
         // ==========================================
         // PUBLIC VIEW RENDERING
@@ -900,7 +908,6 @@
             btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> AUTHENTICATING...`;
             
             try {
-                // Secure login using explicit email and password
                 await signInWithEmailAndPassword(auth, email, pwd);
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('dashboard').classList.add('active');
@@ -1159,9 +1166,6 @@
         }
         window.addEventListener('hashchange', handleRoute);
         
-        // Boot up
-        initAuth();
-        
         // Remove loader and init view
         window.addEventListener('load', () => {
             setTimeout(() => {
@@ -1256,7 +1260,7 @@
                 
                 // The Wavy Wireframe Plane
                 const geo = new THREE.PlaneGeometry(200, 200, 60, 60);
-                const mat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, wireframe: true, transparent: true, opacity: 0.2 });
+                const mat = new THREE.MeshBasicMaterial({ color: 0x10b981, wireframe: true, transparent: true, opacity: 0.25 });
                 const plane = new THREE.Mesh(geo, mat);
                 plane.rotation.x = -Math.PI / 2; plane.position.y = -8;
                 scene.add(plane);
