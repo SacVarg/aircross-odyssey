@@ -195,6 +195,110 @@
             background: rgba(255, 255, 255, 0.95);
         }
 
+        /* Banner Animations */
+        @keyframes bannerSlideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bannerPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.5); }
+        }
+
+        @keyframes shimmerBg {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .event-banner {
+            animation: bannerSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -1000px;
+            width: 1000px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(236, 72, 153, 0.1), transparent);
+            animation: shimmerBg 3s infinite;
+        }
+
+        .event-banner.active {
+            animation: bannerPulse 2s infinite;
+        }
+
+        .banner-status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .banner-status-dot.live {
+            background-color: #ec4899;
+        }
+
+        .banner-status-dot.upcoming {
+            background-color: #f97316;
+        }
+
+        .banner-close {
+            cursor: pointer;
+            transition: transform 0.3s ease, color 0.3s ease;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .banner-close:hover {
+            transform: scale(1.2);
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .event-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 0.2em;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .event-badge.live {
+            background: rgba(236, 72, 153, 0.15);
+            color: #ec4899;
+        }
+
+        .event-badge.upcoming {
+            background: rgba(249, 115, 22, 0.15);
+            color: #f97316;
+        }
+
+        .event-badge.alert {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
     </style>
 </head>
 <body class="selection:bg-pink-200 selection:text-pink-900">
@@ -227,6 +331,45 @@
         </button>
     </nav>
 
+    <!-- Event & Notification Banner -->
+    <div id="event-banner" class="event-banner mx-4 mt-20 px-6 py-4 rounded-2xl relative z-40" style="display: none;">
+        <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+                <!-- Status Indicator -->
+                <div class="flex items-center gap-3">
+                    <span class="banner-status-dot live"></span>
+                    <span class="event-badge live">LIVE EVENT</span>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h3 class="text-sm md:text-base font-space font-bold tracking-[0.1em] text-slate-800 truncate" id="banner-title">
+                            Event Title
+                        </h3>
+                        <p class="text-xs md:text-sm text-slate-600 font-medium" id="banner-description">
+                            Description goes here
+                        </p>
+                    </div>
+                    <div class="text-xs text-slate-500 font-space font-bold tracking-widest mt-2 flex items-center gap-2" id="banner-meta">
+                        <i data-lucide="clock" class="w-3 h-3"></i>
+                        <span>Additional info</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action & Close -->
+            <div class="flex items-center gap-3 flex-shrink-0">
+                <a href="#" id="banner-action" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-space font-bold tracking-widest rounded-full hover:shadow-glow-pink transition-all hover:scale-105 whitespace-nowrap">
+                    VIEW
+                </a>
+                <button class="banner-close text-slate-400 hover:text-slate-600" onclick="closeBanner()">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Hero Section -->
     <section id="mission" class="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-10 overflow-hidden">
         
@@ -234,7 +377,7 @@
         <div id="hero-canvas-container"></div>
         
         <div class="z-10 flex flex-col items-center text-center px-4 w-full max-w-6xl mt-12">
-            <div class="mb-8 inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-pink-200 bg-white/70 text-pink-600 text-xs font-space font-bold tracking-[0.2em] backdrop-blur-md shadow-sm">
+            <div class="mb-8 inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-pink-200 bg-white/70 text-pink-600 text-xs font-space font-bold tracking-[0.2em] backdrop-blur-md">
                 <i data-lucide="sun" class="w-4 h-4 animate-spin-slow" style="animation-duration: 6s;"></i> DEPARTURE: 11 JULY 2026
             </div>
             
@@ -245,7 +388,7 @@
                 Odyssey
             </h2>
             
-            <div class="flex flex-col md:flex-row items-center gap-4 text-sm md:text-base font-space font-bold tracking-[0.2em] text-slate-500 mb-12 bg-white/60 border border-white/80 px-8 py-3 rounded-full backdrop-blur-md shadow-sm">
+            <div class="flex flex-col md:flex-row items-center gap-4 text-sm md:text-base font-space font-bold tracking-[0.2em] text-slate-500 mb-12 bg-white/60 border border-white/80 px-8 py-3 rounded-2xl">
                 <span class="text-slate-800">ANGAMALY</span>
                 <div class="w-8 h-px bg-pink-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-pink-400"></div></div>
                 <i data-lucide="arrow-down" class="md:hidden text-pink-400 w-4 h-4"></i>
@@ -259,7 +402,7 @@
                 6 Friends. 1 Citroën Aircross X 7-Seater.<br>Hundreds of kilometers mapping a beautiful adventure.
             </p>
 
-            <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-white/80 overflow-hidden rounded-2xl border border-white transition-all hover:border-pink-300 shadow-soft-color cursor-pointer z-20 hover:scale-[1.02]">
+            <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-white/80 overflow-hidden rounded-2xl border border-white transition-all hover:border-pink-300 shadow-soft-color">
                 <div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-pink-100 to-transparent skew-x-[-45deg] group-hover:animate-[shimmer_1.5s_infinite]"></div>
                 <span class="relative font-space font-bold tracking-[0.2em] text-slate-800 flex items-center gap-3 text-sm md:text-base">
                     START THE JOURNEY <i data-lucide="arrow-down-circle" class="text-pink-500 group-hover:translate-y-1 transition-transform w-5 h-5"></i>
@@ -366,7 +509,7 @@
                 <div id="real-map" class="w-full h-full rounded-[2rem] z-0 relative"></div>
 
                 <!-- Floating Info HUD over the Map -->
-                <div class="absolute top-8 right-8 w-[85%] max-w-sm bg-white/95 backdrop-blur-xl border border-slate-100 p-6 rounded-3xl z-20 shadow-2xl transition-all duration-300 pointer-events-auto" id="map-hud">
+                <div class="absolute top-8 right-8 w-[85%] max-w-sm bg-white/95 backdrop-blur-xl border border-slate-100 p-6 rounded-3xl z-20 shadow-2xl transition-all duration-300 pointer-events-none" id="map-hud">
                     <!-- Dynamic content injected via JS -->
                 </div>
             </div>
@@ -401,7 +544,7 @@
                         document.write(`
                             <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-2 transition-all duration-500 reveal" style="transition-delay: ${i*100}ms">
                                 <div class="flex justify-between items-start mb-8">
-                                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-${c.color}-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-${c.color}-600 transition-all shadow-sm relative overflow-hidden group-hover:scale-110">
+                                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-${c.color}-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-${c.color}-500">
                                         ${c.name.charAt(0)}
                                     </div>
                                     <div class="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:text-${c.color}-500 group-hover:bg-${c.color}-50 transition-colors shadow-sm">
@@ -448,10 +591,101 @@
         }
         window.scrollTo(0, 0);
 
+        // --- 0.5 Event Banner System ---
+        const bannerConfig = {
+            events: [
+                {
+                    id: 'launch-countdown',
+                    type: 'live',
+                    title: 'LAUNCH SEQUENCE ACTIVATED',
+                    description: '6 days until departure from Angamaly',
+                    meta: 'Next: 11 JULY 2026',
+                    action: '#countdown-section',
+                    active: true,
+                    duration: null
+                },
+                {
+                    id: 'crew-ready',
+                    type: 'upcoming',
+                    title: 'CREW BOARDING BEGINS',
+                    description: 'All 6 members confirmed. Systems at full capacity.',
+                    meta: 'Status: 100% READY',
+                    action: '#crew',
+                    active: true,
+                    duration: 60000
+                },
+                {
+                    id: 'route-mapped',
+                    type: 'live',
+                    title: 'ROUTE TRAJECTORY LOCKED',
+                    description: 'Angamaly → Mysore → Bangalore confirmed',
+                    meta: '~800km total distance',
+                    action: '#route',
+                    active: true,
+                    duration: null
+                }
+            ],
+            
+            currentIndex: 0,
+            autoRotateInterval: 8000,
+            autoRotateTimer: null
+        };
+
+        function showBanner(eventIndex = 0) {
+            const banner = document.getElementById('event-banner');
+            if (!bannerConfig.events[eventIndex]) return;
+
+            const event = bannerConfig.events[eventIndex];
+            
+            document.getElementById('banner-title').textContent = event.title;
+            document.getElementById('banner-description').textContent = event.description;
+            document.getElementById('banner-meta').innerHTML = `
+                <i data-lucide="clock" class="w-3 h-3"></i>
+                <span>${event.meta}</span>
+            `;
+            document.getElementById('banner-action').href = event.action;
+            
+            const badge = banner.querySelector('.event-badge');
+            badge.className = `event-badge ${event.type}`;
+            badge.textContent = event.type === 'live' ? 'LIVE EVENT' : 'UPCOMING';
+
+            const dot = banner.querySelector('.banner-status-dot');
+            dot.className = `banner-status-dot ${event.type}`;
+
+            if (event.type === 'alert') {
+                banner.classList.add('active');
+            } else {
+                banner.classList.remove('active');
+            }
+
+            banner.style.display = 'flex';
+            lucide.createIcons();
+
+            bannerConfig.currentIndex = eventIndex;
+
+            if (bannerConfig.autoRotateTimer) clearInterval(bannerConfig.autoRotateTimer);
+            
+            if (bannerConfig.events.filter(e => e.active).length > 1) {
+                bannerConfig.autoRotateTimer = setInterval(() => {
+                    const activeEvents = bannerConfig.events
+                        .map((e, i) => e.active ? i : null)
+                        .filter(i => i !== null);
+                    
+                    const nextIndex = activeEvents[(activeEvents.indexOf(bannerConfig.currentIndex) + 1) % activeEvents.length];
+                    showBanner(nextIndex);
+                }, bannerConfig.autoRotateInterval);
+            }
+        }
+
+        function closeBanner() {
+            document.getElementById('event-banner').style.display = 'none';
+            if (bannerConfig.autoRotateTimer) clearInterval(bannerConfig.autoRotateTimer);
+        }
+
         // --- 1. Init & Preloader ---
         lucide.createIcons();
         window.addEventListener('load', () => {
-            window.scrollTo(0, 0); // Double ensure scroll is at the very top
+            window.scrollTo(0, 0);
             setTimeout(() => {
                 const loader = document.getElementById('loader');
                 loader.style.opacity = '0';
@@ -461,6 +695,12 @@
                     document.body.classList.remove('overflow-hidden');
                     reveal();
                     initLeafletMap();
+                    
+                    // Initialize banner after page loads
+                    const activeEvents = bannerConfig.events.filter(e => e.active);
+                    if (activeEvents.length > 0) {
+                        showBanner(bannerConfig.events.indexOf(activeEvents[0]));
+                    }
                 }, 800);
             }, 1000); 
         });
@@ -504,9 +744,9 @@
 
         // --- 4. REAL GEOGRAPHIC MAP (LEAFLET - LIGHT THEME WITH RETURN TRACE) ---
         const mapData = [
-            { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-pink-500", bg: "bg-pink-100", coords: [10.1960, 76.3860], markerHex: '#ec4899' },
-            { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-orange-500", bg: "bg-orange-100", coords: [12.2958, 76.6394], markerHex: '#f97316' },
-            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved. Preparing for return trace.", color: "text-violet-500", bg: "bg-violet-100", coords: [12.9716, 77.5946], markerHex: '#8b5cf6' }
+            { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-pink-500", bg: "bg-pink-100", coords: [10.2168, 76.3702], markerHex: "#ec4899" },
+            { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-orange-500", bg: "bg-orange-100", coords: [12.2958, 76.6394], markerHex: "#f97316" },
+            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved. Preparing for return trace.", color: "text-violet-500", bg: "bg-violet-100", coords: [12.9716, 77.5946], markerHex: "#8b5cf6" },
         ];
 
         let realMap;
@@ -548,7 +788,6 @@
                 zoomControl: false 
             }).setView([11.6, 76.8], 7);
 
-            // Light Colorful Map Tile (Carto Voyager)
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OpenStreetMap &copy; CARTO',
                 subdomains: 'abcd',
@@ -558,9 +797,8 @@
             L.control.zoom({ position: 'bottomright' }).addTo(realMap);
 
             const forwardLatLngs = mapData.map(d => d.coords);
-            const returnLatLngs = [mapData[2].coords, mapData[0].coords]; // Bangalore back to Angamaly
+            const returnLatLngs = [mapData[2].coords, mapData[0].coords];
             
-            // Forward Route (Pink Solid Glow)
             L.polyline(forwardLatLngs, {
                 color: '#ec4899', 
                 weight: 6,
@@ -578,12 +816,11 @@
                 lineJoin: 'round'
             }).addTo(realMap);
 
-            // Return Route Trace (Violet Dashed Line)
             L.polyline(returnLatLngs, {
-                color: '#8b5cf6', // Violet color for return trip
+                color: '#8b5cf6',
                 weight: 4,
                 opacity: 0.5,
-                dashArray: '10, 15', // Distinct dashed pattern
+                dashArray: '10, 15',
                 lineCap: 'round',
                 lineJoin: 'round'
             }).addTo(realMap);
@@ -691,6 +928,12 @@
         setTimeout(() => {
             initHeroThreeJS();
         }, 100);
+
+        // Allow external updates to banner
+        window.updateBannerEvent = (eventId) => {
+            const eventIndex = bannerConfig.events.findIndex(e => e.id === eventId);
+            if (eventIndex !== -1) showBanner(eventIndex);
+        };
 
     </script>
 </body>
