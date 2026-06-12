@@ -1,0 +1,877 @@
+<!-- AIRCROSS ODYSSEY - SECURE HOMEPAGE WITH DYNAMIC CONTENT -->
+<!-- This version fetches banners and gallery from JSON files instead of LocalStorage -->
+<!-- NO sensitive data is stored in browser - all content loaded from public data files -->
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIRCROSS ODYSSEY | Mission Launch</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Real Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        space: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        light: '#f8fafc',
+                        dark: '#0f172a',
+                        brand: {
+                            pink: '#ec4899',
+                            orange: '#f97316',
+                            yellow: '#eab308',
+                            cyan: '#06b6d4',
+                            violet: '#8b5cf6'
+                        }
+                    },
+                    boxShadow: {
+                        'soft-color': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'glow-pink': '0 0 20px rgba(236, 72, 153, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Preloader */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.8, 0, 0.2, 1);
+        }
+        .loader-line {
+            width: 200px;
+            height: 3px;
+            background: rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        .loader-line::after {
+            content: '';
+            position: absolute;
+            left: -50%;
+            top: 0;
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, #ec4899, #f97316, #eab308);
+            animation: loadAnim 1.5s infinite ease-in-out;
+            border-radius: 4px;
+        }
+        @keyframes loadAnim {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
+
+        /* Colorful Floating Blobs Background */
+        .blob-bg {
+            position: fixed;
+            width: 60vw;
+            height: 60vw;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.6;
+            animation: floatBlob 20s infinite alternate ease-in-out;
+        }
+        .blob-1 { background: radial-gradient(circle, #fbcfe8, #fbcfe800); top: -20%; left: -10%; }
+        .blob-2 { background: radial-gradient(circle, #bfdbfe, #bfdbfe00); bottom: -10%; right: -10%; animation-delay: -5s; }
+        .blob-3 { background: radial-gradient(circle, #fef08a, #fef08a00); top: 40%; left: 30%; animation-delay: -10s; }
+
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(5%, 10%) scale(1.1); }
+            100% { transform: translate(-5%, -5%) scale(0.9); }
+        }
+
+        /* Light Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.5);
+        }
+        
+        .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 15px 50px -10px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255,255,255,0.8);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #f97316 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: textGradientAnim 6s linear infinite;
+        }
+        @keyframes textGradientAnim {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        /* Scroll Reveal Utility */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px) scale(0.98);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translate(0) scale(1);
+        }
+
+        /* Hero Background Container */
+        #hero-canvas-container {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            opacity: 0.8;
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+        }
+
+        /* Custom Leaflet Map Styling for Light Theme */
+        .leaflet-container {
+            background: #f8fafc !important;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .leaflet-control-zoom a {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            color: #0f172a !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        }
+
+        /* Banner Animations */
+        @keyframes bannerSlideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bannerPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.5); }
+        }
+
+        @keyframes shimmerBg {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .event-banner {
+            animation: bannerSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -1000px;
+            width: 1000px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(236, 72, 153, 0.1), transparent);
+            animation: shimmerBg 3s infinite;
+        }
+
+        .event-banner.active {
+            animation: bannerPulse 2s infinite;
+        }
+
+        .banner-status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .banner-status-dot.live {
+            background-color: #ec4899;
+        }
+
+        .banner-status-dot.upcoming {
+            background-color: #f97316;
+        }
+
+        .banner-close {
+            cursor: pointer;
+            transition: transform 0.3s ease, color 0.3s ease;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .banner-close:hover {
+            transform: scale(1.2);
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .event-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 0.2em;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .event-badge.live {
+            background: rgba(236, 72, 153, 0.15);
+            color: #ec4899;
+        }
+
+        .event-badge.upcoming {
+            background: rgba(249, 115, 22, 0.15);
+            color: #f97316;
+        }
+
+        /* Gallery Lightbox */
+        .gallery-lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9998;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gallery-lightbox.active {
+            display: flex;
+        }
+
+        .lightbox-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 0.5rem;
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            padding: 1rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .lightbox-nav:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .lightbox-prev {
+            left: 1rem;
+        }
+
+        .lightbox-next {
+            right: 1rem;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            width: 50px;
+            height: 50px;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Masonry Gallery */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            aspect-ratio: 1;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Mission carousel */
+        .mission-carousel {
+            display: flex;
+            overflow: hidden;
+            gap: 1rem;
+            scroll-behavior: smooth;
+        }
+
+        .mission-card {
+            flex-shrink: 0;
+            min-width: 280px;
+            animation: slideInCard 0.6s ease-out;
+        }
+
+        @keyframes slideInCard {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="selection:bg-pink-200 selection:text-pink-900">
+
+    <!-- Preloader -->
+    <div id="loader">
+        <div class="text-slate-800 font-space font-bold tracking-[0.3em] text-sm">PREPARING JOURNEY</div>
+        <div class="loader-line"></div>
+    </div>
+
+    <!-- Animated Background Blobs -->
+    <div class="blob-bg blob-1"></div>
+    <div class="blob-bg blob-2"></div>
+    <div class="blob-bg blob-3"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/40 backdrop-blur-xl border-b border-white/60 shadow-sm">
+        <div class="font-space font-bold text-xl tracking-widest text-slate-800">
+            AX<span class="text-pink-500">7</span>
+        </div>
+        <div class="flex gap-8 text-xs font-space font-bold tracking-widest text-slate-500 hidden md:flex">
+            <a href="#mission" class="hover:text-pink-500 transition-colors">MISSION</a>
+            <a href="#countdown-section" class="hover:text-orange-500 transition-colors">LAUNCH</a>
+            <a href="#machine" class="hover:text-violet-500 transition-colors">MACHINE</a>
+            <a href="#route" class="hover:text-cyan-500 transition-colors">ROUTE</a>
+            <a href="#crew" class="hover:text-yellow-500 transition-colors">CREW</a>
+        </div>
+        <button class="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-space font-bold tracking-widest rounded-full hover:shadow-glow-pink hover:scale-105 transition-all">
+            ENGAGE
+        </button>
+    </nav>
+
+    <!-- Event Banner (Loaded from JSON) -->
+    <div id="event-banner" class="event-banner mx-4 mt-20 px-6 py-4 rounded-2xl relative z-40" style="display: none;">
+        <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="flex items-center gap-3">
+                    <span class="banner-status-dot live"></span>
+                    <span class="event-badge live">LIVE UPDATE</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h3 class="text-sm md:text-base font-space font-bold tracking-[0.1em] text-slate-800 truncate" id="banner-title">
+                            Banner Text
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <button class="banner-close text-slate-400 hover:text-slate-600" onclick="closeBanner()">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="mission" class="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-10 overflow-hidden">
+        <div id="hero-canvas-container"></div>
+        
+        <div class="z-10 flex flex-col items-center text-center px-4 w-full max-w-6xl mt-12">
+            <div class="mb-8 inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-pink-200 bg-white/70 text-pink-600 text-xs font-space font-bold tracking-[0.2em] backdrop-blur-md">
+                <i data-lucide="sun" class="w-4 h-4 animate-spin-slow" style="animation-duration: 6s;"></i> DEPARTURE: 11 JULY 2026
+            </div>
+            
+            <h1 class="text-6xl md:text-8xl lg:text-[140px] font-black font-space mb-2 tracking-tighter leading-none text-slate-900 drop-shadow-sm">
+                AIRCROSS
+            </h1>
+            <h2 class="text-5xl md:text-7xl lg:text-8xl font-black font-space mb-8 tracking-tighter leading-none text-gradient uppercase">
+                Odyssey
+            </h2>
+            
+            <div class="flex flex-col md:flex-row items-center gap-4 text-sm md:text-base font-space font-bold tracking-[0.2em] text-slate-500 mb-12 bg-white/60 border border-white/80 px-8 py-3 rounded-full">
+                <span class="text-slate-800">ANGAMALY</span>
+                <div class="w-8 h-px bg-pink-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-pink-400"></div></div>
+                <span class="text-slate-800">MYSORE</span>
+                <div class="w-8 h-px bg-orange-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-orange-400"></div></div>
+                <span class="text-slate-800">BANGALORE</span>
+            </div>
+
+            <p class="max-w-2xl text-slate-600 text-lg md:text-xl font-medium leading-relaxed mb-12">
+                6 Friends. 1 Citroën Aircross X 7-Seater.<br>Hundreds of kilometers mapping a beautiful adventure.
+            </p>
+
+            <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-white/80 overflow-hidden rounded-2xl border border-white transition-all hover:border-pink-300 shadow-soft-color">
+                <div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-pink-100 to-transparent skew-x-[-45deg] group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                <span class="relative font-space font-bold tracking-[0.2em] text-slate-800 flex items-center gap-3 text-sm md:text-base">
+                    START THE JOURNEY <i data-lucide="arrow-down-circle" class="text-pink-500 group-hover:translate-y-1 transition-transform w-5 h-5"></i>
+                </span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Live Mission Updates Section (Loaded from JSON) -->
+    <section id="live-updates" class="py-24 relative px-4 z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h3 class="text-pink-500 font-space font-bold tracking-[0.3em] text-xs mb-3">REAL-TIME NOTIFICATIONS</h3>
+                <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">Live Mission Updates</h2>
+            </div>
+
+            <div id="missionUpdatesContainer" class="reveal">
+                <p class="text-center text-slate-500">Loading updates...</p>
+            </div>
+
+            <div id="emptyUpdatesMessage" class="text-center py-12 reveal" style="display:none;">
+                <p class="text-slate-500 text-lg font-medium">No mission updates yet. Check back soon for launch information.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Countdown Section -->
+    <section id="countdown-section" class="py-24 relative px-4 z-10">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h3 class="text-orange-500 font-space font-bold tracking-[0.3em] text-xs mb-3">ADVENTURE CLOCK</h3>
+                <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">T-Minus Launch</h2>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal">
+                    <span id="cd-days" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter">00</span>
+                    <span class="text-pink-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Days</span>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal" style="transition-delay: 100ms;">
+                    <span id="cd-hours" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter">00</span>
+                    <span class="text-orange-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Hours</span>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal" style="transition-delay: 200ms;">
+                    <span id="cd-minutes" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter">00</span>
+                    <span class="text-yellow-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Minutes</span>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal" style="transition-delay: 300ms;">
+                    <span id="cd-seconds" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter">00</span>
+                    <span class="text-violet-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Seconds</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Machine Section -->
+    <section id="machine" class="py-32 px-4 relative z-10">
+        <div class="max-w-7xl mx-auto relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 reveal">
+                <div>
+                    <h3 class="text-violet-500 font-space font-bold tracking-[0.3em] text-xs mb-3">THE CHARIOT</h3>
+                    <h2 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800">Citroën Aircross X</h2>
+                </div>
+                <div class="flex items-center gap-3 glass-panel px-6 py-3 rounded-full text-xs font-space font-bold tracking-widest text-slate-700">
+                    <i data-lucide="video" class="w-4 h-4 text-violet-500"></i> LIVE VISUAL FEED
+                </div>
+            </div>
+
+            <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-white">
+                <video 
+                    id="car-video" 
+                    class="w-full h-full object-cover pointer-events-none" 
+                    src="./assets/aircross-spin.mp4" 
+                    muted 
+                    playsinline 
+                    autoplay
+                    loop>
+                </video>
+            </div>
+        </div>
+    </section>
+
+    <!-- Memory Vault Gallery Section (Loaded from JSON) -->
+    <section id="memory-vault" class="py-32 px-4 relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h3 class="text-cyan-500 font-space font-bold tracking-[0.3em] text-xs mb-3">ARCHIVED MEMORIES</h3>
+                <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">Memory Vault</h2>
+            </div>
+
+            <div id="galleryContainer" class="reveal">
+                <div class="gallery-grid">
+                    <!-- Gallery items injected here -->
+                </div>
+            </div>
+
+            <div id="emptyGalleryMessage" class="text-center py-12 reveal" style="display:none;">
+                <p class="text-slate-500 text-lg font-medium">Future memories will be archived here.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Lightbox -->
+    <div id="galleryLightbox" class="gallery-lightbox">
+        <div class="lightbox-content">
+            <img id="lightboxImage" class="lightbox-image" src="" alt="Gallery image">
+            <button class="lightbox-nav lightbox-prev" onclick="previousGalleryImage()">&lt;</button>
+            <button class="lightbox-nav lightbox-next" onclick="nextGalleryImage()">&gt;</button>
+            <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        </div>
+    </div>
+
+    <!-- Crew Section -->
+    <section id="crew" class="py-32 px-4 relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal">
+                <div>
+                    <h3 class="text-pink-500 font-space font-bold tracking-[0.3em] text-xs mb-3">THE SQUAD</h3>
+                    <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">Meet the Crew</h2>
+                </div>
+                <div class="text-xs font-space font-bold tracking-widest bg-white border border-slate-200 px-5 py-2.5 rounded-full text-slate-600 shadow-sm">
+                    CAPACITY: <span class="text-emerald-500">100%</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
+                <script>
+                    const crew = [
+                        {name: "ANOOP", role: "COMMANDER", icon: "crosshair", color: "pink"},
+                        {name: "BINTO", role: "NAVIGATOR", icon: "compass", color: "orange"},
+                        {name: "AALWYN", role: "STRATEGIST", icon: "map-pin", color: "violet"},
+                        {name: "VIGNESH", role: "ENTERTAINMENT", icon: "radio", color: "cyan"},
+                        {name: "SACHIN", role: "FOOD OPS", icon: "coffee", color: "emerald"},
+                        {name: "ABRAHAM", role: "CHAOS", icon: "zap", color: "yellow"}
+                    ];
+                    crew.forEach((c, i) => {
+                        document.write(`
+                            <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-2 transition-all duration-500 reveal" style="transition-delay: ${i*100}ms">
+                                <div class="flex justify-between items-start mb-8">
+                                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-${c.color}-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-${c.color}-600">
+                                        ${c.name.charAt(0)}
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:text-${c.color}-500 group-hover:bg-${c.color}-50 transition-colors shadow-sm">
+                                        <i data-lucide="${c.icon}" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 font-space tracking-[0.2em] mb-1">ID: ${String(i+1).padStart(3, '0')}</div>
+                                    <h3 class="text-xl md:text-2xl font-black font-space tracking-tight text-slate-800">${c.name}</h3>
+                                    <p class="text-xs font-space font-bold text-${c.color}-500 uppercase tracking-widest mt-1.5">${c.role}</p>
+                                </div>
+                            </div>
+                        `);
+                    });
+                </script>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="pt-24 pb-12 px-4 border-t border-slate-200 text-center relative overflow-hidden z-10 bg-white/50 backdrop-blur-md">
+        <div class="max-w-4xl mx-auto relative z-10">
+            <h2 class="text-4xl font-black font-space tracking-tighter mb-6 text-slate-800">AIRCROSS <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400">ODYSSEY</span></h2>
+            <div class="flex flex-wrap justify-center gap-4 text-[10px] md:text-xs font-bold text-slate-500 font-space tracking-[0.3em] mb-12">
+                <span>ANOOP</span> // <span>BINTO</span> // <span>AALWYN</span> // <span>VIGNESH</span> // <span>SACHIN</span> // <span>ABRAHAM</span>
+            </div>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-xs font-bold text-slate-400 font-space tracking-widest">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> SYSTEMS READY FOR DEPARTURE
+                </div>
+                <a href="admin.html" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-full hover:shadow-glow-pink hover:scale-105 transition-all inline-flex items-center gap-2">
+                    <i data-lucide="settings" class="w-4 h-4"></i> ADMIN
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        @keyframes shimmer {
+            100% { left: 200%; }
+        }
+    </style>
+
+    <script>
+        // ==========================================
+        // SECURE CONTENT LOADING FROM JSON FILES
+        // ==========================================
+        // NO LocalStorage - all data fetched fresh from public JSON files
+        
+        async function loadBanners() {
+            try {
+                const response = await fetch('data/banners.json');
+                if (!response.ok) throw new Error('Failed to load banners');
+                const banners = await response.json();
+                return banners.filter(b => b.visible === true);
+            } catch (error) {
+                console.error('Error loading banners:', error);
+                return [];
+            }
+        }
+
+        async function loadGallery() {
+            try {
+                const response = await fetch('data/gallery.json');
+                if (!response.ok) throw new Error('Failed to load gallery');
+                const gallery = await response.json();
+                return gallery.filter(img => img.visible === true);
+            } catch (error) {
+                console.error('Error loading gallery:', error);
+                return [];
+            }
+        }
+
+        let currentGalleryIndex = 0;
+        let currentGalleryItems = [];
+
+        async function renderMissionUpdates() {
+            const banners = await loadBanners();
+            const container = document.getElementById('missionUpdatesContainer');
+            const emptyMessage = document.getElementById('emptyUpdatesMessage');
+
+            if (banners.length === 0) {
+                container.innerHTML = '';
+                emptyMessage.style.display = 'block';
+                return;
+            }
+
+            emptyMessage.style.display = 'none';
+
+            container.innerHTML = `
+                <div class="mission-carousel">
+                    ${banners.map((banner, index) => `
+                        <div class="mission-card">
+                            <div class="glass-panel p-6 rounded-2xl h-full">
+                                <div class="flex items-start gap-3 mb-4">
+                                    <div class="w-2 h-2 bg-pink-500 rounded-full mt-1.5"></div>
+                                    <h3 class="text-lg font-space font-bold text-slate-800 flex-1">${banner.text}</h3>
+                                </div>
+                                <p class="text-sm text-slate-500 font-medium">Mission Update #${index + 1}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function renderGallery() {
+            const gallery = await loadGallery();
+            currentGalleryItems = gallery;
+            const container = document.getElementById('galleryContainer').querySelector('.gallery-grid');
+            const emptyMessage = document.getElementById('emptyGalleryMessage');
+
+            if (gallery.length === 0) {
+                container.innerHTML = '';
+                emptyMessage.style.display = 'block';
+                return;
+            }
+
+            emptyMessage.style.display = 'none';
+
+            container.innerHTML = gallery.map((item, index) => `
+                <div class="gallery-item" onclick="openLightbox(${index})">
+                    <img src="${item.imageUrl}" alt="Gallery memory" loading="lazy">
+                </div>
+            `).join('');
+        }
+
+        function openLightbox(index) {
+            currentGalleryIndex = index;
+            if (currentGalleryItems[index]) {
+                const lightbox = document.getElementById('galleryLightbox');
+                document.getElementById('lightboxImage').src = currentGalleryItems[index].imageUrl;
+                lightbox.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeLightbox() {
+            document.getElementById('galleryLightbox').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function nextGalleryImage() {
+            currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryItems.length;
+            document.getElementById('lightboxImage').src = currentGalleryItems[currentGalleryIndex].imageUrl;
+        }
+
+        function previousGalleryImage() {
+            currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryItems.length) % currentGalleryItems.length;
+            document.getElementById('lightboxImage').src = currentGalleryItems[currentGalleryIndex].imageUrl;
+        }
+
+        // Keyboard support for lightbox
+        document.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('galleryLightbox');
+            if (lightbox.classList.contains('active')) {
+                if (e.key === 'ArrowRight') nextGalleryImage();
+                if (e.key === 'ArrowLeft') previousGalleryImage();
+                if (e.key === 'Escape') closeLightbox();
+            }
+        });
+
+        async function displayFirstBanner() {
+            const banners = await loadBanners();
+            if (banners.length > 0) {
+                const banner = banners[0];
+                document.getElementById('banner-title').textContent = banner.text;
+                document.getElementById('event-banner').style.display = 'flex';
+            }
+        }
+
+        function closeBanner() {
+            document.getElementById('event-banner').style.display = 'none';
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        lucide.createIcons();
+        
+        window.addEventListener('load', () => {
+            window.scrollTo(0, 0);
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                loader.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    document.body.classList.remove('overflow-hidden');
+                    reveal();
+                }, 500);
+            }, 800);
+
+            // Load content from JSON files
+            renderMissionUpdates();
+            renderGallery();
+            displayFirstBanner();
+        });
+
+        // ==========================================
+        // COUNTDOWN TIMER
+        // ==========================================
+        function updateCountdown() {
+            const targetDate = new Date('2026-07-11').getTime();
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance > 0) {
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById('cd-days').textContent = String(days).padStart(2, '0');
+                document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('cd-minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('cd-seconds').textContent = String(seconds).padStart(2, '0');
+            }
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // ==========================================
+        // SCROLL REVEAL
+        // ==========================================
+        function reveal() {
+            const reveals = document.querySelectorAll('.reveal');
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', reveal);
+        reveal();
+    </script>
+</body>
+</html>
