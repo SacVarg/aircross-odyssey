@@ -5,18 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIRCROSS ODYSSEY | Mission Launch</title>
     
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     
+    <!-- Leaflet CSS for Real Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
@@ -28,17 +34,19 @@
                         space: ['Space Grotesk', 'sans-serif'],
                     },
                     colors: {
-                        space: '#020205',
+                        light: '#f8fafc',
+                        dark: '#0f172a',
                         brand: {
-                            cyan: '#00f0ff',
-                            blue: '#0077ff',
-                            purple: '#9d4edd',
-                            dark: '#050508'
+                            pink: '#ec4899',
+                            orange: '#f97316',
+                            yellow: '#eab308',
+                            cyan: '#06b6d4',
+                            violet: '#8b5cf6'
                         }
                     },
                     boxShadow: {
-                        'neon-cyan': '0 0 20px rgba(0, 240, 255, 0.4), 0 0 40px rgba(0, 240, 255, 0.2)',
-                        'neon-purple': '0 0 20px rgba(157, 78, 221, 0.4), 0 0 40px rgba(157, 78, 221, 0.2)',
+                        'soft-color': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'glow-pink': '0 0 20px rgba(236, 72, 153, 0.3)',
                     }
                 }
             }
@@ -47,8 +55,8 @@
 
     <style>
         body {
-            background-color: #020205;
-            color: #ffffff;
+            background-color: #f8fafc;
+            color: #0f172a;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
@@ -57,7 +65,7 @@
         #loader {
             position: fixed;
             inset: 0;
-            background: #020205;
+            background: #ffffff;
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -67,11 +75,12 @@
         }
         .loader-line {
             width: 200px;
-            height: 2px;
-            background: rgba(255,255,255,0.1);
+            height: 3px;
+            background: rgba(0,0,0,0.05);
             position: relative;
             overflow: hidden;
             margin-top: 20px;
+            border-radius: 4px;
         }
         .loader-line::after {
             content: '';
@@ -80,92 +89,71 @@
             top: 0;
             height: 100%;
             width: 50%;
-            background: #00f0ff;
+            background: linear-gradient(90deg, #ec4899, #f97316, #eab308);
             animation: loadAnim 1.5s infinite ease-in-out;
+            border-radius: 4px;
         }
         @keyframes loadAnim {
             0% { left: -50%; }
             100% { left: 100%; }
         }
 
-        /* Glassmorphism & Effects */
+        /* Colorful Floating Blobs Background */
+        .blob-bg {
+            position: fixed;
+            width: 60vw;
+            height: 60vw;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.6;
+            animation: floatBlob 20s infinite alternate ease-in-out;
+        }
+        .blob-1 { background: radial-gradient(circle, #fbcfe8, #fbcfe800); top: -20%; left: -10%; }
+        .blob-2 { background: radial-gradient(circle, #bfdbfe, #bfdbfe00); bottom: -10%; right: -10%; animation-delay: -5s; }
+        .blob-3 { background: radial-gradient(circle, #fef08a, #fef08a00); top: 40%; left: 30%; animation-delay: -10s; }
+
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(5%, 10%) scale(1.1); }
+            100% { transform: translate(-5%, -5%) scale(0.9); }
+        }
+
+        /* Light Glassmorphism */
         .glass-panel {
-            background: rgba(10, 10, 15, 0.4);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 240, 255, 0.1);
-            box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.5);
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.5);
         }
         
         .glass-panel:hover {
-            border-color: rgba(0, 240, 255, 0.4);
-            box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.1), 0 0 30px rgba(0, 240, 255, 0.2);
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 15px 50px -10px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255,255,255,0.8);
         }
 
         .text-gradient {
-            background: linear-gradient(135deg, #00f0ff 0%, #0077ff 50%, #9d4edd 100%);
+            background: linear-gradient(135deg, #ec4899 0%, #f97316 50%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-size: 200% auto;
-            animation: textGradientAnim 5s linear infinite;
+            animation: textGradientAnim 6s linear infinite;
         }
         @keyframes textGradientAnim {
             0% { background-position: 0% center; }
             100% { background-position: 200% center; }
         }
 
-        .glitch-text {
-            position: relative;
-        }
-        .glitch-text::before, .glitch-text::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0.8;
-        }
-        .glitch-text::before {
-            left: 2px;
-            text-shadow: -2px 0 #00f0ff;
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim 5s infinite linear alternate-reverse;
-        }
-        .glitch-text::after {
-            left: -2px;
-            text-shadow: -2px 0 #9d4edd;
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim2 5s infinite linear alternate-reverse;
-        }
-        @keyframes glitch-anim {
-            0% { clip: rect(32px, 9999px, 28px, 0); }
-            20% { clip: rect(12px, 9999px, 54px, 0); }
-            40% { clip: rect(74px, 9999px, 93px, 0); }
-            60% { clip: rect(43px, 9999px, 12px, 0); }
-            80% { clip: rect(82px, 9999px, 45px, 0); }
-            100% { clip: rect(54px, 9999px, 23px, 0); }
-        }
-        @keyframes glitch-anim2 {
-            0% { clip: rect(12px, 9999px, 83px, 0); }
-            20% { clip: rect(65px, 9999px, 23px, 0); }
-            40% { clip: rect(43px, 9999px, 73px, 0); }
-            60% { clip: rect(21px, 9999px, 14px, 0); }
-            80% { clip: rect(94px, 9999px, 52px, 0); }
-            100% { clip: rect(32px, 9999px, 64px, 0); }
-        }
-
         /* Scroll Reveal Utility */
         .reveal {
             opacity: 0;
-            transform: translateY(60px) scale(0.95);
-            transition: all 1.2s cubic-bezier(0.19, 1, 0.22, 1);
-            filter: blur(10px);
+            transform: translateY(40px) scale(0.98);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .reveal.active {
             opacity: 1;
             transform: translate(0) scale(1);
-            filter: blur(0);
         }
 
         /* Hero Background Container */
@@ -174,251 +162,264 @@
             inset: 0;
             z-index: 0;
             overflow: hidden;
-        }
-        #hero-canvas-container::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at center, transparent 0%, #020205 80%);
-            pointer-events: none;
+            opacity: 0.8;
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
         }
 
-        /* Custom Leaflet Map Styling */
+        /* Custom Leaflet Map Styling for Light Theme */
         .leaflet-container {
-            background: #020205 !important;
+            background: #f8fafc !important;
             font-family: 'Space Grotesk', sans-serif;
         }
         .leaflet-control-zoom a {
-            background-color: rgba(10, 10, 15, 0.8) !important;
-            color: #00f0ff !important;
-            border: 1px solid rgba(0, 240, 255, 0.3) !important;
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            color: #0f172a !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
         }
-        .custom-neon-marker {
+        .custom-vibrant-marker {
             display: flex;
             justify-content: center;
             align-items: center;
         }
         .leaflet-popup-content-wrapper {
-            background: rgba(10, 10, 15, 0.9);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            color: #0f172a;
             backdrop-filter: blur(10px);
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         .leaflet-popup-tip {
-            background: rgba(10, 10, 15, 0.9);
-            border: 1px solid rgba(0, 240, 255, 0.3);
+            background: rgba(255, 255, 255, 0.95);
         }
 
     </style>
 </head>
-<body class="selection:bg-cyan-500/40">
+<body class="selection:bg-pink-200 selection:text-pink-900">
 
+    <!-- Preloader -->
     <div id="loader">
-        <div class="text-cyan-500 font-space tracking-[0.3em] text-sm animate-pulse">ODYSSEY PROTOCOL INITIATING</div>
+        <div class="text-slate-800 font-space font-bold tracking-[0.3em] text-sm">PREPARING JOURNEY</div>
         <div class="loader-line"></div>
     </div>
 
-    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-space/50 backdrop-blur-md border-b border-white/5">
-        <div class="font-space font-bold text-xl tracking-widest text-white">
-            AX<span class="text-cyan-400">7</span>
+    <!-- Animated Background Blobs -->
+    <div class="blob-bg blob-1"></div>
+    <div class="blob-bg blob-2"></div>
+    <div class="blob-bg blob-3"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/40 backdrop-blur-xl border-b border-white/60 shadow-sm">
+        <div class="font-space font-bold text-xl tracking-widest text-slate-800">
+            AX<span class="text-pink-500">7</span>
         </div>
-        <div class="flex gap-6 text-xs font-space tracking-widest text-gray-400 hidden md:flex">
-            <a href="#mission" class="hover:text-cyan-400 transition-colors">MISSION</a>
-            <a href="#countdown-section" class="hover:text-cyan-400 transition-colors">LAUNCH</a>
-            <a href="#machine" class="hover:text-cyan-400 transition-colors">MACHINE</a>
-            <a href="#route" class="hover:text-cyan-400 transition-colors">ROUTE</a>
-            <a href="#crew" class="hover:text-cyan-400 transition-colors">CREW</a>
+        <div class="flex gap-8 text-xs font-space font-bold tracking-widest text-slate-500 hidden md:flex">
+            <a href="#mission" class="hover:text-pink-500 transition-colors">MISSION</a>
+            <a href="#countdown-section" class="hover:text-orange-500 transition-colors">LAUNCH</a>
+            <a href="#machine" class="hover:text-violet-500 transition-colors">MACHINE</a>
+            <a href="#route" class="hover:text-cyan-500 transition-colors">ROUTE</a>
+            <a href="#crew" class="hover:text-yellow-500 transition-colors">CREW</a>
         </div>
-        <button class="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-space tracking-widest rounded-full hover:bg-cyan-500/20 hover:shadow-neon-cyan transition-all">
+        <button class="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-space font-bold tracking-widest rounded-full hover:shadow-glow-pink hover:scale-105 transition-all">
             ENGAGE
         </button>
     </nav>
 
+    <!-- Hero Section -->
     <section id="mission" class="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-10 overflow-hidden">
         
+        <!-- 3D Background Canvas -->
         <div id="hero-canvas-container"></div>
         
         <div class="z-10 flex flex-col items-center text-center px-4 w-full max-w-6xl mt-12">
-            <div class="mb-6 inline-flex items-center gap-2 px-5 py-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-xs font-space tracking-[0.2em] backdrop-blur-md shadow-neon-cyan">
-                <i data-lucide="crosshair" class="w-4 h-4 animate-spin-slow" style="animation-duration: 4s;"></i> LAUNCH DATE: 11 JULY 2026
+            <div class="mb-8 inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-pink-200 bg-white/70 text-pink-600 text-xs font-space font-bold tracking-[0.2em] backdrop-blur-md shadow-sm">
+                <i data-lucide="sun" class="w-4 h-4 animate-spin-slow" style="animation-duration: 6s;"></i> DEPARTURE: 11 JULY 2026
             </div>
             
-            <h1 class="text-6xl md:text-8xl lg:text-[140px] font-black font-space mb-2 tracking-tighter leading-none glitch-text" data-text="AIRCROSS">
+            <h1 class="text-6xl md:text-8xl lg:text-[140px] font-black font-space mb-2 tracking-tighter leading-none text-slate-900 drop-shadow-sm">
                 AIRCROSS
             </h1>
             <h2 class="text-5xl md:text-7xl lg:text-8xl font-black font-space mb-8 tracking-tighter leading-none text-gradient uppercase">
                 Odyssey
             </h2>
             
-            <div class="flex flex-col md:flex-row items-center gap-4 text-sm md:text-base font-space tracking-[0.2em] text-gray-400 mb-12 bg-white/5 border border-white/10 px-8 py-3 rounded-full backdrop-blur-sm">
-                <span class="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">ANGAMALY</span>
-                <div class="w-8 h-px bg-cyan-500/50 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-cyan-500"></div></div>
-                <i data-lucide="chevron-down" class="md:hidden text-cyan-500 w-4 h-4"></i>
-                <span class="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">MYSORE</span>
-                <div class="w-8 h-px bg-purple-500/50 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-purple-500"></div></div>
-                <i data-lucide="chevron-down" class="md:hidden text-purple-500 w-4 h-4"></i>
-                <span class="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">BANGALORE</span>
+            <div class="flex flex-col md:flex-row items-center gap-4 text-sm md:text-base font-space font-bold tracking-[0.2em] text-slate-500 mb-12 bg-white/60 border border-white/80 px-8 py-3 rounded-full backdrop-blur-md shadow-sm">
+                <span class="text-slate-800">ANGAMALY</span>
+                <div class="w-8 h-px bg-pink-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-pink-400"></div></div>
+                <i data-lucide="arrow-down" class="md:hidden text-pink-400 w-4 h-4"></i>
+                <span class="text-slate-800">MYSORE</span>
+                <div class="w-8 h-px bg-orange-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-orange-400"></div></div>
+                <i data-lucide="arrow-down" class="md:hidden text-orange-400 w-4 h-4"></i>
+                <span class="text-slate-800">BANGALORE</span>
             </div>
 
-            <p class="max-w-2xl text-gray-400 text-lg md:text-xl font-light leading-relaxed mb-12 drop-shadow-md">
-                6 Friends. 1 Citroën Aircross X 7-Seater.<br>Hundreds of kilometers mapping the ultimate adventure.
+            <p class="max-w-2xl text-slate-600 text-lg md:text-xl font-medium leading-relaxed mb-12">
+                6 Friends. 1 Citroën Aircross X 7-Seater.<br>Hundreds of kilometers mapping a beautiful adventure.
             </p>
 
-            <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-transparent overflow-hidden rounded-xl border border-cyan-500/50 transition-all hover:border-cyan-400 shadow-neon-cyan cursor-pointer z-20">
-                <div class="absolute inset-0 bg-cyan-500/10 group-hover:bg-cyan-500/30 transition-all duration-300"></div>
-                <div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-45deg] group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                <span class="relative font-space font-bold tracking-[0.2em] text-white flex items-center gap-3 text-sm md:text-base">
-                    INITIALIZE SEQUENCE <i data-lucide="arrow-down-circle" class="group-hover:translate-y-1 transition-transform w-5 h-5"></i>
+            <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-white/80 overflow-hidden rounded-2xl border border-white transition-all hover:border-pink-300 shadow-soft-color cursor-pointer z-20 hover:scale-[1.02]">
+                <div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-pink-100 to-transparent skew-x-[-45deg] group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                <span class="relative font-space font-bold tracking-[0.2em] text-slate-800 flex items-center gap-3 text-sm md:text-base">
+                    START THE JOURNEY <i data-lucide="arrow-down-circle" class="text-pink-500 group-hover:translate-y-1 transition-transform w-5 h-5"></i>
                 </span>
             </a>
         </div>
     </section>
 
+    <!-- Countdown Section -->
     <section id="countdown-section" class="py-24 relative px-4 z-10">
-        <div class="absolute inset-0 bg-gradient-to-b from-[#020205] via-[#050510] to-[#020205] -z-10"></div>
         <div class="max-w-6xl mx-auto">
             <div class="text-center mb-16 reveal">
-                <h3 class="text-cyan-500 font-space tracking-[0.3em] text-xs font-bold mb-3">SYSTEM CLOCK</h3>
-                <h2 class="text-4xl md:text-5xl font-black font-space uppercase">T-Minus Launch</h2>
+                <h3 class="text-orange-500 font-space font-bold tracking-[0.3em] text-xs mb-3">ADVENTURE CLOCK</h3>
+                <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">T-Minus Launch</h2>
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal">
-                    <span id="cd-days" class="text-6xl md:text-8xl font-black font-space text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">00</span>
-                    <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Days</span>
+                <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal">
+                    <span id="cd-days" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter">00</span>
+                    <span class="text-pink-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Days</span>
                 </div>
-                <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 100ms;">
-                    <span id="cd-hours" class="text-6xl md:text-8xl font-black font-space text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">00</span>
-                    <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Hours</span>
+                <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal" style="transition-delay: 100ms;">
+                    <span id="cd-hours" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter">00</span>
+                    <span class="text-orange-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Hours</span>
                 </div>
-                <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 200ms;">
-                    <span id="cd-minutes" class="text-6xl md:text-8xl font-black font-space text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">00</span>
-                    <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Minutes</span>
+                <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal" style="transition-delay: 200ms;">
+                    <span id="cd-minutes" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter">00</span>
+                    <span class="text-yellow-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Minutes</span>
                 </div>
-                <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 300ms;">
-                    <span id="cd-seconds" class="text-6xl md:text-8xl font-black font-space text-cyan-300 tracking-tighter drop-shadow-[0_0_20px_rgba(0,240,255,0.5)]">00</span>
-                    <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Seconds</span>
+                <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal" style="transition-delay: 300ms;">
+                    <span id="cd-seconds" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter">00</span>
+                    <span class="text-violet-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Seconds</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="machine" class="py-32 px-4 relative border-y border-white/5 bg-[#020205] overflow-hidden">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-900/10 blur-[150px] rounded-full pointer-events-none"></div>
-        
+    <!-- The Machine (Custom MP4 360 Scrubbing) -->
+    <section id="machine" class="py-32 px-4 relative z-10">
         <div class="max-w-7xl mx-auto relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 reveal">
                 <div>
-                    <h3 class="text-cyan-500 font-space tracking-[0.3em] text-xs font-bold mb-3">HARDWARE ASSET</h3>
-                    <h2 class="text-4xl md:text-6xl font-black font-space uppercase">Citroën Aircross X</h2>
+                    <h3 class="text-violet-500 font-space font-bold tracking-[0.3em] text-xs mb-3">THE CHARIOT</h3>
+                    <h2 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800">Citroën Aircross X</h2>
                 </div>
-                <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-5 py-2 rounded-full text-xs font-space tracking-widest text-white backdrop-blur-md">
-                    <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-cyan-400"></i> INTERACTIVE 360° VIEW
+                <div class="flex items-center gap-3 glass-panel px-6 py-3 rounded-full text-xs font-space font-bold tracking-widest text-slate-700">
+                    <i data-lucide="hand" class="w-4 h-4 text-violet-500"></i> INTERACTIVE 360° VIEW
                 </div>
             </div>
 
-            <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2rem] overflow-hidden border border-cyan-500/20 shadow-neon-cyan reveal bg-black cursor-grab active:cursor-grabbing">
+            <!-- Custom 360 Video Drag Container -->
+            <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-white cursor-grab active:cursor-grabbing">
                 
+                <!-- THE VIDEO TAG (Loads the local MP4 file, autoplay and loop added) -->
                 <video 
                     id="car-video" 
                     class="w-full h-full object-cover pointer-events-none" 
                     src="./assets/aircross-spin.mp4" 
                     muted 
                     playsinline 
+                    autoplay
+                    loop
                     preload="auto">
                 </video>
                 
-                <div id="drag-overlay" class="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-500 pointer-events-none z-30">
-                    <div class="bg-black/60 border border-cyan-500/50 px-6 py-3 rounded-full text-cyan-400 font-space tracking-widest text-sm flex items-center gap-3 backdrop-blur-md shadow-neon-cyan">
-                        <i data-lucide="move-horizontal" class="w-5 h-5 animate-pulse"></i> DRAG TO INSPECT
+                <!-- Drag Instruction Overlay -->
+                <div id="drag-overlay" class="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-sm transition-opacity duration-500 pointer-events-none z-30">
+                    <div class="bg-white/90 border border-slate-200 px-8 py-4 rounded-full text-slate-800 font-space font-bold tracking-widest text-sm flex items-center gap-3 shadow-lg">
+                        <i data-lucide="move-horizontal" class="w-5 h-5 text-violet-500 animate-pulse"></i> DRAG TO INSPECT
                     </div>
                 </div>
 
+                <!-- Overlay HUD -->
                 <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between z-20">
                     <div class="flex justify-between items-start w-full">
-                        <div class="text-cyan-400 font-space text-xs tracking-[0.3em] font-bold drop-shadow-md">
-                            <span class="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></span> LIVE FEED
+                        <div class="text-slate-800 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full font-space text-xs tracking-[0.3em] font-bold shadow-sm flex items-center">
+                            <span class="inline-block w-2 h-2 bg-pink-500 rounded-full animate-pulse mr-2"></span> LIVE VIEW
                         </div>
-                        <div class="text-right drop-shadow-md">
-                            <div class="text-white font-space font-bold text-lg">AX-7 PLATFORM</div>
-                            <div class="text-gray-300 font-space text-xs tracking-widest">7-SEATER CONFIG</div>
+                        <div class="text-right bg-white/80 backdrop-blur-md px-5 py-2 rounded-2xl shadow-sm">
+                            <div class="text-slate-900 font-space font-black text-lg">AX-7 PLATFORM</div>
+                            <div class="text-slate-500 font-space font-bold text-xs tracking-widest">7-SEATER CONFIG</div>
                         </div>
                     </div>
                     
                     <div class="flex justify-between items-end w-full">
-                        <div class="glass-panel p-4 rounded-xl pointer-events-auto max-w-[250px] bg-black/40">
-                            <div class="text-xs font-space text-gray-400 tracking-widest mb-2 border-b border-white/10 pb-2">VEHICLE SPECS</div>
-                            <ul class="space-y-2 text-sm font-space">
-                                <li class="flex justify-between"><span class="text-cyan-500">CREW LIMIT</span> <span class="font-bold text-white">06/07</span></li>
-                                <li class="flex justify-between"><span class="text-purple-500">CARGO</span> <span class="font-bold text-white">MAX CAPACITY</span></li>
-                                <li class="flex justify-between"><span class="text-blue-500">SYSTEM STATUS</span> <span class="font-bold text-green-400">OPTIMAL</span></li>
+                        <div class="bg-white/85 backdrop-blur-md border border-white p-5 rounded-2xl pointer-events-auto max-w-[280px] shadow-lg">
+                            <div class="text-xs font-space font-bold text-slate-400 tracking-widest mb-3 border-b border-slate-200 pb-2">VEHICLE SPECS</div>
+                            <ul class="space-y-3 text-sm font-space font-medium">
+                                <li class="flex justify-between"><span class="text-slate-500">CREW LIMIT</span> <span class="font-bold text-slate-900">06/07</span></li>
+                                <li class="flex justify-between"><span class="text-slate-500">CARGO</span> <span class="font-bold text-slate-900">MAX CAPACITY</span></li>
+                                <li class="flex justify-between"><span class="text-slate-500">SYSTEM STATUS</span> <span class="font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded">OPTIMAL</span></li>
                             </ul>
                         </div>
                     </div>
                 </div>
-                
-                <div class="absolute top-0 left-0 w-full h-1 bg-cyan-500/50 shadow-[0_0_20px_#00f0ff] z-20 pointer-events-none opacity-50" style="animation: scan 4s linear infinite;"></div>
             </div>
         </div>
     </section>
 
-    <section id="route" class="py-32 px-4 relative overflow-hidden bg-[#050508]">
+    <!-- Real Geographic Map Section -->
+    <section id="route" class="py-32 px-4 relative z-10">
         <div class="max-w-7xl mx-auto relative z-10">
             <div class="text-center mb-16 reveal">
-                <h3 class="text-purple-500 font-space tracking-[0.3em] text-xs font-bold mb-3">GEOLOCATION DATA</h3>
-                <h2 class="text-4xl md:text-6xl font-black font-space uppercase">Route Trajectory</h2>
-                <p class="text-gray-400 mt-4 font-space tracking-widest text-sm">REAL-TIME TACTICAL MAP</p>
+                <h3 class="text-cyan-500 font-space font-bold tracking-[0.3em] text-xs mb-3">GEOLOCATION DATA</h3>
+                <h2 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800">Route Trajectory</h2>
+                <p class="text-slate-500 mt-4 font-space font-medium tracking-widest text-sm">INTERACTIVE MAP</p>
             </div>
 
-            <div class="relative w-full h-[600px] md:h-[700px] rounded-[2rem] overflow-hidden border border-cyan-500/20 shadow-neon-cyan reveal">
+            <div class="relative w-full h-[600px] md:h-[700px] rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-white p-2">
                 
-                <div id="real-map" class="w-full h-full z-0 relative"></div>
+                <!-- Leaflet Map Container -->
+                <div id="real-map" class="w-full h-full rounded-[2rem] z-0 relative"></div>
 
-                <div class="absolute top-6 right-6 w-[85%] max-w-sm glass-panel p-6 rounded-2xl z-20 shadow-2xl transition-all duration-300 pointer-events-auto" id="map-hud">
-                    </div>
+                <!-- Floating Info HUD over the Map -->
+                <div class="absolute top-8 right-8 w-[85%] max-w-sm bg-white/95 backdrop-blur-xl border border-slate-100 p-6 rounded-3xl z-20 shadow-2xl transition-all duration-300 pointer-events-auto" id="map-hud">
+                    <!-- Dynamic content injected via JS -->
+                </div>
             </div>
         </div>
     </section>
 
-    <section id="crew" class="py-24 px-4 bg-gradient-to-b from-[#050508] to-[#020205] border-t border-white/5 relative">
+    <!-- Crew Section -->
+    <section id="crew" class="py-32 px-4 relative z-10">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal">
                 <div>
-                    <h3 class="text-cyan-500 font-space tracking-[0.3em] text-xs font-bold mb-3">BIOMETRIC DATA</h3>
-                    <h2 class="text-4xl md:text-5xl font-black font-space uppercase">The Crew</h2>
+                    <h3 class="text-pink-500 font-space font-bold tracking-[0.3em] text-xs mb-3">THE SQUAD</h3>
+                    <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">Meet the Crew</h2>
                 </div>
-                <div class="text-xs font-space tracking-widest border border-white/20 px-4 py-2 rounded-full text-gray-400">
-                    SQUAD CAPACITY: <span class="text-green-400 font-bold">100%</span>
+                <div class="text-xs font-space font-bold tracking-widest bg-white border border-slate-200 px-5 py-2.5 rounded-full text-slate-600 shadow-sm">
+                    CAPACITY: <span class="text-emerald-500">100%</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
+                <!-- Crew Cards -->
                 <script>
                     const crew = [
-                        {name: "ANOOP", role: "CMDR", icon: "crosshair", color: "cyan"},
-                        {name: "BINTO", role: "NAV", icon: "compass", color: "blue"},
-                        {name: "AALWYN", role: "ROUTE", icon: "map-pin", color: "purple"},
-                        {name: "VIGNESH", role: "ENT", icon: "radio", color: "pink"},
-                        {name: "SACHIN", role: "RATIONS", icon: "coffee", color: "green"},
+                        {name: "ANOOP", role: "COMMANDER", icon: "crosshair", color: "pink"},
+                        {name: "BINTO", role: "NAVIGATOR", icon: "compass", color: "orange"},
+                        {name: "AALWYN", role: "STRATEGIST", icon: "map-pin", color: "violet"},
+                        {name: "VIGNESH", role: "ENTERTAINMENT", icon: "radio", color: "cyan"},
+                        {name: "SACHIN", role: "FOOD OPS", icon: "coffee", color: "emerald"},
                         {name: "ABRAHAM", role: "CHAOS", icon: "zap", color: "yellow"}
                     ];
                     crew.forEach((c, i) => {
                         document.write(`
-                            <div class="glass-panel p-6 rounded-2xl group hover:-translate-y-2 transition-all duration-500 reveal border-t-2 border-t-${c.color}-500/50" style="transition-delay: ${i*100}ms">
+                            <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-2 transition-all duration-500 reveal" style="transition-delay: ${i*100}ms">
                                 <div class="flex justify-between items-start mb-8">
-                                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-[#050510] border border-white/10 flex items-center justify-center text-xl md:text-2xl font-black font-space text-gray-500 group-hover:text-${c.color}-400 group-hover:border-${c.color}-400/50 transition-all shadow-inner relative overflow-hidden">
-                                        <div class="absolute inset-0 bg-${c.color}-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-${c.color}-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-${c.color}-600 transition-all shadow-sm relative overflow-hidden group-hover:scale-110">
                                         ${c.name.charAt(0)}
                                     </div>
-                                    <div class="p-2 rounded bg-white/5 text-${c.color}-400">
-                                        <i data-lucide="${c.icon}" class="w-4 h-4 md:w-5 md:h-5"></i>
+                                    <div class="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:text-${c.color}-500 group-hover:bg-${c.color}-50 transition-colors shadow-sm">
+                                        <i data-lucide="${c.icon}" class="w-5 h-5"></i>
                                     </div>
                                 </div>
                                 <div>
-                                    <div class="text-[10px] text-gray-500 font-space tracking-[0.2em] mb-1">ID: ${String(i+1).padStart(3, '0')}</div>
-                                    <h3 class="text-lg md:text-2xl font-black font-space tracking-tight group-hover:text-white transition-colors">${c.name}</h3>
-                                    <p class="text-xs font-space text-${c.color}-400 uppercase tracking-widest mt-1 opacity-80">${c.role}</p>
+                                    <div class="text-[10px] font-bold text-slate-400 font-space tracking-[0.2em] mb-1">ID: ${String(i+1).padStart(3, '0')}</div>
+                                    <h3 class="text-xl md:text-2xl font-black font-space tracking-tight text-slate-800">${c.name}</h3>
+                                    <p class="text-xs font-space font-bold text-${c.color}-500 uppercase tracking-widest mt-1.5">${c.role}</p>
                                 </div>
                             </div>
                         `);
@@ -428,24 +429,20 @@
         </div>
     </section>
 
-    <footer class="pt-24 pb-12 px-4 border-t border-white/10 text-center relative overflow-hidden bg-[#020205]">
-        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-gradient-to-t from-cyan-900/40 to-transparent blur-[80px] pointer-events-none"></div>
+    <!-- Footer -->
+    <footer class="pt-24 pb-12 px-4 border-t border-slate-200 text-center relative overflow-hidden z-10 bg-white/50 backdrop-blur-md">
         <div class="max-w-4xl mx-auto relative z-10">
-            <h2 class="text-4xl font-black font-space tracking-tighter mb-6 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-600">AIRCROSS <span class="text-cyan-400">ODYSSEY</span></h2>
-            <div class="flex flex-wrap justify-center gap-4 text-[10px] md:text-xs text-gray-500 font-space tracking-[0.3em] mb-12">
+            <h2 class="text-4xl font-black font-space tracking-tighter mb-6 text-slate-800">AIRCROSS <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400">ODYSSEY</span></h2>
+            <div class="flex flex-wrap justify-center gap-4 text-[10px] md:text-xs font-bold text-slate-500 font-space tracking-[0.3em] mb-12">
                 <span>ANOOP</span> // <span>BINTO</span> // <span>AALWYN</span> // <span>VIGNESH</span> // <span>SACHIN</span> // <span>ABRAHAM</span>
             </div>
-            <div class="text-xs text-cyan-500/50 font-space tracking-widest flex items-center justify-center gap-2">
-                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> SYSTEM SHUTDOWN PENDING
+            <div class="text-xs font-bold text-slate-400 font-space tracking-widest flex items-center justify-center gap-2">
+                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> SYSTEMS READY FOR DEPARTURE
             </div>
         </div>
     </footer>
 
     <style>
-        @keyframes scan {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(500px); }
-        }
         @keyframes shimmer {
             100% { left: 200%; }
         }
@@ -463,7 +460,6 @@
                     loader.style.display = 'none';
                     document.body.classList.remove('overflow-hidden');
                     reveal();
-                    // Setup map after preloader to ensure proper sizing
                     initLeafletMap();
                 }, 800);
             }, 1000); 
@@ -506,11 +502,11 @@
         setInterval(updateCountdown, 1000);
         updateCountdown();
 
-        // --- 4. REAL GEOGRAPHIC MAP (LEAFLET) ---
+        // --- 4. REAL GEOGRAPHIC MAP (LEAFLET - LIGHT THEME) ---
         const mapData = [
-            { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-cyan-400", border: "border-cyan-500/30", coords: [10.1960, 76.3860] },
-            { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-purple-400", border: "border-purple-500/30", coords: [12.2958, 76.6394] },
-            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved.", color: "text-blue-400", border: "border-blue-500/30", coords: [12.9716, 77.5946] }
+            { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-pink-500", bg: "bg-pink-100", coords: [10.1960, 76.3860], markerHex: '#ec4899' },
+            { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-orange-500", bg: "bg-orange-100", coords: [12.2958, 76.6394], markerHex: '#f97316' },
+            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved.", color: "text-violet-500", bg: "bg-violet-100", coords: [12.9716, 77.5946], markerHex: '#8b5cf6' }
         ];
 
         let realMap;
@@ -524,14 +520,14 @@
             
             setTimeout(() => {
                 hud.innerHTML = `
-                    <div class="flex justify-between items-start mb-4 border-b border-white/10 pb-4">
-                        <div class="font-space text-xs tracking-[0.2em] text-gray-500">NAV PNT ${data.id}</div>
-                        <div class="${data.color} text-[10px] tracking-widest font-bold border ${data.border} px-2 py-1 rounded bg-white/5">${data.status}</div>
+                    <div class="flex justify-between items-center mb-5 border-b border-slate-100 pb-4">
+                        <div class="font-space font-bold text-xs tracking-[0.2em] text-slate-400">NAV PNT ${data.id}</div>
+                        <div class="${data.color} ${data.bg} text-[10px] tracking-widest font-bold px-3 py-1.5 rounded-md shadow-sm">${data.status}</div>
                     </div>
-                    <h3 class="text-3xl font-black font-space mb-2 tracking-tight">${data.name}</h3>
-                    <p class="text-sm text-gray-400 leading-relaxed font-space mb-4">${data.desc}</p>
-                    <div class="text-[10px] text-gray-500 font-space tracking-widest flex items-center gap-2">
-                        <i data-lucide="crosshair" class="w-3 h-3"></i> LAT: ${data.coords[0].toFixed(4)} / LNG: ${data.coords[1].toFixed(4)}
+                    <h3 class="text-3xl font-black font-space mb-3 tracking-tight text-slate-800">${data.name}</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed font-medium mb-6">${data.desc}</p>
+                    <div class="text-[10px] text-slate-400 font-space font-bold tracking-widest flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <i data-lucide="crosshair" class="w-4 h-4 text-slate-400"></i> LAT: ${data.coords[0].toFixed(4)} <br/> LNG: ${data.coords[1].toFixed(4)}
                     </div>
                 `;
                 lucide.createIcons();
@@ -552,8 +548,9 @@
                 zoomControl: false 
             }).setView([11.6, 76.8], 7);
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            // Light Colorful Map Tile (Carto Voyager)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(realMap);
@@ -562,10 +559,11 @@
 
             const latlngs = mapData.map(d => d.coords);
             
+            // Vibrant Route Line
             L.polyline(latlngs, {
-                color: '#00f0ff',
-                weight: 8,
-                opacity: 0.3,
+                color: '#ec4899', // Pink
+                weight: 6,
+                opacity: 0.6,
                 lineCap: 'round',
                 lineJoin: 'round'
             }).addTo(realMap);
@@ -573,33 +571,31 @@
             L.polyline(latlngs, {
                 color: '#fff',
                 weight: 2,
-                opacity: 0.8,
-                dashArray: '8, 12',
+                opacity: 1,
+                dashArray: '6, 10',
                 lineCap: 'round',
                 lineJoin: 'round'
             }).addTo(realMap);
 
             mapData.forEach((loc, index) => {
-                let markerColor = index === 0 ? '#00f0ff' : (index === 1 ? '#9d4edd' : '#0077ff');
-                
-                const neonIcon = L.divIcon({
-                    className: 'custom-neon-marker',
+                const vibrantIcon = L.divIcon({
+                    className: 'custom-vibrant-marker',
                     html: `
                         <div class="relative flex items-center justify-center">
-                            <div class="absolute w-8 h-8 rounded-full animate-ping" style="background-color: ${markerColor}; opacity: 0.4;"></div>
-                            <div class="w-4 h-4 rounded-full border-2 border-[#020205] shadow-lg z-10" style="background-color: ${markerColor}; box-shadow: 0 0 15px ${markerColor};"></div>
+                            <div class="absolute w-10 h-10 rounded-full animate-ping" style="background-color: ${loc.markerHex}; opacity: 0.3;"></div>
+                            <div class="w-5 h-5 rounded-full border-4 border-white shadow-md z-10" style="background-color: ${loc.markerHex};"></div>
                         </div>
                     `,
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 16]
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
                 });
 
-                const marker = L.marker(loc.coords, { icon: neonIcon }).addTo(realMap);
+                const marker = L.marker(loc.coords, { icon: vibrantIcon }).addTo(realMap);
                 
                 marker.bindTooltip(`<div class="font-space font-bold tracking-widest text-xs">${loc.name}</div>`, {
                     direction: 'top',
-                    offset: [0, -10],
-                    className: 'glass-panel text-white border-0 bg-transparent shadow-none'
+                    offset: [0, -15],
+                    className: 'glass-panel text-slate-800 border-0 shadow-lg'
                 });
 
                 marker.on('click', () => updateMapInfo(index));
@@ -608,11 +604,12 @@
             updateMapInfo(0);
         }
 
-        // --- 5. Hero Background (Moving Terrain via Three.js) ---
+        // --- 5. Hero Background (Moving Terrain via Three.js - Light Theme) ---
         const initHeroThreeJS = () => {
             const container = document.getElementById('hero-canvas-container');
             const scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x020205, 0.02);
+            // Light fog to blend into the white background
+            scene.fog = new THREE.FogExp2(0xf8fafc, 0.025);
 
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 5, 20);
@@ -621,42 +618,59 @@
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
+            // Ensure clear background
+            renderer.setClearColor(0x000000, 0);
             container.appendChild(renderer.domElement);
 
             const geometry = new THREE.PlaneGeometry(200, 200, 40, 40);
             const vertices = geometry.attributes.position.array;
             for (let i = 0; i < vertices.length; i += 3) {
-                vertices[i + 2] = (Math.random() - 0.5) * 2; 
+                vertices[i + 2] = (Math.random() - 0.5) * 2.5; 
             }
+            // Vibrant Violet Wireframe
             const material = new THREE.MeshBasicMaterial({ 
-                color: 0x00f0ff, 
+                color: 0x8b5cf6, 
                 wireframe: true,
                 transparent: true,
                 opacity: 0.15
             });
             const plane = new THREE.Mesh(geometry, material);
             plane.rotation.x = -Math.PI / 2;
-            plane.position.y = -5;
+            plane.position.y = -6;
             scene.add(plane);
 
+            // Bright Particles
             const starsGeo = new THREE.BufferGeometry();
-            const starsCount = 500;
+            const starsCount = 400;
             const posArray = new Float32Array(starsCount * 3);
             for(let i=0; i<starsCount*3; i++) {
                 posArray[i] = (Math.random() - 0.5) * 100;
+                // keep particles mostly above the grid
+                if(i%3===1) posArray[i] = Math.abs(posArray[i]); 
             }
             starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            const starsMat = new THREE.PointsMaterial({ size: 0.1, color: 0x9d4edd, transparent: true, opacity: 0.8 });
-            const starsMesh = new THREE.Points(starsGeo, starsMat);
-            scene.add(starsMesh);
+            
+            // Multiple colors for particles
+            const colors = [0xec4899, 0xf97316, 0x06b6d4];
+            colors.forEach(color => {
+                const mat = new THREE.PointsMaterial({ size: 0.15, color: color, transparent: true, opacity: 0.6 });
+                const mesh = new THREE.Points(starsGeo, mat);
+                mesh.rotation.x = Math.random() * Math.PI;
+                mesh.rotation.y = Math.random() * Math.PI;
+                scene.add(mesh);
+            });
 
             function animate() {
                 requestAnimationFrame(animate);
                 plane.position.z += 0.05;
                 if (plane.position.z > 5) plane.position.z = 0; 
                 
-                starsMesh.rotation.y += 0.0005;
-                starsMesh.rotation.x += 0.0002;
+                scene.children.forEach(child => {
+                    if (child.type === "Points") {
+                        child.rotation.y += 0.0003;
+                        child.rotation.x += 0.0001;
+                    }
+                });
                 
                 renderer.render(scene, camera);
             }
@@ -683,17 +697,18 @@
             let startX = 0;
             let startVideoTime = 0;
 
-            // Adjust this to change how fast the car spins relative to mouse movement
             const sensitivity = 0.005; 
 
-            // Ensure video data is loaded before allowing interaction
             carVideo.addEventListener('loadedmetadata', () => {
                 
                 const handleDragStart = (e) => {
                     isDraggingVideo = true;
+                    // Pause the auto-looping so the user can control the spin
+                    carVideo.pause();
+                    
                     startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
                     startVideoTime = carVideo.currentTime;
-                    if(dragOverlay) dragOverlay.style.opacity = '0'; // Hide the overlay
+                    if(dragOverlay) dragOverlay.style.opacity = '0'; 
                 };
 
                 const handleDragMove = (e) => {
@@ -703,14 +718,13 @@
                     const currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
                     const diffX = currentX - startX;
                     
-                    // Calculate new time based on drag distance
                     let newTime = startVideoTime + (diffX * sensitivity);
                     
-                    // Loop the video seamlessly
+                    // Improved modulo math for seamless looping during fast scrubs
                     if (newTime < 0) {
-                        newTime = carVideo.duration + newTime;
-                    } else if (newTime > carVideo.duration) {
-                        newTime = newTime - carVideo.duration;
+                        newTime = carVideo.duration + (newTime % carVideo.duration);
+                    } else if (newTime >= carVideo.duration) {
+                        newTime = newTime % carVideo.duration;
                     }
                     
                     carVideo.currentTime = newTime;
@@ -718,14 +732,14 @@
 
                 const handleDragEnd = () => {
                     isDraggingVideo = false;
+                    // Optional: If you want it to resume spinning automatically after dragging, uncomment below
+                    // carVideo.play();
                 };
 
-                // Mouse Events
                 videoContainer.addEventListener('mousedown', handleDragStart);
                 window.addEventListener('mousemove', handleDragMove);
                 window.addEventListener('mouseup', handleDragEnd);
 
-                // Touch Events for Mobile
                 videoContainer.addEventListener('touchstart', handleDragStart, { passive: false });
                 window.addEventListener('touchmove', handleDragMove, { passive: false });
                 window.addEventListener('touchend', handleDragEnd);
@@ -734,4 +748,3 @@
     </script>
 </body>
 </html>
-
