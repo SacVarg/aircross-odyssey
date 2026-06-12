@@ -217,6 +217,11 @@
             100% { background-position: 1000px 0; }
         }
 
+        @keyframes carouselSlide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
         .event-banner {
             animation: bannerSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             background: rgba(255, 255, 255, 0.75);
@@ -299,6 +304,134 @@
             color: #ef4444;
         }
 
+        /* Mission Updates Carousel */
+        .mission-carousel {
+            display: flex;
+            overflow: hidden;
+            gap: 1rem;
+            scroll-behavior: smooth;
+        }
+
+        .mission-card {
+            flex-shrink: 0;
+            min-width: 280px;
+            animation: slideInCard 0.6s ease-out;
+        }
+
+        @keyframes slideInCard {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Gallery Lightbox */
+        .gallery-lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9998;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gallery-lightbox.active {
+            display: flex;
+        }
+
+        .lightbox-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 0.5rem;
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            padding: 1rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .lightbox-nav:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .lightbox-prev {
+            left: 1rem;
+        }
+
+        .lightbox-next {
+            right: 1rem;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            width: 50px;
+            height: 50px;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Masonry Gallery */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            aspect-ratio: 1;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
     </style>
 </head>
 <body class="selection:bg-pink-200 selection:text-pink-900">
@@ -360,7 +493,7 @@
 
             <!-- Action & Close -->
             <div class="flex items-center gap-3 flex-shrink-0">
-                <a href="#" id="banner-action" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-space font-bold tracking-widest rounded-full hover:shadow-glow-pink transition-all hover:scale-105 whitespace-nowrap">
+                <a href="#" id="banner-action" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-space font-bold tracking-widest rounded-full hover:shadow-glow-pink transition-all">
                     VIEW
                 </a>
                 <button class="banner-close text-slate-400 hover:text-slate-600" onclick="closeBanner()">
@@ -408,6 +541,24 @@
                     START THE JOURNEY <i data-lucide="arrow-down-circle" class="text-pink-500 group-hover:translate-y-1 transition-transform w-5 h-5"></i>
                 </span>
             </a>
+        </div>
+    </section>
+
+    <!-- Live Mission Updates Section -->
+    <section id="live-updates" class="py-24 relative px-4 z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h3 class="text-pink-500 font-space font-bold tracking-[0.3em] text-xs mb-3">REAL-TIME NOTIFICATIONS</h3>
+                <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">Live Mission Updates</h2>
+            </div>
+
+            <div id="missionUpdatesContainer" class="reveal">
+                <!-- Mission cards will be injected here by JavaScript -->
+            </div>
+
+            <div id="emptyUpdatesMessage" class="text-center py-12 reveal">
+                <p class="text-slate-500 text-lg font-medium">No mission updates yet. Check back soon for launch information.</p>
+            </div>
         </div>
     </section>
 
@@ -516,6 +667,36 @@
         </div>
     </section>
 
+    <!-- Memory Vault Gallery Section -->
+    <section id="memory-vault" class="py-32 px-4 relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h3 class="text-cyan-500 font-space font-bold tracking-[0.3em] text-xs mb-3">ARCHIVED MEMORIES</h3>
+                <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">Memory Vault</h2>
+            </div>
+
+            <div id="galleryContainer" class="reveal">
+                <div class="gallery-grid">
+                    <!-- Gallery items will be injected here by JavaScript -->
+                </div>
+            </div>
+
+            <div id="emptyGalleryMessage" class="text-center py-12 reveal">
+                <p class="text-slate-500 text-lg font-medium">Future memories will be archived here.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Lightbox -->
+    <div id="galleryLightbox" class="gallery-lightbox">
+        <div class="lightbox-content">
+            <img id="lightboxImage" class="lightbox-image" src="" alt="Gallery image">
+            <button class="lightbox-nav lightbox-prev" onclick="previousGalleryImage()">&lt;</button>
+            <button class="lightbox-nav lightbox-next" onclick="nextGalleryImage()">&gt;</button>
+            <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        </div>
+    </div>
+
     <!-- Crew Section -->
     <section id="crew" class="py-32 px-4 relative z-10">
         <div class="max-w-7xl mx-auto">
@@ -544,7 +725,7 @@
                         document.write(`
                             <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-2 transition-all duration-500 reveal" style="transition-delay: ${i*100}ms">
                                 <div class="flex justify-between items-start mb-8">
-                                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-${c.color}-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-${c.color}-500">
+                                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-${c.color}-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-${c.color}-600">
                                         ${c.name.charAt(0)}
                                     </div>
                                     <div class="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:text-${c.color}-500 group-hover:bg-${c.color}-50 transition-colors shadow-sm">
@@ -571,8 +752,13 @@
             <div class="flex flex-wrap justify-center gap-4 text-[10px] md:text-xs font-bold text-slate-500 font-space tracking-[0.3em] mb-12">
                 <span>ANOOP</span> // <span>BINTO</span> // <span>AALWYN</span> // <span>VIGNESH</span> // <span>SACHIN</span> // <span>ABRAHAM</span>
             </div>
-            <div class="text-xs font-bold text-slate-400 font-space tracking-widest flex items-center justify-center gap-2">
-                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> SYSTEMS READY FOR DEPARTURE
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-xs font-bold text-slate-400 font-space tracking-widest">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> SYSTEMS READY FOR DEPARTURE
+                </div>
+                <a href="admin.html" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-full hover:shadow-glow-pink hover:scale-105 transition-all inline-flex items-center gap-2">
+                    <i data-lucide="settings" class="w-4 h-4"></i> ADMIN
+                </a>
             </div>
         </div>
     </footer>
@@ -584,14 +770,130 @@
     </style>
 
     <script>
-        // --- 0. Force scroll to top on page load ---
-        // This ensures the site always starts at the Hero "Aircross Odyssey" section.
+        // ==========================================
+        // STORAGE & DATA MANAGEMENT
+        // ==========================================
+        const STORAGE_KEYS = {
+            banners: 'aircross_banners',
+            gallery: 'aircross_gallery'
+        };
+
+        function getBanners() {
+            const data = localStorage.getItem(STORAGE_KEYS.banners);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function getGallery() {
+            const data = localStorage.getItem(STORAGE_KEYS.gallery);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // ==========================================
+        // MISSION UPDATES RENDERING
+        // ==========================================
+        function renderMissionUpdates() {
+            const banners = getBanners().filter(b => b.visible);
+            const container = document.getElementById('missionUpdatesContainer');
+            const emptyMessage = document.getElementById('emptyUpdatesMessage');
+
+            if (banners.length === 0) {
+                container.innerHTML = '';
+                emptyMessage.style.display = 'block';
+                return;
+            }
+
+            emptyMessage.style.display = 'none';
+
+            container.innerHTML = `
+                <div class="mission-carousel">
+                    ${banners.map((banner, index) => `
+                        <div class="mission-card">
+                            <div class="glass-panel p-6 rounded-2xl h-full">
+                                <div class="flex items-start gap-3 mb-4">
+                                    <div class="w-2 h-2 bg-pink-500 rounded-full mt-1.5"></div>
+                                    <h3 class="text-lg font-space font-bold text-slate-800 flex-1">${banner.text}</h3>
+                                </div>
+                                <p class="text-sm text-slate-500 font-medium">Mission Update #${index + 1}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // GALLERY RENDERING
+        // ==========================================
+        let currentGalleryIndex = 0;
+
+        function renderGallery() {
+            const gallery = getGallery().filter(g => g.visible);
+            const container = document.getElementById('galleryContainer').querySelector('.gallery-grid');
+            const emptyMessage = document.getElementById('emptyGalleryMessage');
+
+            if (gallery.length === 0) {
+                container.innerHTML = '';
+                emptyMessage.style.display = 'block';
+                return;
+            }
+
+            emptyMessage.style.display = 'none';
+
+            container.innerHTML = gallery.map((item, index) => `
+                <div class="gallery-item" onclick="openLightbox(${index})">
+                    <img src="${item.image}" alt="Gallery memory" loading="lazy">
+                </div>
+            `).join('');
+        }
+
+        function openLightbox(index) {
+            currentGalleryIndex = index;
+            const gallery = getGallery().filter(g => g.visible);
+            if (gallery[index]) {
+                const lightbox = document.getElementById('galleryLightbox');
+                document.getElementById('lightboxImage').src = gallery[index].image;
+                lightbox.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeLightbox() {
+            document.getElementById('galleryLightbox').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function nextGalleryImage() {
+            const gallery = getGallery().filter(g => g.visible);
+            currentGalleryIndex = (currentGalleryIndex + 1) % gallery.length;
+            document.getElementById('lightboxImage').src = gallery[currentGalleryIndex].image;
+        }
+
+        function previousGalleryImage() {
+            const gallery = getGallery().filter(g => g.visible);
+            currentGalleryIndex = (currentGalleryIndex - 1 + gallery.length) % gallery.length;
+            document.getElementById('lightboxImage').src = gallery[currentGalleryIndex].image;
+        }
+
+        // Keyboard support for lightbox
+        document.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('galleryLightbox');
+            if (lightbox.classList.contains('active')) {
+                if (e.key === 'ArrowRight') nextGalleryImage();
+                if (e.key === 'ArrowLeft') previousGalleryImage();
+                if (e.key === 'Escape') closeLightbox();
+            }
+        });
+
+        // ==========================================
+        // 0. Force scroll to top on page load ---
         if (history.scrollRestoration) {
             history.scrollRestoration = 'manual';
         }
         window.scrollTo(0, 0);
 
-        // --- 0.5 Event Banner System ---
+        // ==========================================
+        // 0.5 Event Banner System
+        // ==========================================
         const bannerConfig = {
             events: [
                 {
@@ -682,7 +984,9 @@
             if (bannerConfig.autoRotateTimer) clearInterval(bannerConfig.autoRotateTimer);
         }
 
-        // --- 1. Init & Preloader ---
+        // ==========================================
+        // 1. Init & Preloader
+        // ==========================================
         lucide.createIcons();
         window.addEventListener('load', () => {
             window.scrollTo(0, 0);
@@ -695,6 +999,8 @@
                     document.body.classList.remove('overflow-hidden');
                     reveal();
                     initLeafletMap();
+                    renderMissionUpdates();
+                    renderGallery();
                     
                     // Initialize banner after page loads
                     const activeEvents = bannerConfig.events.filter(e => e.active);
@@ -705,7 +1011,18 @@
             }, 1000); 
         });
 
-        // --- 2. Scroll Reveal Logic ---
+        // Listen for storage changes from admin panel
+        window.addEventListener('storage', (e) => {
+            if (e.key === STORAGE_KEYS.banners) {
+                renderMissionUpdates();
+            } else if (e.key === STORAGE_KEYS.gallery) {
+                renderGallery();
+            }
+        });
+
+        // ==========================================
+        // 2. Scroll Reveal Logic
+        // ==========================================
         function reveal() {
             var reveals = document.querySelectorAll(".reveal");
             for (var i = 0; i < reveals.length; i++) {
@@ -719,7 +1036,9 @@
         }
         window.addEventListener("scroll", reveal);
 
-        // --- 3. Countdown Timer ---
+        // ==========================================
+        // 3. Countdown Timer
+        // ==========================================
         const targetDate = new Date("2026-07-11T00:30:00Z").getTime();
         function updateCountdown() {
             const now = new Date().getTime();
@@ -742,11 +1061,13 @@
         setInterval(updateCountdown, 1000);
         updateCountdown();
 
-        // --- 4. REAL GEOGRAPHIC MAP (LEAFLET - LIGHT THEME WITH RETURN TRACE) ---
+        // ==========================================
+        // 4. REAL GEOGRAPHIC MAP (LEAFLET)
+        // ==========================================
         const mapData = [
-            { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-pink-500", bg: "bg-pink-100", coords: [10.2168, 76.3702], markerHex: "#ec4899" },
-            { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-orange-500", bg: "bg-orange-100", coords: [12.2958, 76.6394], markerHex: "#f97316" },
-            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved. Preparing for return trace.", color: "text-violet-500", bg: "bg-violet-100", coords: [12.9716, 77.5946], markerHex: "#8b5cf6" },
+            { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-pink-500", bg: "bg-pink-100", coords: [10.2191, 76.2506], markerHex: '#ec4899'},
+            { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-orange-500", bg: "bg-orange-100", coords: [12.2958, 76.6394], markerHex: '#f97316'},
+            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved. Preparing for return trace.", color: "text-violet-500", bg: "bg-violet-100", coords: [12.9716, 77.5946], markerHex: '#8b5cf6'}
         ];
 
         let realMap;
@@ -852,7 +1173,9 @@
             updateMapInfo(0);
         }
 
-        // --- 5. Hero Background (Moving Terrain via Three.js - Light Theme) ---
+        // ==========================================
+        // 5. Hero Background (Three.js)
+        // ==========================================
         const initHeroThreeJS = () => {
             const container = document.getElementById('hero-canvas-container');
             const scene = new THREE.Scene();
