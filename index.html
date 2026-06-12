@@ -5,24 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIRCROSS ODYSSEY | Mission Control</title>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- Leaflet CSS for Real Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
     <script>
@@ -74,7 +68,6 @@
             color: #0f172a;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
-            /* Futuristic Tech Grid & Gradients */
             background-image: 
                 linear-gradient(to right, rgba(16, 185, 129, 0.05) 1px, transparent 1px),
                 linear-gradient(to bottom, rgba(16, 185, 129, 0.05) 1px, transparent 1px),
@@ -82,6 +75,22 @@
                 radial-gradient(at 100% 0%, hsla(160,100%,84%,0.15) 0px, transparent 50%);
             background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
             background-attachment: fixed;
+            transition: filter 0.5s ease;
+        }
+
+        /* Hyperdrive active state */
+        .hyperdrive-active {
+            filter: contrast(150%) brightness(1.2) hue-rotate(15deg);
+        }
+        .hyperdrive-shake {
+            animation: hyperShake 0.1s infinite;
+        }
+        @keyframes hyperShake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            25% { transform: translate(-1px, -2px) rotate(-1deg); }
+            50% { transform: translate(-3px, 0px) rotate(1deg); }
+            75% { transform: translate(3px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -1px) rotate(-1deg); }
         }
 
         /* Preloader */
@@ -101,7 +110,7 @@
         }
         @keyframes loadAnim { 0% { left: -50%; } 100% { left: 100%; } }
 
-        /* Colorful Floating Blobs Background */
+        /* Colorful Floating Blobs */
         .blob-bg {
             position: fixed; width: 60vw; height: 60vw; border-radius: 50%;
             filter: blur(120px); z-index: -1; opacity: 0.4;
@@ -110,7 +119,6 @@
         .blob-1 { background: radial-gradient(circle, #fbcfe8, transparent); top: -20%; left: -10%; }
         .blob-2 { background: radial-gradient(circle, #a7f3d0, transparent); bottom: -10%; right: -10%; animation-delay: -5s; }
         .blob-3 { background: radial-gradient(circle, #bae6fd, transparent); top: 40%; left: 30%; animation-delay: -10s; }
-
         @keyframes floatBlob {
             0% { transform: translate(0, 0) scale(1) rotate(0deg); }
             50% { transform: translate(5%, 10%) scale(1.1) rotate(180deg); }
@@ -150,14 +158,13 @@
             position: relative;
         }
 
-        /* Leaflet Map Styling & Animations */
+        /* Maps & HUDs */
         .leaflet-container { background: transparent !important; font-family: 'Space Grotesk', sans-serif; border-radius: 2rem; }
         .custom-vibrant-marker { display: flex; justify-content: center; align-items: center; }
         .leaflet-popup-content-wrapper {
             background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.05);
             color: #0f172a; backdrop-filter: blur(10px); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        
         .route-flow-forward { stroke-dasharray: 12, 24; animation: flowForward 20s linear infinite; }
         .route-flow-return { stroke-dasharray: 12, 24; animation: flowReturn 20s linear infinite; }
         @keyframes flowForward { to { stroke-dashoffset: -1000; } }
@@ -186,27 +193,27 @@
         .event-badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 10px; font-weight: bold; letter-spacing: 0.2em; font-family: 'Space Grotesk', sans-serif; }
         .event-badge.live { background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.4); }
 
-        /* Custom Scrollbar for Admin Tables */
+        /* Custom Scrollbar for Admin Tables & Comms */
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.5); border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.8); }
 
+        /* Public Comms Scrollbar */
+        .comms-scrollbar::-webkit-scrollbar { width: 6px; }
+        .comms-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.5); border-radius: 4px; }
+        .comms-scrollbar::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.3); border-radius: 4px; }
+        .comms-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.6); }
+
         /* CONTAINED HORIZONTAL GALLERY */
-        .gallery-scroll-wrapper {
-            position: relative; width: 100%;
-        }
-        /* Fade edges for aesthetic sliding effect */
-        .gallery-scroll-wrapper::before, .gallery-scroll-wrapper::after {
-            content: ''; position: absolute; top: 0; bottom: 0; width: 80px; z-index: 10; pointer-events: none;
-        }
+        .gallery-scroll-wrapper { position: relative; width: 100%; }
+        .gallery-scroll-wrapper::before, .gallery-scroll-wrapper::after { content: ''; position: absolute; top: 0; bottom: 0; width: 80px; z-index: 10; pointer-events: none; }
         .gallery-scroll-wrapper::before { left: 0; background: linear-gradient(to right, #f8fafc, transparent); }
         .gallery-scroll-wrapper::after { right: 0; background: linear-gradient(to left, #f8fafc, transparent); }
 
         .gallery-grid { 
             display: flex; gap: 1.5rem; overflow-x: auto; padding: 2rem 4rem; 
             scroll-snap-type: x mandatory; scroll-behavior: smooth;
-            /* Hide scrollbar for a clean look */
             scrollbar-width: none; -ms-overflow-style: none;
         }
         .gallery-grid::-webkit-scrollbar { display: none; }
@@ -287,8 +294,8 @@
         .dashboard.active { display: block; opacity: 1; transform: translateY(0); }
         .admin-section { padding: 2rem; border-radius: 1.25rem; margin-bottom: 2rem; }
 
-        .form-input, .form-textarea { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(16, 185, 129, 0.15); color: #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; width: 100%; transition: all 0.3s; }
-        .form-input:focus, .form-textarea:focus { outline: none; border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+        .form-input, .form-textarea, .form-select { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(16, 185, 129, 0.15); color: #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; width: 100%; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+        .form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
         
         .table-admin { width: 100%; border-collapse: collapse; margin-top: 1rem; }
         .table-admin th { padding: 1rem; text-align: left; font-weight: 600; color: #94a3b8; border-bottom: 2px solid rgba(16, 185, 129, 0.2); }
@@ -313,39 +320,32 @@
 </head>
 <body id="app-body">
 
-    <!-- ============================================== -->
-    <!-- PUBLIC SITE VIEW -->
-    <!-- ============================================== -->
-    <div id="public-view" class="theme-public">
-        <!-- Preloader -->
+    <div id="public-view" class="theme-public transition-all duration-300" style="min-height: 100vh;">
         <div id="loader">
             <div class="text-slate-800 font-space font-bold tracking-[0.3em] text-sm">INITIALIZING SYSTEMS</div>
             <div class="loader-line"></div>
         </div>
 
-        <!-- Animated Background Blobs -->
         <div class="blob-bg blob-1"></div>
         <div class="blob-bg blob-2"></div>
         <div class="blob-bg blob-3"></div>
 
-        <!-- Navigation -->
         <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/50 backdrop-blur-xl border-b border-white/60 shadow-sm transition-all duration-300">
-            <div class="font-space font-bold text-xl tracking-widest text-slate-800 flex items-center gap-2">
+            <div class="font-space font-bold text-xl tracking-widest text-slate-800 flex items-center gap-2 cursor-pointer select-none" onclick="window.triggerHyperdrive()">
                 <i data-lucide="compass" class="w-5 h-5 text-emerald-500 animate-pulse"></i> AX<span class="text-emerald-500">7</span>
             </div>
             <div class="flex gap-8 text-xs font-space font-bold tracking-widest text-slate-500 hidden md:flex">
                 <a href="#mission" class="hover:text-emerald-500 transition-colors" onclick="window.location.hash='';">MISSION</a>
-                <a href="#countdown-section" class="hover:text-cyan-500 transition-colors" onclick="window.location.hash='';">LAUNCH</a>
                 <a href="#machine" class="hover:text-violet-500 transition-colors" onclick="window.location.hash='';">MACHINE</a>
                 <a href="#route" class="hover:text-pink-500 transition-colors" onclick="window.location.hash='';">ROUTE</a>
                 <a href="#crew" class="hover:text-orange-500 transition-colors" onclick="window.location.hash='';">CREW</a>
+                <a href="#comms" class="hover:text-cyan-500 transition-colors" onclick="window.location.hash='';">COMMS</a>
             </div>
             <a href="#admin" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-space font-bold tracking-widest rounded-full hover:shadow-glow-cyan hover:scale-105 transition-all flex items-center gap-2">
                 <i data-lucide="satellite" class="w-4 h-4"></i> ADMIN
             </a>
         </nav>
 
-        <!-- Dynamic Live Banner -->
         <div id="event-banner" class="event-banner mx-4 mt-24 px-6 py-4 rounded-2xl relative z-40" style="display: none;">
             <div class="flex items-center justify-between gap-4">
                 <div class="flex items-center gap-4 flex-1 min-w-0">
@@ -371,12 +371,9 @@
             </div>
         </div>
 
-        <!-- Hero Section -->
         <section id="mission" class="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-10 overflow-hidden">
-            <!-- 3D Background Canvas -->
             <div id="hero-canvas-container"></div>
             
-            <!-- Cyber HUD accents -->
             <div class="absolute top-1/4 left-10 text-[10px] font-space text-emerald-600/60 hidden lg:block font-bold tracking-[0.2em] leading-loose">
                 SYS.OP.449<br/>MEM.ALLOC: 64TB<br/><span class="text-cyan-600">STATUS: GREEN</span>
             </div>
@@ -389,7 +386,7 @@
                     <i data-lucide="sun" class="w-4 h-4 animate-spin-slow" style="animation-duration: 6s;"></i> DEPARTURE: 11 JULY 2026
                 </div>
                 
-                <h1 class="text-6xl md:text-8xl lg:text-[140px] font-black font-space mb-2 tracking-tighter leading-none text-slate-900 cyber-title">
+                <h1 class="text-6xl md:text-8xl lg:text-[140px] font-black font-space mb-2 tracking-tighter leading-none text-slate-900 cyber-title" id="main-title">
                     AIRCROSS
                 </h1>
                 <h2 class="text-5xl md:text-7xl lg:text-8xl font-black font-space mb-8 tracking-tighter leading-none text-gradient uppercase drop-shadow-md">
@@ -406,12 +403,7 @@
                     <span class="text-slate-800 hover:text-violet-500 transition-colors cursor-default">BANGALORE</span>
                 </div>
 
-                <p class="max-w-2xl text-slate-700 text-lg md:text-xl font-medium leading-relaxed mb-12 bg-white/50 backdrop-blur-xl p-5 rounded-2xl border border-white/60 shadow-lg">
-                    6 Friends. 1 Citroën Aircross X 7-Seater.<br>Hundreds of kilometers mapping a beautiful adventure.
-                </p>
-
-                <!-- Start Button -->
-                <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-white overflow-hidden rounded-2xl border-2 border-emerald-300 transition-all hover:border-emerald-500 shadow-soft-color hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+                <a href="#machine" class="group relative inline-flex px-10 py-5 bg-white overflow-hidden rounded-2xl border-2 border-emerald-300 transition-all hover:border-emerald-500 shadow-soft-color hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]">
                     <div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-emerald-100 to-transparent skew-x-[-45deg] group-hover:animate-[shimmer_1.5s_infinite]"></div>
                     <span class="relative font-space font-bold tracking-[0.2em] text-slate-800 flex items-center gap-3 text-sm md:text-base group-hover:text-emerald-700 transition-colors">
                         START THE JOURNEY <i data-lucide="arrow-down-circle" class="text-emerald-500 group-hover:translate-y-1 transition-transform w-5 h-5"></i>
@@ -420,37 +412,6 @@
             </div>
         </section>
 
-        <!-- Countdown Section -->
-        <section id="countdown-section" class="py-24 relative px-4 z-10">
-            <div class="max-w-6xl mx-auto">
-                <div class="text-center mb-16 reveal">
-                    <h3 class="text-orange-500 font-space font-bold tracking-[0.3em] text-xs mb-3 flex justify-center items-center gap-2">
-                        <i data-lucide="timer" class="w-4 h-4"></i> ADVENTURE CLOCK
-                    </h3>
-                    <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">T-Minus Launch</h2>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal hover:border-emerald-400 hover:shadow-glow-emerald transition-all">
-                        <span id="cd-days" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter group-hover:text-emerald-500 transition-colors">00</span>
-                        <span class="text-emerald-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Days</span>
-                    </div>
-                    <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal hover:border-orange-400 hover:shadow-[0_0_25px_rgba(249,115,22,0.4)] transition-all" style="transition-delay: 100ms;">
-                        <span id="cd-hours" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter group-hover:text-orange-500 transition-colors">00</span>
-                        <span class="text-orange-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Hours</span>
-                    </div>
-                    <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal hover:border-cyan-400 hover:shadow-glow-cyan transition-all" style="transition-delay: 200ms;">
-                        <span id="cd-minutes" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter group-hover:text-cyan-500 transition-colors">00</span>
-                        <span class="text-cyan-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Minutes</span>
-                    </div>
-                    <div class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center relative group reveal hover:border-violet-400 hover:shadow-glow-violet transition-all" style="transition-delay: 300ms;">
-                        <span id="cd-seconds" class="text-6xl md:text-8xl font-black font-space text-slate-800 tracking-tighter group-hover:text-violet-500 transition-colors">00</span>
-                        <span class="text-violet-500 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Seconds</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Futuristic Video / Machine Section -->
         <section id="machine" class="py-32 px-4 relative z-10">
             <div class="max-w-7xl mx-auto relative z-10">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 reveal">
@@ -461,38 +422,26 @@
                         <h2 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800">Citroën Aircross X</h2>
                     </div>
                     <div class="flex items-center gap-3 glass-panel px-6 py-3 rounded-full text-xs font-space font-bold tracking-widest text-slate-700 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all cursor-default">
-                        <i data-lucide="video" class="w-4 h-4 text-violet-500 animate-pulse"></i> LIVE VISUAL FEED
+                        <i data-lucide="activity" class="w-4 h-4 text-violet-500 animate-pulse"></i> LIVE TELEMETRY ACTIVE
                     </div>
                 </div>
 
-                <!-- Video Display Container -->
                 <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-slate-900 group hover:shadow-2xl transition-all duration-500">
-                    
-                    <!-- HUD Cyber Brackets -->
-                    <div class="hud-bracket hud-tl"></div>
-                    <div class="hud-bracket hud-tr"></div>
-                    <div class="hud-bracket hud-bl"></div>
-                    <div class="hud-bracket hud-br"></div>
-
-                    <!-- HUD Scanner Line -->
+                    <div class="hud-bracket hud-tl"></div><div class="hud-bracket hud-tr"></div>
+                    <div class="hud-bracket hud-bl"></div><div class="hud-bracket hud-br"></div>
                     <div class="scanline"></div>
 
-                    <!-- THE VIDEO TAG -->
                     <video 
                         id="car-video" 
                         class="w-full h-full object-cover pointer-events-none filter brightness-95 contrast-125 group-hover:brightness-105 transition-all duration-700 transform group-hover:scale-105" 
                         src="./assets/aircross-spin.mp4" 
-                        muted 
-                        playsinline 
-                        autoplay
-                        loop>
+                        muted playsinline autoplay loop>
                     </video>
                     
-                    <!-- Overlay HUD -->
                     <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between z-20">
                         <div class="flex justify-between items-start w-full">
                             <div class="text-white bg-black/40 backdrop-blur-md px-4 py-2 rounded-full font-space text-xs tracking-[0.3em] font-bold shadow-sm flex items-center border border-white/20">
-                                <span class="inline-block w-2 h-2 bg-emerald-500 rounded-full animate-pulse mr-2 shadow-[0_0_10px_#10b981]"></span> CAM_01
+                                <span class="inline-block w-2 h-2 bg-emerald-500 rounded-full animate-pulse mr-2 shadow-[0_0_10px_#10b981]"></span> SYNCED
                             </div>
                             <div class="text-right bg-black/40 backdrop-blur-md px-5 py-2 rounded-2xl shadow-sm border border-white/20">
                                 <div class="font-space font-black text-lg text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">AX-7 PLATFORM</div>
@@ -501,14 +450,14 @@
                         </div>
                         
                         <div class="flex justify-between items-end w-full">
-                            <div class="bg-black/50 backdrop-blur-md border border-emerald-500/50 p-5 rounded-2xl pointer-events-auto max-w-[280px] shadow-lg transform transition-transform hover:scale-105 cursor-default group/stats">
+                            <div class="bg-black/60 backdrop-blur-md border border-emerald-500/50 p-5 rounded-2xl pointer-events-auto min-w-[260px] shadow-[0_0_20px_rgba(16,185,129,0.2)] transform transition-transform hover:scale-105 cursor-default">
                                 <div class="text-xs font-space font-bold text-emerald-400 tracking-widest mb-3 border-b border-white/20 pb-2 flex items-center gap-2">
-                                    <i data-lucide="bar-chart-2" class="w-4 h-4"></i> VEHICLE SPECS
+                                    <i data-lucide="gauge" class="w-4 h-4"></i> LIVE TELEMETRY
                                 </div>
                                 <ul class="space-y-3 text-sm font-space font-medium text-white">
-                                    <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">CREW LIMIT</span> <span class="font-bold">06/07</span></li>
-                                    <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">CARGO</span> <span class="font-bold">MAX CAPACITY</span></li>
-                                    <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">SYSTEM STATUS</span> <span class="font-bold text-cyan-400 bg-cyan-900/50 px-2 py-0.5 rounded border border-cyan-500/50 animate-pulse">OPTIMAL</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-slate-400 text-xs tracking-widest">PILOT</span> <span class="font-bold text-cyan-300" id="tel-driver">AWAITING</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-slate-400 text-xs tracking-widest">DISTANCE</span> <span class="font-bold text-yellow-300" id="tel-distance">0 KM</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-slate-400 text-xs tracking-widest">CABIN VIBE</span> <span class="font-bold text-pink-300" id="tel-vibe">UNKNOWN</span></li>
                                 </ul>
                             </div>
                         </div>
@@ -517,7 +466,6 @@
             </div>
         </section>
 
-        <!-- Route Map Section with Data Flow -->
         <section id="route" class="py-32 px-4 relative z-10">
             <div class="max-w-7xl mx-auto relative z-10">
                 <div class="text-center mb-16 reveal">
@@ -526,14 +474,24 @@
                     </h3>
                     <h2 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800">Route Trajectory</h2>
                 </div>
+                
                 <div class="relative w-full h-[600px] md:h-[700px] rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-white p-2 group hover:shadow-glow-cyan transition-shadow duration-500">
                     <div id="real-map" class="w-full h-full rounded-[2rem] z-0 relative"></div>
+                    
                     <div class="absolute top-8 right-8 w-[85%] max-w-sm bg-white/95 backdrop-blur-xl border border-slate-100 p-6 rounded-3xl z-20 shadow-2xl transition-all duration-300 pointer-events-none transform group-hover:scale-105 origin-top-right" id="map-hud"></div>
+                    
+                    <div class="absolute bottom-8 left-8 bg-slate-900/80 backdrop-blur-md border border-cyan-500/30 p-5 rounded-2xl z-20 shadow-[0_0_20px_rgba(6,182,212,0.2)] pointer-events-none hidden md:block">
+                        <div class="text-[10px] font-space font-bold text-cyan-400 tracking-[0.2em] mb-3 border-b border-cyan-500/30 pb-2 flex items-center gap-2">
+                            <i data-lucide="cloud-lightning" class="w-3 h-3"></i> ATMOSPHERIC SCANNERS
+                        </div>
+                        <div class="space-y-3" id="weather-hud">
+                            <div class="text-xs text-slate-400 font-space animate-pulse">Initializing orbital scan...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- SECURE HORIZONTAL MEMORY VAULT SECTION -->
         <section id="memory-vault" class="py-32 px-4 relative z-10 overflow-hidden">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center mb-16 reveal">
@@ -544,19 +502,15 @@
                 </div>
                 
                 <div id="galleryContainer" class="reveal relative group/gallery">
-                    <!-- Nav Left -->
                     <button onclick="window.scrollGallery(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 p-4 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.1)] opacity-0 group-hover/gallery:opacity-100 transition-all hover:bg-emerald-50 text-emerald-600 border border-emerald-100 hover:scale-110 hidden md:block">
                         <i data-lucide="chevron-left" class="w-6 h-6"></i>
                     </button>
                     
-                    <!-- Horizontal Scroll Track -->
                     <div class="gallery-scroll-wrapper">
                         <div class="gallery-grid" id="public-gallery-grid">
-                            <!-- Dynamic Gallery Images from Firebase -->
-                        </div>
+                            </div>
                     </div>
 
-                    <!-- Nav Right -->
                     <button onclick="window.scrollGallery(1)" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 p-4 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.1)] opacity-0 group-hover/gallery:opacity-100 transition-all hover:bg-emerald-50 text-emerald-600 border border-emerald-100 hover:scale-110 hidden md:block">
                         <i data-lucide="chevron-right" class="w-6 h-6"></i>
                     </button>
@@ -569,7 +523,6 @@
             </div>
         </section>
         
-        <!-- FIX: Interactive Lightbox tied properly to the Window Object -->
         <div id="galleryLightbox" class="gallery-lightbox" onclick="if(event.target === this) window.closeLightbox()">
             <div class="lightbox-content">
                 <img id="lightboxImage" class="lightbox-image" src="" alt="Gallery image">
@@ -579,7 +532,6 @@
             </div>
         </div>
 
-        <!-- Crew Section -->
         <section id="crew" class="py-32 px-4 relative z-10">
             <div class="max-w-7xl mx-auto">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal">
@@ -595,7 +547,6 @@
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
-                    <!-- Crew Card 1 -->
                     <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-3 transition-all duration-500 reveal border-t-4 border-t-transparent hover:border-t-pink-500">
                         <div class="flex justify-between items-start mb-8">
                             <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-pink-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-pink-600 group-hover:scale-110 group-hover:shadow-glow-pink transition-all">A</div>
@@ -608,7 +559,6 @@
                         </div>
                     </div>
 
-                    <!-- Crew Card 2 -->
                     <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-3 transition-all duration-500 reveal border-t-4 border-t-transparent hover:border-t-orange-500" style="transition-delay: 100ms;">
                         <div class="flex justify-between items-start mb-8">
                             <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-orange-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-orange-600 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all">B</div>
@@ -621,7 +571,6 @@
                         </div>
                     </div>
 
-                    <!-- Crew Card 3 -->
                     <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-3 transition-all duration-500 reveal border-t-4 border-t-transparent hover:border-t-violet-500" style="transition-delay: 200ms;">
                         <div class="flex justify-between items-start mb-8">
                             <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-violet-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-violet-600 group-hover:scale-110 group-hover:shadow-glow-violet transition-all">A</div>
@@ -634,7 +583,6 @@
                         </div>
                     </div>
 
-                    <!-- Crew Card 4 -->
                     <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-3 transition-all duration-500 reveal border-t-4 border-t-transparent hover:border-t-cyan-500" style="transition-delay: 300ms;">
                         <div class="flex justify-between items-start mb-8">
                             <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-cyan-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-cyan-600 group-hover:scale-110 group-hover:shadow-glow-cyan transition-all">V</div>
@@ -647,7 +595,6 @@
                         </div>
                     </div>
 
-                    <!-- Crew Card 5 -->
                     <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-3 transition-all duration-500 reveal border-t-4 border-t-transparent hover:border-t-emerald-500" style="transition-delay: 400ms;">
                         <div class="flex justify-between items-start mb-8">
                             <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-emerald-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-emerald-600 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all">S</div>
@@ -660,7 +607,6 @@
                         </div>
                     </div>
 
-                    <!-- Crew Card 6 -->
                     <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-3 transition-all duration-500 reveal border-t-4 border-t-transparent hover:border-t-yellow-500" style="transition-delay: 500ms;">
                         <div class="flex justify-between items-start mb-8">
                             <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-yellow-100 flex items-center justify-center text-xl md:text-2xl font-black font-space text-yellow-600 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(234,179,8,0.4)] transition-all">A</div>
@@ -676,7 +622,68 @@
             </div>
         </section>
 
-        <!-- Footer -->
+        <section id="comms" class="py-32 px-4 relative z-10">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-16 reveal">
+                    <h3 class="text-cyan-500 font-space font-bold tracking-[0.3em] text-xs mb-3 flex justify-center items-center gap-2">
+                        <i data-lucide="message-square" class="w-4 h-4"></i> SECURE CHNL
+                    </h3>
+                    <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">Crew Comms</h2>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 reveal">
+                    <div class="lg:col-span-1">
+                        <div class="glass-panel p-8 rounded-3xl border-t-4 border-t-cyan-500">
+                            <h3 class="font-space font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="terminal" class="w-5 h-5 text-cyan-500"></i> TRANSMIT LOG</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 tracking-wider mb-2 block">IDENTIFY</label>
+                                    <select id="commAuthor" class="w-full bg-white/50 border border-slate-200 rounded-xl p-3 text-sm font-space font-bold text-slate-700 focus:outline-none focus:border-cyan-500">
+                                        <option value="ANOOP">ANOOP (CMD)</option>
+                                        <option value="BINTO">BINTO (NAV)</option>
+                                        <option value="AALWYN">AALWYN (STR)</option>
+                                        <option value="VIGNESH">VIGNESH (ENT)</option>
+                                        <option value="SACHIN">SACHIN (FOD)</option>
+                                        <option value="ABRAHAM">ABRAHAM (CHS)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 tracking-wider mb-2 block">MESSAGE</label>
+                                    <textarea id="commMessage" rows="3" class="w-full bg-white/50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-cyan-500 resize-none" placeholder="Enter transmission..."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 tracking-wider mb-2 block">AUTH PIN</label>
+                                    <input type="password" id="commPin" class="w-full bg-white/50 border border-slate-200 rounded-xl p-3 text-sm font-space tracking-widest focus:outline-none focus:border-cyan-500" placeholder="••••">
+                                </div>
+
+                                <button onclick="window.postComm()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-space font-bold tracking-widest rounded-xl hover:shadow-glow-cyan transition-all flex justify-center items-center gap-2">
+                                    <i data-lucide="send" class="w-4 h-4"></i> POST
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <div class="glass-panel p-6 rounded-3xl h-[450px] flex flex-col">
+                            <div class="text-xs font-bold text-slate-400 tracking-widest mb-4 border-b border-slate-200 pb-4 flex justify-between items-center">
+                                <span>LIVE FEED</span>
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> ONLINE</span>
+                            </div>
+                            
+                            <div id="commsContainer" class="flex-1 overflow-y-auto pr-2 comms-scrollbar space-y-4">
+                                <div class="text-center py-10 text-slate-400 font-space text-sm">
+                                    <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-cyan-500"></i> Syncing comms...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <footer class="pt-24 pb-12 px-4 border-t border-emerald-200/50 text-center relative z-10 bg-white/60 backdrop-blur-xl shadow-[0_-10px_40px_rgba(16,185,129,0.05)]">
             <div class="max-w-4xl mx-auto relative z-10">
                 <h2 class="text-4xl font-black font-space tracking-tighter mb-6 text-slate-800 hover:scale-105 transition-transform cursor-default">AIRCROSS <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-500">ODYSSEY</span></h2>
@@ -701,11 +708,7 @@
     </div>
 
 
-    <!-- ============================================== -->
-    <!-- ADMIN SECURE VIEW -->
-    <!-- ============================================== -->
     <div id="admin-view" class="theme-admin">
-        <!-- Login Screen -->
         <div id="loginScreen" class="login-container animate-in">
             <div class="text-center">
                 <h1 class="text-glow-cyan text-4xl font-space font-black mb-2 tracking-widest">AIRCROSS</h1>
@@ -739,7 +742,6 @@
             </div>
         </div>
 
-        <!-- Dashboard -->
         <div id="dashboard" class="dashboard max-w-7xl mx-auto px-6 pb-12">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-700 pb-6 gap-4">
                 <div>
@@ -756,8 +758,38 @@
                 </div>
             </div>
 
+            <div class="admin-section glass-admin animate-in mb-8">
+                <h2 class="text-xl font-space font-bold text-white mb-6 flex items-center gap-2">
+                    <i data-lucide="gauge" class="w-5 h-5 text-yellow-400"></i> LIVE TELEMETRY OVERRIDE
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-yellow-400 mb-2 block tracking-wider">CURRENT PILOT</label>
+                        <select id="adminDriver" class="form-select">
+                            <option value="ANOOP">ANOOP</option>
+                            <option value="BINTO">BINTO</option>
+                            <option value="AALWYN">AALWYN</option>
+                            <option value="VIGNESH">VIGNESH</option>
+                            <option value="SACHIN">SACHIN</option>
+                            <option value="ABRAHAM">ABRAHAM</option>
+                            <option value="AUTOPILOT">AUTOPILOT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-yellow-400 mb-2 block tracking-wider">DISTANCE (KM)</label>
+                        <input type="number" id="adminDist" class="form-input" placeholder="e.g. 250">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-yellow-400 mb-2 block tracking-wider">CABIN VIBE</label>
+                        <input type="text" id="adminVibe" class="form-input" placeholder="e.g. CHAOTIC, CHILL">
+                    </div>
+                </div>
+                <button class="mt-4 px-6 py-2 bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 rounded-lg font-bold text-sm hover:bg-yellow-500/30 transition-colors" onclick="window.updateTelemetry()">
+                    SYNC TELEMETRY
+                </button>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Banners Admin -->
                 <div class="admin-section glass-admin animate-in">
                     <h2 class="text-xl font-space font-bold text-white mb-6 flex items-center gap-2">
                         <i data-lucide="bell" class="w-5 h-5 text-emerald-400"></i> BANNER UPDATES
@@ -779,7 +811,6 @@
                     </div>
                 </div>
 
-                <!-- Gallery Admin -->
                 <div class="admin-section glass-admin animate-in" style="animation-delay: 100ms;">
                     <h2 class="text-xl font-space font-bold text-white mb-6 flex items-center gap-2">
                         <i data-lucide="image" class="w-5 h-5 text-cyan-400"></i> MEMORY VAULT
@@ -802,16 +833,26 @@
                         </table>
                     </div>
                 </div>
+
+                <div class="admin-section glass-admin animate-in lg:col-span-2 mt-4" style="animation-delay: 200ms;">
+                    <h2 class="text-xl font-space font-bold text-white mb-6 flex items-center gap-2">
+                        <i data-lucide="message-square" class="w-5 h-5 text-pink-400"></i> CREW COMMS MODERATION
+                    </h2>
+                    <div class="overflow-x-auto bg-slate-900/40 rounded-xl border border-slate-800 max-h-[300px] overflow-y-auto custom-scrollbar">
+                        <table class="table-admin text-sm">
+                            <thead class="bg-slate-800/50 sticky top-0 backdrop-blur-md z-10"><tr><th>AUTHOR</th><th>MESSAGE</th><th>DATE</th><th>ACT</th></tr></thead>
+                            <tbody id="adminCommsTableBody">
+                                <tr><td colspan="4" class="text-center py-8 text-slate-500 flex justify-center items-center gap-2"><i data-lucide="loader" class="w-4 h-4 animate-spin text-pink-500"></i> Syncing with cloud...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast Container -->
     <div id="toastContainer"></div>
 
-    <!-- ============================================== -->
-    <!-- LOGIC & FIREBASE INTEGRATION -->
-    <!-- ============================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -833,8 +874,10 @@
 
         let publicBanners = [];
         let publicGallery = [];
+        let publicComms = [];
         let isAuthenticated = false;
         let mapInitialized = false;
+        let hyperdriveMode = false;
 
         let activeBannerIndex = 0;
         let bannerInterval = null;
@@ -847,18 +890,45 @@
             
             const bannersRef = collection(db, 'artifacts', appId, 'public', 'data', 'banners');
             const galleryRef = collection(db, 'artifacts', appId, 'public', 'data', 'gallery');
+            const commsRef = collection(db, 'artifacts', appId, 'public', 'data', 'comms');
+            const telemetryRef = doc(db, 'artifacts', appId, 'public', 'data', 'telemetry', 'latest');
 
             onSnapshot(bannersRef, (snapshot) => {
                 publicBanners = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
                 renderPublicBanners();
                 if(isAuthenticated) renderAdminBanners();
-            }, (error) => console.error("Banner sync error:", error));
+            });
 
             onSnapshot(galleryRef, (snapshot) => {
                 publicGallery = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
                 renderPublicGallery();
                 if(isAuthenticated) renderAdminGallery();
-            }, (error) => console.error("Gallery sync error:", error));
+            });
+
+            onSnapshot(commsRef, (snapshot) => {
+                publicComms = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
+                renderPublicComms();
+                if(isAuthenticated) renderAdminComms();
+            });
+
+            onSnapshot(telemetryRef, (docSnap) => {
+                if(docSnap.exists()) {
+                    const data = docSnap.data();
+                    const dEl = document.getElementById('tel-driver');
+                    const distEl = document.getElementById('tel-distance');
+                    const vEl = document.getElementById('tel-vibe');
+                    if(dEl) dEl.innerText = data.driver || 'UNKNOWN';
+                    if(distEl) distEl.innerText = (data.distance || 0) + ' KM';
+                    if(vEl) vEl.innerText = data.vibe || 'UNKNOWN';
+
+                    // Update Admin Inputs if open
+                    if(document.getElementById('adminDist')) {
+                        document.getElementById('adminDriver').value = data.driver || 'ANOOP';
+                        document.getElementById('adminDist').value = data.distance || '';
+                        document.getElementById('adminVibe').value = data.vibe || '';
+                    }
+                }
+            });
         }
 
         setupFirestoreListeners();
@@ -868,10 +938,46 @@
                 isAuthenticated = true;
                 renderAdminBanners();
                 renderAdminGallery();
+                renderAdminComms();
             } else {
                 isAuthenticated = false;
             }
         });
+
+        // ==========================================
+        // EXTERNAL APIS (Weather)
+        // ==========================================
+        async function fetchWeather() {
+            try {
+                // Fetch for Angamaly, Mysore, Bangalore
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=10.2191,12.2958,12.9716&longitude=76.2506,76.6394,77.5946&current_weather=true');
+                const data = await res.json();
+                const cities = ['ANGAMALY', 'MYSORE', 'BANGALORE'];
+                let html = '';
+                
+                if(data && data.length || (data.current_weather && Array.isArray(data))) {
+                     data.forEach((d, i) => {
+                         const temp = d.current_weather ? d.current_weather.temperature : '--';
+                         const wind = d.current_weather ? d.current_weather.windspeed : '--';
+                         html += `
+                            <div class="flex justify-between items-center gap-6">
+                                <span class="text-xs font-space font-bold text-slate-300">${cities[i]}</span>
+                                <span class="text-xs font-space text-cyan-300 font-bold">${temp}°C <span class="text-slate-500 ml-1 opacity-50">|</span> <span class="text-cyan-600 ml-1">${wind}km/h</span></span>
+                            </div>
+                         `;
+                     });
+                } else {
+                     html = `<div class="text-xs text-cyan-400 font-space font-bold">ATMOSPHERIC DATA ACQUIRED</div>`;
+                }
+                
+                const wBox = document.getElementById('weather-hud');
+                if(wBox) wBox.innerHTML = html || `<div class="text-xs text-cyan-400 font-space font-bold">SYS ONLINE: 28°C AVG</div>`;
+            } catch(e) {
+                const wBox = document.getElementById('weather-hud');
+                if(wBox) wBox.innerHTML = `<div class="text-xs text-cyan-400 font-space font-bold">SYS ONLINE: 28°C AVG</div>`;
+            }
+        }
+        setTimeout(fetchWeather, 2000);
 
         // ==========================================
         // PUBLIC VIEW RENDERING
@@ -879,18 +985,11 @@
         function renderPublicBanners() {
             const activeBanners = publicBanners.filter(b => b.visible);
             const bannerElement = document.getElementById('event-banner');
-            
             clearInterval(bannerInterval);
-
-            if (activeBanners.length === 0) {
-                bannerElement.style.display = 'none';
-                return;
-            }
-
+            if (activeBanners.length === 0) { bannerElement.style.display = 'none'; return; }
             bannerElement.style.display = 'block';
             activeBannerIndex = 0;
             updateBannerUI(activeBanners);
-
             if (activeBanners.length > 1) {
                 bannerInterval = setInterval(() => {
                     activeBannerIndex = (activeBannerIndex + 1) % activeBanners.length;
@@ -904,13 +1003,10 @@
             const descEl = document.getElementById('banner-description');
             const metaEl = document.getElementById('banner-meta');
             const container = document.getElementById('banner-content-container');
-            
             container.classList.remove('slide-up-anim');
             void container.offsetWidth; 
-            
             descEl.textContent = banner.text;
             metaEl.innerHTML = `<i data-lucide="radio" class="w-3 h-3 text-emerald-500 animate-pulse"></i><span>Broadcast ${activeBannerIndex + 1} of ${activeBanners.length}</span>`;
-            
             container.classList.add('slide-up-anim');
             lucide.createIcons();
         }
@@ -919,19 +1015,15 @@
             const activeGallery = publicGallery.filter(g => g.visible);
             const grid = document.getElementById('public-gallery-grid');
             const emptyMsg = document.getElementById('emptyGalleryMessage');
-
             if (activeGallery.length === 0) {
-                grid.innerHTML = '';
-                emptyMsg.style.display = 'block';
-                return;
+                grid.innerHTML = ''; emptyMsg.style.display = 'block'; return;
             }
-
             emptyMsg.style.display = 'none';
             grid.innerHTML = activeGallery.map((item) => `
-                <div class="gallery-item group" onclick="window.openLightbox('${item.id}')">
-                    <img src="${item.image}" alt="Memory" loading="lazy">
-                    <div class="absolute inset-0 bg-gradient-to-t from-emerald-900/80 via-emerald-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
-                        <div class="bg-white/20 backdrop-blur-md rounded-full p-2 border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.4)] pointer-events-auto hover:bg-white/40 transition-colors">
+                <div class="gallery-item group cursor-pointer" onclick="window.openLightbox('${item.id}')">
+                    <img src="${item.image}" alt="Memory" loading="lazy" class="pointer-events-none">
+                    <div class="absolute inset-0 bg-gradient-to-t from-emerald-900/80 via-emerald-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5 pointer-events-none">
+                        <div class="bg-white/20 backdrop-blur-md rounded-full p-2 border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.4)] pointer-events-auto hover:bg-white/40 transition-colors" onclick="window.openLightbox('${item.id}'); event.stopPropagation();">
                             <i data-lucide="maximize-2" class="w-5 h-5 text-white"></i>
                         </div>
                     </div>
@@ -940,12 +1032,91 @@
             lucide.createIcons();
         }
 
-        // Window exposed horizontal scroll function for gallery
+        function renderPublicComms() {
+            const container = document.getElementById('commsContainer');
+            if(!container) return;
+            
+            if(publicComms.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-slate-400 font-space text-sm">No transmissions yet.</div>`;
+                return;
+            }
+
+            container.innerHTML = publicComms.map(c => {
+                const date = new Date(c.timestamp).toLocaleDateString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'});
+                return `
+                <div class="bg-white/40 border border-white/60 p-4 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-space font-bold text-cyan-600 text-xs tracking-widest">${c.author}</span>
+                        <span class="text-[10px] text-slate-400 font-space">${date}</span>
+                    </div>
+                    <p class="text-sm text-slate-700 leading-relaxed font-medium">${c.message}</p>
+                </div>
+            `}).join('');
+        }
+
         window.scrollGallery = (direction) => {
             const grid = document.getElementById('public-gallery-grid');
-            const scrollAmount = 320; // Card width + gap
+            const scrollAmount = 320; 
             grid.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
         };
+
+        // ==========================================
+        // CREW COMMS POSTING (PUBLIC)
+        // ==========================================
+        window.postComm = async () => {
+            const author = document.getElementById('commAuthor').value;
+            const msg = document.getElementById('commMessage').value.trim();
+            const pin = document.getElementById('commPin').value;
+
+            if(!msg) return showToast('Enter a message', 'error');
+            if(pin !== '2026') return showToast('AUTH FAILED: Invalid PIN', 'error');
+
+            const id = Date.now().toString();
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'comms', id), {
+                    id: id,
+                    author: author,
+                    message: msg,
+                    timestamp: Date.now()
+                });
+                document.getElementById('commMessage').value = '';
+                document.getElementById('commPin').value = '';
+                showToast('Transmission logged', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('Transmission failed (Check rules)', 'error');
+            }
+        };
+
+        // ==========================================
+        // HYPERDRIVE EASTER EGG
+        // ==========================================
+        let logoClicks = 0;
+        let clickTimer;
+        window.triggerHyperdrive = () => {
+            logoClicks++;
+            clearTimeout(clickTimer);
+            if(logoClicks >= 3 && !hyperdriveMode) {
+                activateHyperdrive();
+                logoClicks = 0;
+            } else {
+                clickTimer = setTimeout(()=>logoClicks=0, 1000);
+            }
+        };
+
+        function activateHyperdrive() {
+            hyperdriveMode = true;
+            showToast('WARNING: HYPERDRIVE ENGAGED', 'error'); // red colored toast
+            const pv = document.getElementById('public-view');
+            pv.classList.add('hyperdrive-active', 'hyperdrive-shake');
+            
+            // Revert after 4 seconds
+            setTimeout(() => {
+                pv.classList.remove('hyperdrive-active', 'hyperdrive-shake');
+                hyperdriveMode = false;
+                showToast('ORBIT STABILIZED', 'success');
+            }, 4000);
+        }
 
         // ==========================================
         // ADMIN AUTHENTICATION
@@ -967,8 +1138,6 @@
                 await signInWithEmailAndPassword(auth, email, pwd);
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('dashboard').classList.add('active');
-                renderAdminBanners();
-                renderAdminGallery();
                 lucide.createIcons();
             } catch (error) {
                 showToast('Access Denied. Invalid credentials.', 'error');
@@ -995,48 +1164,59 @@
             const id = Date.now().toString();
             try {
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id), {
-                    id: id,
-                    text: text,
-                    visible: true,
-                    timestamp: Date.now()
+                    id: id, text: text, visible: true, timestamp: Date.now()
                 });
                 document.getElementById('bannerText').value = '';
                 showToast('Broadcast live synced', 'success');
-            } catch (e) { showToast('Sync failed', 'error'); console.error(e); }
+            } catch (e) { showToast('Sync failed', 'error'); }
         };
 
         window.toggleBannerVisibility = async (id, currentVis) => {
             if(!isAuthenticated) return;
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id.toString()), {
-                    visible: !currentVis
-                }, { merge: true });
-            } catch (e) { showToast('Permission Denied', 'error'); }
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id.toString()), { visible: !currentVis }, { merge: true });
         };
 
         window.deleteBanner = async (id) => {
             if(!isAuthenticated || !confirm('Delete transmission from cloud?')) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id.toString()));
-                showToast('Transmission deleted', 'success');
-            } catch (e) { showToast('Permission Denied', 'error'); }
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id.toString()));
+            showToast('Transmission deleted', 'success');
         };
 
         window.toggleGalleryVisibility = async (id, currentVis) => {
             if(!isAuthenticated) return;
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id.toString()), {
-                    visible: !currentVis
-                }, { merge: true });
-            } catch (e) { showToast('Permission Denied', 'error'); }
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id.toString()), { visible: !currentVis }, { merge: true });
         };
 
         window.deleteGalleryItem = async (id) => {
             if(!isAuthenticated || !confirm('Delete memory from cloud?')) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id.toString()));
+            showToast('Memory wiped', 'success');
+        };
+
+        window.deleteComm = async (id) => {
+            if(!isAuthenticated || !confirm('Delete this crew comm?')) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'comms', id.toString()));
+            showToast('Comm deleted', 'success');
+        };
+
+        window.updateTelemetry = async () => {
+            if(!isAuthenticated) return;
+            const driver = document.getElementById('adminDriver').value;
+            const dist = document.getElementById('adminDist').value;
+            const vibe = document.getElementById('adminVibe').value.trim();
+
             try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id.toString()));
-                showToast('Memory wiped', 'success');
-            } catch (e) { showToast('Permission Denied', 'error'); }
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'telemetry', 'latest'), {
+                    driver: driver,
+                    distance: dist,
+                    vibe: vibe,
+                    timestamp: Date.now()
+                });
+                showToast('Telemetry updated', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('Update failed', 'error');
+            }
         };
 
         // ==========================================
@@ -1046,18 +1226,12 @@
             const tbody = document.getElementById('bannersTableBody');
             if(publicBanners.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-500"><i data-lucide="radio" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>No active broadcasts.</td></tr>';
-                lucide.createIcons();
-                return;
+                lucide.createIcons(); return;
             }
             tbody.innerHTML = publicBanners.map(b => `
                 <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
                     <td class="max-w-xs truncate py-3 font-medium text-slate-300">${b.text}</td>
-                    <td class="py-3">
-                        <label class="toggle-admin">
-                            <input type="checkbox" ${b.visible ? 'checked' : ''} onchange="window.toggleBannerVisibility('${b.id}', ${b.visible})">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </td>
+                    <td class="py-3"><label class="toggle-admin"><input type="checkbox" ${b.visible ? 'checked' : ''} onchange="window.toggleBannerVisibility('${b.id}', ${b.visible})"><span class="toggle-slider"></span></label></td>
                     <td class="py-3"><button class="btn-admin-danger rounded" onclick="window.deleteBanner('${b.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
                 </tr>
             `).join('');
@@ -1068,21 +1242,35 @@
             const tbody = document.getElementById('galleryTableBody');
             if(publicGallery.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-500"><i data-lucide="image-off" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>Vault is empty.</td></tr>';
-                lucide.createIcons();
-                return;
+                lucide.createIcons(); return;
             }
             tbody.innerHTML = publicGallery.map(g => `
                 <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
                     <td class="py-3"><img src="${g.image}" class="w-14 h-14 rounded-lg object-cover border border-slate-700 shadow-md"></td>
-                    <td class="py-3">
-                        <label class="toggle-admin">
-                            <input type="checkbox" ${g.visible ? 'checked' : ''} onchange="window.toggleGalleryVisibility('${g.id}', ${g.visible})">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </td>
+                    <td class="py-3"><label class="toggle-admin"><input type="checkbox" ${g.visible ? 'checked' : ''} onchange="window.toggleGalleryVisibility('${g.id}', ${g.visible})"><span class="toggle-slider"></span></label></td>
                     <td class="py-3"><button class="btn-admin-danger rounded" onclick="window.deleteGalleryItem('${g.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
                 </tr>
             `).join('');
+            lucide.createIcons();
+        }
+
+        function renderAdminComms() {
+            const tbody = document.getElementById('adminCommsTableBody');
+            if(!tbody) return;
+            if(publicComms.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-500">No comms logged.</td></tr>';
+                lucide.createIcons(); return;
+            }
+            tbody.innerHTML = publicComms.map(c => {
+                const date = new Date(c.timestamp).toLocaleDateString('en-US', {month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit'});
+                return `
+                <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                    <td class="py-3 text-cyan-400 font-bold text-xs">${c.author}</td>
+                    <td class="py-3 text-slate-300 max-w-xs truncate">${c.message}</td>
+                    <td class="py-3 text-slate-500 text-xs">${date}</td>
+                    <td class="py-3"><button class="btn-admin-danger rounded" onclick="window.deleteComm('${c.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                </tr>
+            `}).join('');
             lucide.createIcons();
         }
 
@@ -1128,21 +1316,15 @@
                 const base64 = await compressImage(file);
                 const id = Date.now().toString();
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id), {
-                    id: id,
-                    image: base64,
-                    visible: true,
-                    timestamp: Date.now()
+                    id: id, image: base64, visible: true, timestamp: Date.now()
                 });
                 showToast('Memory securely vaulted', 'success');
-            } catch(err) {
-                console.error(err);
-                showToast('Upload failed', 'error');
-            }
+            } catch(err) { showToast('Upload failed', 'error'); }
             e.target.value = '';
         };
 
         // ==========================================
-        // LIGHTBOX
+        // LIGHTBOX & ROUTING
         // ==========================================
         let currentGalleryId = null;
         window.openLightbox = (id) => {
@@ -1161,21 +1343,14 @@
         window.nextGalleryImage = () => {
             const active = publicGallery.filter(g => g.visible);
             const idx = active.findIndex(g => g.id === currentGalleryId);
-            if(idx !== -1 && active.length > 0) {
-                const nextItem = active[(idx + 1) % active.length];
-                window.openLightbox(nextItem.id);
-            }
+            if(idx !== -1 && active.length > 0) window.openLightbox(active[(idx + 1) % active.length].id);
         };
         window.previousGalleryImage = () => {
             const active = publicGallery.filter(g => g.visible);
             const idx = active.findIndex(g => g.id === currentGalleryId);
-            if(idx !== -1 && active.length > 0) {
-                const prevItem = active[(idx - 1 + active.length) % active.length];
-                window.openLightbox(prevItem.id);
-            }
+            if(idx !== -1 && active.length > 0) window.openLightbox(active[(idx - 1 + active.length) % active.length].id);
         };
 
-        // Keyboard events for lightbox
         document.addEventListener('keydown', (e) => {
             const lb = document.getElementById('galleryLightbox');
             if(lb && lb.classList.contains('active')) {
@@ -1185,9 +1360,6 @@
             }
         });
 
-        // ==========================================
-        // UTILS & ROUTING
-        // ==========================================
         function showToast(msg, type) {
             const container = document.getElementById('toastContainer');
             const t = document.createElement('div');
@@ -1217,7 +1389,6 @@
         }
         window.addEventListener('hashchange', handleRoute);
         
-        // Remove loader and init view
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const loader = document.getElementById('loader');
@@ -1246,7 +1417,6 @@
             window.addEventListener("scroll", reveal);
             reveal();
 
-            // Leaflet Map
             const mapData = [
                 { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized.", color: "text-pink-500", bg: "bg-pink-100", coords: [10.2191, 76.2506], markerHex: '#ec4899'},
                 { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached.", color: "text-orange-500", bg: "bg-orange-100", coords: [12.2958, 76.6394], markerHex: '#f97316'},
@@ -1292,7 +1462,7 @@
             });
             updateMapInfo(0);
 
-            // Three.js Dynamic Wavy Grid
+            // Three.js
             const container = document.getElementById('hero-canvas-container');
             if(container && !container.hasChildNodes()) {
                 const scene = new THREE.Scene();
@@ -1303,21 +1473,18 @@
                 renderer.setPixelRatio(window.devicePixelRatio);
                 container.appendChild(renderer.domElement);
                 
-                // MAIN EMERALD GRID
                 const geo = new THREE.PlaneGeometry(200, 200, 60, 60);
                 const mat = new THREE.MeshBasicMaterial({ color: 0x059669, wireframe: true, transparent: true, opacity: 0.7 });
                 const plane = new THREE.Mesh(geo, mat);
                 plane.rotation.x = -Math.PI / 2; plane.position.y = -8;
                 scene.add(plane);
 
-                // SECONDARY CYAN GRID 
                 const geo2 = new THREE.PlaneGeometry(200, 200, 40, 40);
                 const mat2 = new THREE.MeshBasicMaterial({ color: 0x06b6d4, wireframe: true, transparent: true, opacity: 0.3 });
                 const plane2 = new THREE.Mesh(geo2, mat2);
                 plane2.rotation.x = -Math.PI / 2; plane2.position.y = -10;
                 scene.add(plane2);
                 
-                // FLOATING DATA PARTICLES
                 const starsGeo = new THREE.BufferGeometry();
                 const starsCount = 500;
                 const posArray = new Float32Array(starsCount * 3);
@@ -1334,11 +1501,14 @@
                     requestAnimationFrame(animate);
                     const time = Date.now() * 0.001;
                     
+                    // Apply Hyperdrive Speed Modifier
+                    const speedMod = hyperdriveMode ? 25 : 1;
+                    
                     const positions = plane.geometry.attributes.position;
                     for (let i = 0; i < count; i++) {
                         const x = positions.getX(i);
                         const y = positions.getY(i);
-                        positions.setZ(i, Math.sin(x * 0.1 + time) * 1.5 + Math.cos(y * 0.1 + time) * 1.5);
+                        positions.setZ(i, Math.sin(x * 0.1 + (time * speedMod)) * 1.5 + Math.cos(y * 0.1 + (time * speedMod)) * 1.5);
                     }
                     positions.needsUpdate = true;
 
@@ -1346,15 +1516,15 @@
                     for (let i = 0; i < positions2.count; i++) {
                         const x = positions2.getX(i);
                         const y = positions2.getY(i);
-                        positions2.setZ(i, Math.sin(x * 0.08 - time) * 2 + Math.cos(y * 0.08 - time) * 2);
+                        positions2.setZ(i, Math.sin(x * 0.08 - (time * speedMod)) * 2 + Math.cos(y * 0.08 - (time * speedMod)) * 2);
                     }
                     positions2.needsUpdate = true;
                     
-                    plane.position.z += 0.02; if (plane.position.z > 5) plane.position.z = 0; 
-                    plane2.position.z += 0.01; if (plane2.position.z > 5) plane2.position.z = 0; 
+                    plane.position.z += 0.02 * speedMod; if (plane.position.z > 5) plane.position.z = 0; 
+                    plane2.position.z += 0.01 * speedMod; if (plane2.position.z > 5) plane2.position.z = 0; 
 
-                    starPoints.rotation.y += 0.0005;
-                    starPoints.position.y += 0.02;
+                    starPoints.rotation.y += 0.0005 * speedMod;
+                    starPoints.position.y += 0.02 * speedMod;
                     if(starPoints.position.y > 20) starPoints.position.y = -10;
 
                     renderer.render(scene, camera);
