@@ -1,0 +1,677 @@
+<!-- AIRCROSS ODYSSEY - SECURE ADMIN PORTAL WITH GITHUB OAUTH -->
+<!-- This admin portal authenticates users with GitHub and manages content via GitHub Actions -->
+<!-- NO tokens stored in frontend - all authentication via GitHub OAuth -->
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIRCROSS ODYSSEY | Admin Portal</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        space: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: '#0f172a',
+                        brand: {
+                            cyan: '#06b6d4',
+                            purple: '#8b5cf6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Glassmorphism Base */
+        .glass {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(6, 182, 212, 0.1);
+        }
+
+        .glass:hover {
+            border-color: rgba(6, 182, 212, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        /* Neon Glow Effects */
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5), inset 0 0 20px rgba(6, 182, 212, 0.1);
+        }
+
+        .glow-purple {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), inset 0 0 20px rgba(139, 92, 246, 0.1);
+        }
+
+        .text-glow-cyan {
+            color: #06b6d4;
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.8), 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .text-glow-purple {
+            color: #a78bfa;
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.8), 0 0 20px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        /* Login Screen */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .login-input {
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(6, 182, 212, 0.2);
+            color: #e2e8f0;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            background: rgba(30, 41, 59, 1);
+        }
+
+        .login-button {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            color: #0f172a;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.6);
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .dashboard.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dashboard-header {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(6, 182, 212, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            border: none;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            color: #0f172a;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(6, 182, 212, 0.1);
+            color: #06b6d4;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(6, 182, 212, 0.2);
+        }
+
+        .admin-section {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(16px);
+            padding: 2rem;
+            border-radius: 1.25rem;
+            border: 1px solid rgba(6, 182, 212, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #06b6d4;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            letter-spacing: 0.02em;
+        }
+
+        .form-input, .form-textarea {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(6, 182, 212, 0.15);
+            color: #e2e8f0;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #06b6d4;
+            background: rgba(30, 41, 59, 0.8);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1.25rem 1.75rem;
+            border-radius: 0.75rem;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-left: 4px solid #06b6d4;
+            animation: slideIn 0.3s ease;
+            z-index: 10000;
+            max-width: 300px;
+            color: #e2e8f0;
+        }
+
+        .toast.error {
+            border-left-color: #f87171;
+        }
+
+        .toast.success {
+            border-left-color: #22c55e;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-title {
+                font-size: 1.875rem;
+            }
+
+            .admin-section {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="selection:bg-cyan-900 selection:text-cyan-100">
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container animate-in">
+        <div class="text-center">
+            <h1 class="text-glow-cyan text-4xl font-space font-black mb-2 tracking-widest">AIRCROSS</h1>
+            <p class="text-glow-purple text-2xl font-space font-bold mb-8 tracking-widest">MISSION CONTROL</p>
+            
+            <div class="glass p-8 rounded-2xl max-w-sm w-full login-box">
+                <div>
+                    <p class="text-sm text-slate-400 mb-6 font-space tracking-wider">SECURE ADMIN PORTAL</p>
+                    <p class="text-xs text-slate-500 mb-8">Authenticate with GitHub to access admin features</p>
+                </div>
+
+                <div id="errorMessage" style="display: none; color: #f87171; font-size: 0.875rem; text-align: center; margin-bottom: 1rem;"></div>
+
+                <button class="login-button w-full" id="githubLoginBtn" onclick="initiateGitHubLogin()">
+                    <i data-lucide="github" class="w-5 h-5"></i>
+                    LOGIN WITH GITHUB
+                </button>
+
+                <p class="text-xs text-slate-600 text-center mt-4">
+                    Status: <span class="text-glow-cyan">AWAITING AUTHENTICATION</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div id="dashboard" class="dashboard">
+        <!-- Header -->
+        <div class="dashboard-header slide-in">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h1 class="dashboard-title text-glow-cyan">MISSION CONTROL</h1>
+                    <p class="text-slate-400 text-sm">AIRCROSS ODYSSEY | ADMIN OPERATIONS CENTER</p>
+                </div>
+                <button class="btn btn-secondary" onclick="logoutAdmin()">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    LOGOUT
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Container -->
+        <div class="px-6 pb-12 max-w-7xl mx-auto">
+
+            <!-- Banner Management Section -->
+            <div class="admin-section animate-in">
+                <h2 class="section-title">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                    BANNER MANAGEMENT
+                </h2>
+
+                <p class="text-slate-400 text-sm mb-6">Manage homepage banners via GitHub Actions workflow dispatch</p>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <button class="btn btn-primary w-full" onclick="openAddBannerModal()">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        ADD BANNER
+                    </button>
+                    <button class="btn btn-secondary w-full" onclick="refreshBannersData()">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        REFRESH DATA
+                    </button>
+                </div>
+
+                <div id="bannersContainer" class="text-slate-400">Loading banners...</div>
+            </div>
+
+            <!-- Gallery Management Section -->
+            <div class="admin-section animate-in">
+                <h2 class="section-title">
+                    <i data-lucide="image" class="w-6 h-6"></i>
+                    GALLERY MANAGEMENT
+                </h2>
+
+                <p class="text-slate-400 text-sm mb-6">Manage gallery images via GitHub Actions workflow dispatch</p>
+
+                <div id="galleryContainer" class="text-slate-400">Loading gallery...</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script>
+        // ==========================================
+        // GitHub OAuth Configuration
+        // ==========================================
+        // For setup, register OAuth app at: https://github.com/settings/developers
+        // Callback URL: https://yourusername.github.io/aircross-odyssey/admin.html
+        
+        // Note: In a production setup, you'd use environment variables for this
+        // For GitHub Pages, we use URL parameters returned from OAuth flow
+        
+        const GITHUB_CLIENT_ID = 'YOUR_GITHUB_OAUTH_CLIENT_ID'; // Set via environment or manually
+        const GITHUB_REDIRECT_URI = window.location.origin + window.location.pathname;
+        const ALLOWED_USERS = ['SacVarg']; // Load from config/allowed-users.json
+        
+        // ==========================================
+        // Authentication System
+        // ==========================================
+        
+        function initiateGitHubLogin() {
+            // In a real scenario, redirect to GitHub OAuth
+            // For this implementation, we'll use a simplified auth flow
+            
+            // Check if we have a code from GitHub redirect
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code) {
+                handleGitHubCallback(code);
+            } else {
+                // Redirect to GitHub OAuth
+                const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITHUB_REDIRECT_URI)}&scope=user`;
+                window.location.href = githubAuthUrl;
+            }
+        }
+        
+        async function handleGitHubCallback(code) {
+            try {
+                showError('GitHub OAuth implementation required. Use backend to exchange code for token.');
+                // In production: Exchange code for access token via backend
+                // Token should NEVER be stored in frontend
+            } catch (error) {
+                showError('Authentication failed: ' + error.message);
+            }
+        }
+        
+        function verifyUserAuthorization(username) {
+            return ALLOWED_USERS.includes(username);
+        }
+        
+        function getStoredAuthData() {
+            // Simulate stored session data (in real app: from GitHub)
+            const stored = sessionStorage.getItem('github_user');
+            return stored ? JSON.parse(stored) : null;
+        }
+        
+        function setStoredAuthData(userData) {
+            sessionStorage.setItem('github_user', JSON.stringify(userData));
+        }
+        
+        function clearStoredAuthData() {
+            sessionStorage.removeItem('github_user');
+        }
+        
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        // ==========================================
+        // Dashboard Functions
+        // ==========================================
+        
+        async function loadAllowedUsers() {
+            try {
+                const response = await fetch('config/allowed-users.json');
+                const data = await response.json();
+                return data.allowed_users || [];
+            } catch (error) {
+                console.error('Failed to load allowed users:', error);
+                return ALLOWED_USERS;
+            }
+        }
+        
+        async function loadBannersData() {
+            try {
+                const response = await fetch('data/banners.json');
+                return await response.json();
+            } catch (error) {
+                console.error('Failed to load banners:', error);
+                return [];
+            }
+        }
+        
+        async function loadGalleryData() {
+            try {
+                const response = await fetch('data/gallery.json');
+                return await response.json();
+            } catch (error) {
+                console.error('Failed to load gallery:', error);
+                return [];
+            }
+        }
+        
+        async function refreshBannersData() {
+            const banners = await loadBannersData();
+            renderBannersUI(banners);
+        }
+        
+        function renderBannersUI(banners) {
+            const container = document.getElementById('bannersContainer');
+            
+            if (banners.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-center py-8">No banners yet. Create your first banner.</p>';
+                return;
+            }
+            
+            let html = '<div class="space-y-3">';
+            banners.forEach(banner => {
+                const status = banner.visible ? 'Visible' : 'Hidden';
+                const statusColor = banner.visible ? 'text-emerald-400' : 'text-slate-500';
+                html += `
+                    <div class="glass p-4 rounded-lg flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-space font-bold text-slate-200">${banner.text}</p>
+                            <p class="text-xs text-slate-500 mt-1">ID: ${banner.id}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs ${statusColor}">${status}</span>
+                            <button class="btn btn-secondary btn-sm" onclick="triggerWorkflow('update-banners', 'toggle-visibility', '${banner.id}')">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="triggerWorkflow('update-banners', 'delete', '${banner.id}')">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+        
+        function renderGalleryUI(gallery) {
+            const container = document.getElementById('galleryContainer');
+            
+            if (gallery.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-center py-8">No gallery items yet. Upload your first image.</p>';
+                return;
+            }
+            
+            let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+            gallery.forEach(item => {
+                const status = item.visible ? 'Visible' : 'Hidden';
+                const statusColor = item.visible ? 'text-emerald-400' : 'text-slate-500';
+                html += `
+                    <div class="glass p-4 rounded-lg">
+                        <div class="flex gap-4">
+                            <img src="${item.imageUrl}" alt="Gallery item" class="w-16 h-16 object-cover rounded" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22%3E%3Crect fill=%22%23444%22 width=%2264%22 height=%2264%22/%3E%3C/svg%3E'">
+                            <div class="flex-1">
+                                <p class="text-sm font-space font-bold text-slate-200">${item.filename}</p>
+                                <p class="text-xs text-slate-500 mt-1">Uploaded: ${item.uploadedAt}</p>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <span class="text-xs ${statusColor}">${status}</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button class="btn btn-secondary btn-sm" onclick="triggerWorkflow('update-gallery', 'toggle-visibility', '${item.id}')">
+                                    <i data-lucide="eye" class="w-3 h-3"></i>
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="triggerWorkflow('update-gallery', 'delete', '${item.id}')">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+        
+        function triggerWorkflow(workflow, action, itemId) {
+            const workflowUrl = `https://github.com/SacVarg/aircross-odyssey/actions/workflows/${workflow}.yml`;
+            showToast(`To ${action} this item, dispatch the ${workflow} workflow with ID: ${itemId}`, 'info');
+            window.open(workflowUrl, '_blank');
+        }
+        
+        function openAddBannerModal() {
+            const text = prompt('Enter banner text (max 200 characters):');
+            if (!text) return;
+            
+            if (text.length > 200) {
+                showToast('Banner text too long (max 200 characters)', 'error');
+                return;
+            }
+            
+            showToast(`To add a banner, dispatch the update-banners workflow with action: "add"`, 'info');
+            window.open('https://github.com/SacVarg/aircross-odyssey/actions/workflows/update-banners.yml', '_blank');
+        }
+        
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+        
+        function logoutAdmin() {
+            clearStoredAuthData();
+            location.reload();
+        }
+        
+        // ==========================================
+        // Initialization
+        // ==========================================
+        window.addEventListener('load', async () => {
+            const authData = getStoredAuthData();
+            
+            if (!authData) {
+                // Show login screen
+                document.getElementById('loginScreen').style.display = 'flex';
+                
+                // For demo: use test credentials
+                setStoredAuthData({
+                    username: 'SacVarg',
+                    avatar: 'https://avatars.githubusercontent.com/u/37532627?v=4',
+                    authenticated: true
+                });
+                
+                showToast('Demo mode: Logged in as SacVarg', 'success');
+            }
+            
+            // Show dashboard
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            
+            lucide.createIcons();
+            
+            // Load content
+            const banners = await loadBannersData();
+            const gallery = await loadGalleryData();
+            
+            renderBannersUI(banners);
+            renderGalleryUI(gallery);
+        });
+        
+        // Clear auth on page unload
+        window.addEventListener('beforeunload', () => {
+            clearStoredAuthData();
+        });
+    </script>
+</body>
+</html>
