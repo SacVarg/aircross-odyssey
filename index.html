@@ -5,14 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIRCROSS ODYSSEY | Mission Launch</title>
     
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     
+    <!-- Leaflet CSS for Real Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Three.js for 3D Elements -->
+    
+    <!-- Three.js (Used ONLY for Hero Background) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Leaflet JS for Real Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
         tailwind.config = {
@@ -150,59 +161,6 @@
             100% { clip: rect(32px, 9999px, 64px, 0); }
         }
 
-        /* 3D Map Utilities */
-        .map-3d-container {
-            perspective: 1200px;
-            transform-style: preserve-3d;
-        }
-        .map-terrain {
-            transform: rotateX(60deg) rotateZ(-45deg);
-            transform-style: preserve-3d;
-            transition: transform 1s ease;
-            box-shadow: 0 0 50px rgba(0, 240, 255, 0.2);
-            border: 1px solid rgba(0,240,255,0.3);
-            background: linear-gradient(to bottom, rgba(0, 240, 255, 0.05), rgba(157, 78, 221, 0.05));
-        }
-        .map-terrain:hover {
-            transform: rotateX(55deg) rotateZ(-40deg);
-        }
-        
-        .terrain-grid {
-            position: absolute;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(0, 240, 255, 0.2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 240, 255, 0.2) 1px, transparent 1px);
-            background-size: 40px 40px;
-            transform: translateZ(-1px);
-        }
-
-        .map-marker {
-            transform-style: preserve-3d;
-            transition: all 0.5s ease;
-        }
-        .map-marker-pin {
-            transform: rotateX(-90deg) rotateY(45deg) translateY(-20px);
-            transform-origin: bottom center;
-            filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.8));
-        }
-        .map-marker.active .map-marker-pin {
-            transform: rotateX(-90deg) rotateY(45deg) translateY(-30px) scale(1.2);
-            filter: drop-shadow(0 0 20px #00f0ff);
-        }
-
-        .route-path {
-            stroke-dasharray: 2000;
-            stroke-dashoffset: 2000;
-            filter: drop-shadow(0 0 8px #00f0ff);
-        }
-        .route-path.active {
-            animation: dashDraw 4s ease-in-out forwards;
-        }
-        @keyframes dashDraw {
-            to { stroke-dashoffset: 0; }
-        }
-
         /* Scroll Reveal Utility */
         .reveal {
             opacity: 0;
@@ -216,7 +174,7 @@
             filter: blur(0);
         }
 
-        /* Canvas Containers */
+        /* Hero Background Container */
         #hero-canvas-container {
             position: absolute;
             inset: 0;
@@ -231,16 +189,31 @@
             pointer-events: none;
         }
 
-        #machine-canvas-container {
-            width: 100%;
-            height: 400px;
-            cursor: grab;
+        /* Custom Leaflet Map Styling */
+        .leaflet-container {
+            background: #020205 !important;
+            font-family: 'Space Grotesk', sans-serif;
         }
-        #machine-canvas-container:active {
-            cursor: grabbing;
+        .leaflet-control-zoom a {
+            background-color: rgba(10, 10, 15, 0.8) !important;
+            color: #00f0ff !important;
+            border: 1px solid rgba(0, 240, 255, 0.3) !important;
         }
-        @media (min-width: 768px) {
-            #machine-canvas-container { height: 500px; }
+        .custom-neon-marker {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .leaflet-popup-content-wrapper {
+            background: rgba(10, 10, 15, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: white;
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+        }
+        .leaflet-popup-tip {
+            background: rgba(10, 10, 15, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.3);
         }
 
     </style>
@@ -260,9 +233,10 @@
         </div>
         <div class="flex gap-6 text-xs font-space tracking-widest text-gray-400 hidden md:flex">
             <a href="#mission" class="hover:text-cyan-400 transition-colors">MISSION</a>
-            <a href="#crew" class="hover:text-cyan-400 transition-colors">CREW</a>
+            <a href="#countdown-section" class="hover:text-cyan-400 transition-colors">LAUNCH</a>
             <a href="#machine" class="hover:text-cyan-400 transition-colors">MACHINE</a>
             <a href="#route" class="hover:text-cyan-400 transition-colors">ROUTE</a>
+            <a href="#crew" class="hover:text-cyan-400 transition-colors">CREW</a>
         </div>
         <button class="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-space tracking-widest rounded-full hover:bg-cyan-500/20 hover:shadow-neon-cyan transition-all">
             ENGAGE
@@ -321,27 +295,19 @@
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                <!-- Days -->
                 <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <span id="cd-days" class="text-6xl md:text-8xl font-black font-space text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">00</span>
                     <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Days</span>
                 </div>
-                <!-- Hours -->
                 <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 100ms;">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <span id="cd-hours" class="text-6xl md:text-8xl font-black font-space text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">00</span>
                     <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Hours</span>
                 </div>
-                <!-- Minutes -->
                 <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 200ms;">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <span id="cd-minutes" class="text-6xl md:text-8xl font-black font-space text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">00</span>
                     <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Minutes</span>
                 </div>
-                <!-- Seconds -->
                 <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group reveal" style="transition-delay: 300ms;">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <span id="cd-seconds" class="text-6xl md:text-8xl font-black font-space text-cyan-300 tracking-tighter drop-shadow-[0_0_20px_rgba(0,240,255,0.5)]">00</span>
                     <span class="text-cyan-400 font-space font-bold uppercase tracking-[0.2em] text-xs mt-3">Seconds</span>
                 </div>
@@ -349,7 +315,7 @@
         </div>
     </section>
 
-    <!-- The Machine (3D) -->
+    <!-- The Machine (360 Embed) -->
     <section id="machine" class="py-32 px-4 relative border-y border-white/5 bg-[#020205] overflow-hidden">
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-900/10 blur-[150px] rounded-full pointer-events-none"></div>
         
@@ -360,130 +326,88 @@
                     <h2 class="text-4xl md:text-6xl font-black font-space uppercase">Citroën Aircross X</h2>
                 </div>
                 <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-5 py-2 rounded-full text-xs font-space tracking-widest text-white backdrop-blur-md">
-                    <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-cyan-400"></i> DRAG TO ROTATE
+                    <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-cyan-400"></i> INTERACTIVE 360° VIEW
                 </div>
             </div>
 
-            <div class="relative glass-panel rounded-[2rem] overflow-hidden border border-cyan-500/20 shadow-neon-cyan reveal">
+            <!-- Embedded 360 Viewer Container -->
+            <div class="relative w-full aspect-square md:aspect-video rounded-[2rem] overflow-hidden border border-cyan-500/20 shadow-neon-cyan reveal bg-black">
                 
-                <!-- 3D Canvas Container for Car -->
-                <div id="machine-canvas-container" class="w-full bg-gradient-to-b from-[#050510] to-[#020205]"></div>
-                
-                <!-- Overlay HUD -->
+                <!-- 
+                ====================================================================
+                PASTE YOUR 360 CAR LINK HERE:
+                Replace the 'src' URL below with your actual 360 viewer or iframe link.
+                (Currently using a placeholder Sketchfab 3D SUV model for demonstration) 
+                ====================================================================
+                -->
+                <iframe 
+                    title="Car 360 View" 
+                    frameborder="0" 
+                    allowfullscreen 
+                    mozallowfullscreen="true" 
+                    webkitallowfullscreen="true" 
+                    allow="autoplay; fullscreen; xr-spatial-tracking" 
+                    xr-spatial-tracking 
+                    execution-while-out-of-viewport 
+                    execution-while-not-rendered 
+                    web-share 
+                    class="w-full h-full"
+                    src="https://www.cartrade.com/citroen-cars/aircross-x/360-view/">
+                </iframe>
+
+                <!-- Overlay Tactical HUD (Sits on top of the iframe) -->
                 <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between">
                     <div class="flex justify-between items-start w-full">
-                        <div class="text-cyan-400 font-space text-xs tracking-[0.3em] font-bold">
-                            <span class="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></span> REC
+                        <div class="text-cyan-400 font-space text-xs tracking-[0.3em] font-bold drop-shadow-md">
+                            <span class="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></span> LIVE FEED
                         </div>
-                        <div class="text-right">
+                        <div class="text-right drop-shadow-md">
                             <div class="text-white font-space font-bold text-lg">AX-7 PLATFORM</div>
-                            <div class="text-gray-500 font-space text-xs tracking-widest">7-SEATER CONFIG</div>
+                            <div class="text-gray-300 font-space text-xs tracking-widest">7-SEATER CONFIG</div>
                         </div>
                     </div>
                     
                     <div class="flex justify-between items-end w-full">
-                        <div class="glass-panel p-4 rounded-xl pointer-events-auto max-w-[250px]">
-                            <div class="text-xs font-space text-gray-400 tracking-widest mb-2 border-b border-white/10 pb-2">SPECS</div>
+                        <div class="glass-panel p-4 rounded-xl pointer-events-auto max-w-[250px] bg-black/40">
+                            <div class="text-xs font-space text-gray-400 tracking-widest mb-2 border-b border-white/10 pb-2">VEHICLE SPECS</div>
                             <ul class="space-y-2 text-sm font-space">
-                                <li class="flex justify-between"><span class="text-cyan-500">CREW</span> <span class="font-bold">06/07</span></li>
-                                <li class="flex justify-between"><span class="text-purple-500">RANGE</span> <span class="font-bold">OPTIMAL</span></li>
-                                <li class="flex justify-between"><span class="text-blue-500">MODE</span> <span class="font-bold">ODYSSEY</span></li>
+                                <li class="flex justify-between"><span class="text-cyan-500">CREW LIMIT</span> <span class="font-bold">06/07</span></li>
+                                <li class="flex justify-between"><span class="text-purple-500">CARGO</span> <span class="font-bold">MAX CAPACITY</span></li>
+                                <li class="flex justify-between"><span class="text-blue-500">SYSTEM STATUS</span> <span class="font-bold text-green-400">OPTIMAL</span></li>
                             </ul>
-                        </div>
-                        <div class="hidden md:block text-right pointer-events-auto">
-                            <button id="reset-car-btn" class="text-xs font-space tracking-widest bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/50 px-4 py-2 rounded-full transition-all">
-                                RESET VIEW
-                            </button>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Scanning Line -->
+                <!-- Scanning Line Effect -->
                 <div class="absolute top-0 left-0 w-full h-1 bg-cyan-500/50 shadow-[0_0_20px_#00f0ff] z-20 pointer-events-none opacity-50" style="animation: scan 4s linear infinite;"></div>
             </div>
         </div>
     </section>
 
-    <!-- Abstract Terrain Map Section -->
+    <!-- Real Geographic Map Section -->
     <section id="route" class="py-32 px-4 relative overflow-hidden bg-[#050508]">
         <div class="max-w-7xl mx-auto relative z-10">
-            <div class="text-center mb-24 reveal">
-                <h3 class="text-purple-500 font-space tracking-[0.3em] text-xs font-bold mb-3">TOPOLOGICAL DATA</h3>
+            <div class="text-center mb-16 reveal">
+                <h3 class="text-purple-500 font-space tracking-[0.3em] text-xs font-bold mb-3">GEOLOCATION DATA</h3>
                 <h2 class="text-4xl md:text-6xl font-black font-space uppercase">Route Trajectory</h2>
-                <p class="text-gray-400 mt-4 font-space tracking-widest text-sm">3 CITIES // 1 JOURNEY</p>
+                <p class="text-gray-400 mt-4 font-space tracking-widest text-sm">REAL-TIME TACTICAL MAP</p>
             </div>
 
-            <div class="relative w-full h-[600px] flex items-center justify-center map-3d-container reveal">
+            <div class="relative w-full h-[600px] md:h-[700px] rounded-[2rem] overflow-hidden border border-cyan-500/20 shadow-neon-cyan reveal">
                 
-                <!-- Isometric Plane -->
-                <div class="map-terrain w-full max-w-[800px] aspect-square relative rounded-3xl overflow-hidden" id="map-plane">
-                    <div class="terrain-grid"></div>
-                    
-                    <!-- SVG Route Line -->
-                    <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <defs>
-                            <linearGradient id="glowLine" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#00f0ff" />
-                                <stop offset="50%" stop-color="#9d4edd" />
-                                <stop offset="100%" stop-color="#00f0ff" />
-                            </linearGradient>
-                            <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-                                <feGaussianBlur stdDeviation="2" result="blur" />
-                                <feMerge>
-                                    <feMergeNode in="blur" />
-                                    <feMergeNode in="blur" />
-                                    <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                            </filter>
-                        </defs>
-                        <!-- Topographical decorative lines -->
-                        <path d="M -10 20 Q 30 10 50 40 T 110 30" fill="none" stroke="rgba(0,240,255,0.05)" stroke-width="0.2"/>
-                        <path d="M -10 40 Q 40 30 60 60 T 110 50" fill="none" stroke="rgba(157,78,221,0.05)" stroke-width="0.2"/>
-                        <path d="M -10 60 Q 20 50 40 80 T 110 70" fill="none" stroke="rgba(0,240,255,0.05)" stroke-width="0.2"/>
-                        
-                        <!-- Base Track -->
-                        <path d="M 20 80 C 20 50, 45 45, 50 40 C 60 30, 70 30, 80 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="2 2" />
-                        
-                        <!-- Animated Glowing Route -->
-                        <path d="M 20 80 C 20 50, 45 45, 50 40 C 60 30, 70 30, 80 20" fill="none" stroke="url(#glowLine)" stroke-width="1" class="route-path" id="animated-route" filter="url(#neonGlow)"/>
-                    </svg>
+                <!-- Leaflet Map Container -->
+                <div id="real-map" class="w-full h-full z-0 relative"></div>
 
-                    <!-- Nodes (positioned via left/top % to match SVG) -->
-                    <div class="absolute map-marker active" style="left: 20%; top: 80%;" data-index="0" onmouseenter="updateMapInfo(0)">
-                        <div class="map-marker-pin flex flex-col items-center cursor-pointer group">
-                            <div class="px-3 py-1 bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-[10px] font-space font-bold rounded shadow-[0_0_15px_#00f0ff] mb-1 backdrop-blur-sm whitespace-nowrap group-hover:scale-110 transition-transform">ANGAMALY</div>
-                            <div class="w-px h-8 bg-gradient-to-t from-cyan-500 to-transparent"></div>
-                            <div class="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_#fff]"></div>
-                            <div class="w-8 h-8 rounded-full border border-cyan-500/50 absolute bottom-[-14px] rotate-X-90 animate-ping"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="absolute map-marker" style="left: 50%; top: 40%;" data-index="1" onmouseenter="updateMapInfo(1)">
-                        <div class="map-marker-pin flex flex-col items-center cursor-pointer group">
-                            <div class="px-3 py-1 bg-purple-500/20 border border-purple-400 text-purple-300 text-[10px] font-space font-bold rounded shadow-[0_0_15px_#9d4edd] mb-1 backdrop-blur-sm whitespace-nowrap group-hover:scale-110 transition-transform">MYSORE</div>
-                            <div class="w-px h-12 bg-gradient-to-t from-purple-500 to-transparent"></div>
-                            <div class="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_#fff]"></div>
-                        </div>
-                    </div>
-
-                    <div class="absolute map-marker" style="left: 80%; top: 20%;" data-index="2" onmouseenter="updateMapInfo(2)">
-                        <div class="map-marker-pin flex flex-col items-center cursor-pointer group">
-                            <div class="px-3 py-1 bg-blue-500/20 border border-blue-400 text-blue-300 text-[10px] font-space font-bold rounded shadow-[0_0_15px_#0077ff] mb-1 backdrop-blur-sm whitespace-nowrap group-hover:scale-110 transition-transform">BANGALORE</div>
-                            <div class="w-px h-16 bg-gradient-to-t from-blue-500 to-transparent"></div>
-                            <div class="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_#fff]"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Info HUD -->
-                <div class="absolute top-0 right-0 w-full md:w-80 glass-panel p-6 rounded-2xl md:translate-x-1/4 z-20 shadow-2xl transition-all duration-300" id="map-hud">
-                    <!-- Injected via JS -->
+                <!-- Floating Info HUD over the Map -->
+                <div class="absolute top-6 right-6 w-[85%] max-w-sm glass-panel p-6 rounded-2xl z-20 shadow-2xl transition-all duration-300 pointer-events-auto" id="map-hud">
+                    <!-- Dynamic content injected via JS -->
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Crew Section (Stylized Grid) -->
+    <!-- Crew Section -->
     <section id="crew" class="py-24 px-4 bg-gradient-to-b from-[#050508] to-[#020205] border-t border-white/5 relative">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal">
@@ -497,7 +421,7 @@
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-8">
-                <!-- Generate 6 cards -->
+                <!-- Crew Cards -->
                 <script>
                     const crew = [
                         {name: "ANOOP", role: "CMDR", icon: "crosshair", color: "cyan"},
@@ -567,10 +491,11 @@
                 setTimeout(() => {
                     loader.style.display = 'none';
                     document.body.classList.remove('overflow-hidden');
-                    // Trigger initial reveals immediately
                     reveal();
+                    // Setup map after preloader to ensure proper sizing
+                    initLeafletMap();
                 }, 800);
-            }, 1500); // Fake load time for effect
+            }, 1000); 
         });
 
         // --- 2. Scroll Reveal Logic ---
@@ -582,48 +507,12 @@
                 var elementVisible = 100;
                 if (elementTop < windowHeight - elementVisible) {
                     reveals[i].classList.add("active");
-                    // If map section, trigger route animation
-                    if(reveals[i].id === 'map-plane' || reveals[i].closest('#route')) {
-                        document.getElementById('animated-route').classList.add('active');
-                    }
                 }
             }
         }
         window.addEventListener("scroll", reveal);
 
-        // --- 3. Map Data & Logic ---
-        const mapData = [
-            { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-cyan-400", border: "border-cyan-500/30" },
-            { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-purple-400", border: "border-purple-500/30" },
-            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved.", color: "text-blue-400", border: "border-blue-500/30" }
-        ];
-
-        function updateMapInfo(index) {
-            const markers = document.querySelectorAll('.map-marker');
-            markers.forEach((m, i) => m.classList.toggle('active', i === index));
-
-            const hud = document.getElementById('map-hud');
-            const data = mapData[index];
-            
-            hud.style.opacity = '0';
-            hud.style.transform = 'translateY(10px)';
-            
-            setTimeout(() => {
-                hud.innerHTML = `
-                    <div class="flex justify-between items-start mb-4 border-b border-white/10 pb-4">
-                        <div class="font-space text-xs tracking-[0.2em] text-gray-500">NAV PNT ${data.id}</div>
-                        <div class="${data.color} text-[10px] tracking-widest font-bold border ${data.border} px-2 py-1 rounded bg-white/5">${data.status}</div>
-                    </div>
-                    <h3 class="text-3xl font-black font-space mb-2 tracking-tight">${data.name}</h3>
-                    <p class="text-sm text-gray-400 leading-relaxed font-space">${data.desc}</p>
-                `;
-                hud.style.opacity = '1';
-                hud.style.transform = 'translateY(0)';
-            }, 200);
-        }
-        updateMapInfo(0); // init
-
-        // --- 4. Countdown Timer ---
+        // --- 3. Countdown Timer ---
         const targetDate = new Date("2026-07-11T00:30:00Z").getTime();
         function updateCountdown() {
             const now = new Date().getTime();
@@ -646,11 +535,118 @@
         setInterval(updateCountdown, 1000);
         updateCountdown();
 
-        // ==========================================
-        // THREE.JS IMPLEMENTATIONS
-        // ==========================================
-        
-        // --- A. Hero Background (Moving Terrain) ---
+        // --- 4. REAL GEOGRAPHIC MAP (LEAFLET) ---
+        const mapData = [
+            { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized. Crew boarding sequence complete.", color: "text-cyan-400", border: "border-cyan-500/30", coords: [10.1960, 76.3860] },
+            { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached. Refueling and local exploration active.", color: "text-purple-400", border: "border-purple-500/30", coords: [12.2958, 76.6394] },
+            { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired. Mission parameters achieved.", color: "text-blue-400", border: "border-blue-500/30", coords: [12.9716, 77.5946] }
+        ];
+
+        let realMap;
+
+        function updateMapInfo(index) {
+            const hud = document.getElementById('map-hud');
+            const data = mapData[index];
+            
+            hud.style.opacity = '0';
+            hud.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                hud.innerHTML = `
+                    <div class="flex justify-between items-start mb-4 border-b border-white/10 pb-4">
+                        <div class="font-space text-xs tracking-[0.2em] text-gray-500">NAV PNT ${data.id}</div>
+                        <div class="${data.color} text-[10px] tracking-widest font-bold border ${data.border} px-2 py-1 rounded bg-white/5">${data.status}</div>
+                    </div>
+                    <h3 class="text-3xl font-black font-space mb-2 tracking-tight">${data.name}</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed font-space mb-4">${data.desc}</p>
+                    <div class="text-[10px] text-gray-500 font-space tracking-widest flex items-center gap-2">
+                        <i data-lucide="crosshair" class="w-3 h-3"></i> LAT: ${data.coords[0].toFixed(4)} / LNG: ${data.coords[1].toFixed(4)}
+                    </div>
+                `;
+                lucide.createIcons();
+                hud.style.opacity = '1';
+                hud.style.transform = 'translateY(0)';
+            }, 200);
+
+            // Pan map to location when clicked
+            if (realMap) {
+                realMap.setView(data.coords, 8, {
+                    animate: true,
+                    duration: 1.5
+                });
+            }
+        }
+
+        function initLeafletMap() {
+            // Center map between Kerala and Karnataka
+            realMap = L.map('real-map', {
+                zoomControl: false // Custom position later if needed
+            }).setView([11.6, 76.8], 7);
+
+            // Add Dark Matter Tile Layer for Cyberpunk Vibe
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(realMap);
+
+            L.control.zoom({ position: 'bottomright' }).addTo(realMap);
+
+            // Draw Route Polyline (Glowing effect using two lines)
+            const latlngs = mapData.map(d => d.coords);
+            
+            // Outer glow line
+            L.polyline(latlngs, {
+                color: '#00f0ff',
+                weight: 8,
+                opacity: 0.3,
+                lineCap: 'round',
+                lineJoin: 'round'
+            }).addTo(realMap);
+
+            // Inner solid dash line
+            L.polyline(latlngs, {
+                color: '#fff',
+                weight: 2,
+                opacity: 0.8,
+                dashArray: '8, 12',
+                lineCap: 'round',
+                lineJoin: 'round'
+            }).addTo(realMap);
+
+            // Custom Neon Markers
+            mapData.forEach((loc, index) => {
+                let markerColor = index === 0 ? '#00f0ff' : (index === 1 ? '#9d4edd' : '#0077ff');
+                
+                const neonIcon = L.divIcon({
+                    className: 'custom-neon-marker',
+                    html: `
+                        <div class="relative flex items-center justify-center">
+                            <div class="absolute w-8 h-8 rounded-full animate-ping" style="background-color: ${markerColor}; opacity: 0.4;"></div>
+                            <div class="w-4 h-4 rounded-full border-2 border-[#020205] shadow-lg z-10" style="background-color: ${markerColor}; box-shadow: 0 0 15px ${markerColor};"></div>
+                        </div>
+                    `,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                const marker = L.marker(loc.coords, { icon: neonIcon }).addTo(realMap);
+                
+                // Add tooltip on hover
+                marker.bindTooltip(`<div class="font-space font-bold tracking-widest text-xs">${loc.name}</div>`, {
+                    direction: 'top',
+                    offset: [0, -10],
+                    className: 'glass-panel text-white border-0 bg-transparent shadow-none'
+                });
+
+                marker.on('click', () => updateMapInfo(index));
+            });
+
+            // Init HUD with first location
+            updateMapInfo(0);
+        }
+
+        // --- 5. Hero Background (Moving Terrain via Three.js) ---
         const initHeroThreeJS = () => {
             const container = document.getElementById('hero-canvas-container');
             const scene = new THREE.Scene();
@@ -665,28 +661,24 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
-            // Create Grid Terrain
+            // Grid Terrain
             const geometry = new THREE.PlaneGeometry(200, 200, 40, 40);
-            
-            // Add slight randomness to vertices to make it look like terrain
             const vertices = geometry.attributes.position.array;
             for (let i = 0; i < vertices.length; i += 3) {
-                vertices[i + 2] = (Math.random() - 0.5) * 2; // z axis becomes y after rotation
+                vertices[i + 2] = (Math.random() - 0.5) * 2; 
             }
-            
             const material = new THREE.MeshBasicMaterial({ 
                 color: 0x00f0ff, 
                 wireframe: true,
                 transparent: true,
                 opacity: 0.15
             });
-            
             const plane = new THREE.Mesh(geometry, material);
             plane.rotation.x = -Math.PI / 2;
             plane.position.y = -5;
             scene.add(plane);
 
-            // Particles/Stars
+            // Stars
             const starsGeo = new THREE.BufferGeometry();
             const starsCount = 500;
             const posArray = new Float32Array(starsCount * 3);
@@ -700,9 +692,8 @@
 
             function animate() {
                 requestAnimationFrame(animate);
-                // Move plane towards camera to simulate driving/flying
                 plane.position.z += 0.05;
-                if (plane.position.z > 5) plane.position.z = 0; // seamless loop
+                if (plane.position.z > 5) plane.position.z = 0; 
                 
                 starsMesh.rotation.y += 0.0005;
                 starsMesh.rotation.x += 0.0002;
@@ -718,207 +709,9 @@
             });
         };
 
-        // --- B. Machine Canvas (Procedural 3D Car) ---
-        const initMachineThreeJS = () => {
-            const container = document.getElementById('machine-canvas-container');
-            const scene = new THREE.Scene();
-            
-            // Create a slight gradient background effect in ThreeJS via fog
-            scene.fog = new THREE.Fog(0x050510, 10, 40);
-
-            const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-            camera.position.set(-6, 4, 8);
-            camera.lookAt(0, 0, 0);
-
-            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            // Enhance rendering for shiny car
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
-            container.appendChild(renderer.domElement);
-
-            // Lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-            scene.add(ambientLight);
-            
-            const dirLight = new THREE.DirectionalLight(0x00f0ff, 2);
-            dirLight.position.set(5, 5, 5);
-            scene.add(dirLight);
-
-            const backLight = new THREE.DirectionalLight(0x9d4edd, 2);
-            backLight.position.set(-5, 5, -5);
-            scene.add(backLight);
-
-            // --- BUILD PROCEDURAL CAR ---
-            const carGroup = new THREE.Group();
-
-            // Materials
-            const bodyMat = new THREE.MeshStandardMaterial({ 
-                color: 0x050505, 
-                roughness: 0.1, 
-                metalness: 0.9,
-            });
-            const glassMat = new THREE.MeshStandardMaterial({ 
-                color: 0x000000, 
-                roughness: 0.0, 
-                metalness: 1.0, 
-                transparent: true, 
-                opacity: 0.8
-            });
-            const neonMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.5 });
-
-            // 1. Lower Body
-            const lowerBodyGeo = new THREE.BoxGeometry(4.8, 1.2, 2.2);
-            const lowerBody = new THREE.Mesh(lowerBodyGeo, bodyMat);
-            lowerBody.position.y = 0.8;
-            
-            // Add neon edges
-            const edgesGeo1 = new THREE.EdgesGeometry(lowerBodyGeo);
-            const bodyLines = new THREE.LineSegments(edgesGeo1, neonMat);
-            lowerBody.add(bodyLines);
-            carGroup.add(lowerBody);
-
-            // 2. Cabin (Top part)
-            const cabinGeo = new THREE.BoxGeometry(2.6, 0.9, 1.9);
-            const cabin = new THREE.Mesh(cabinGeo, glassMat);
-            // Position slightly back
-            cabin.position.set(-0.3, 1.85, 0);
-            
-            const edgesGeo2 = new THREE.EdgesGeometry(cabinGeo);
-            const cabinLines = new THREE.LineSegments(edgesGeo2, new THREE.LineBasicMaterial({ color: 0x9d4edd, opacity: 0.5, transparent: true }));
-            cabin.add(cabinLines);
-            carGroup.add(cabin);
-
-            // 3. Wheels
-            const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.6, 32);
-            wheelGeo.rotateX(Math.PI / 2);
-            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x020202, roughness: 0.9 });
-            
-            const wheelPositions = [
-                [1.5, 0.55, 1.1],   // Front Right
-                [-1.5, 0.55, 1.1],  // Back Right
-                [1.5, 0.55, -1.1],  // Front Left
-                [-1.5, 0.55, -1.1]  // Back Left
-            ];
-
-            wheelPositions.forEach(pos => {
-                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-                wheel.position.set(...pos);
-                // Hubcap neon
-                const hubGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.62, 16);
-                hubGeo.rotateX(Math.PI / 2);
-                const hub = new THREE.Mesh(hubGeo, new THREE.MeshBasicMaterial({color: 0x00f0ff, wireframe: true}));
-                wheel.add(hub);
-                carGroup.add(wheel);
-            });
-
-            // 4. Headlights / Taillights
-            const hlGeo = new THREE.BoxGeometry(0.1, 0.3, 0.6);
-            const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Bright white
-            
-            const hlRight = new THREE.Mesh(hlGeo, hlMat);
-            hlRight.position.set(2.4, 1.0, 0.8);
-            carGroup.add(hlRight);
-            
-            const hlLeft = new THREE.Mesh(hlGeo, hlMat);
-            hlLeft.position.set(2.4, 1.0, -0.8);
-            carGroup.add(hlLeft);
-
-            const tlMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red
-            const tlRight = new THREE.Mesh(hlGeo, tlMat);
-            tlRight.position.set(-2.4, 1.0, 0.8);
-            carGroup.add(tlRight);
-            
-            const tlLeft = new THREE.Mesh(hlGeo, tlMat);
-            tlLeft.position.set(-2.4, 1.0, -0.8);
-            carGroup.add(tlLeft);
-
-            // Add Ground Grid
-            const gridHelper = new THREE.GridHelper(20, 20, 0x00f0ff, 0x222222);
-            gridHelper.position.y = 0;
-            gridHelper.material.opacity = 0.2;
-            gridHelper.material.transparent = true;
-            scene.add(gridHelper);
-
-            scene.add(carGroup);
-
-            // Animation & Interaction
-            let isDragging = false;
-            let previousMousePosition = { x: 0, y: 0 };
-            let autoRotate = true;
-
-            container.addEventListener('mousedown', () => { isDragging = true; autoRotate = false; });
-            document.addEventListener('mouseup', () => { isDragging = false; });
-            
-            container.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    const deltaMove = {
-                        x: e.offsetX - previousMousePosition.x,
-                        y: e.offsetY - previousMousePosition.y
-                    };
-                    carGroup.rotation.y += deltaMove.x * 0.01;
-                    carGroup.rotation.x += deltaMove.y * 0.01;
-                    // Limit X rotation
-                    carGroup.rotation.x = Math.max(-Math.PI/4, Math.min(Math.PI/4, carGroup.rotation.x));
-                }
-                previousMousePosition = { x: e.offsetX, y: e.offsetY };
-            });
-
-            // Touch support
-            container.addEventListener('touchstart', (e) => { 
-                isDragging = true; autoRotate = false; 
-                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }, {passive: true});
-            document.addEventListener('touchend', () => { isDragging = false; });
-            container.addEventListener('touchmove', (e) => {
-                if(isDragging) {
-                    const deltaMove = {
-                        x: e.touches[0].clientX - previousMousePosition.x,
-                        y: e.touches[0].clientY - previousMousePosition.y
-                    };
-                    carGroup.rotation.y += deltaMove.x * 0.01;
-                    carGroup.rotation.x += deltaMove.y * 0.01;
-                    carGroup.rotation.x = Math.max(-Math.PI/4, Math.min(Math.PI/4, carGroup.rotation.x));
-                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                }
-            }, {passive: true});
-
-            document.getElementById('reset-car-btn').addEventListener('click', () => {
-                carGroup.rotation.set(0,0,0);
-                autoRotate = true;
-            });
-
-            // Add slight bobbing motion
-            let time = 0;
-
-            function animateMachine() {
-                requestAnimationFrame(animateMachine);
-                time += 0.02;
-                
-                if (autoRotate) {
-                    carGroup.rotation.y += 0.005;
-                }
-                
-                // Bobbing suspension effect
-                carGroup.position.y = Math.sin(time) * 0.05;
-
-                renderer.render(scene, camera);
-            }
-            animateMachine();
-
-            // Handle Resize
-            window.addEventListener('resize', () => {
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
-            });
-        };
-
-        // Initialize ThreeJS after a tiny delay to ensure containers are sized
+        // Initialize ThreeJS Background immediately
         setTimeout(() => {
             initHeroThreeJS();
-            initMachineThreeJS();
         }, 100);
 
     </script>
