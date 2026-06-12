@@ -73,9 +73,13 @@
             color: #0f172a;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            /* Futuristic Subliminal Grid & Gradients */
             background-image: 
-                radial-gradient(at 0% 0%, hsla(328,100%,84%,0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, hsla(253,100%,84%,0.1) 0px, transparent 50%);
+                linear-gradient(to right, rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                radial-gradient(at 0% 0%, hsla(328,100%,84%,0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(253,100%,84%,0.15) 0px, transparent 50%);
+            background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
             background-attachment: fixed;
         }
 
@@ -135,18 +139,24 @@
         .reveal.active { opacity: 1; transform: translate(0) scale(1); }
 
         #hero-canvas-container {
-            position: absolute; inset: 0; z-index: 0; overflow: hidden; opacity: 0.9;
-            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            position: absolute; inset: 0; z-index: 0; overflow: hidden; opacity: 0.95;
+            mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
         }
 
-        /* Map Styling */
-        .leaflet-container { background: #f8fafc !important; font-family: 'Space Grotesk', sans-serif; border-radius: 2rem; }
+        /* Leaflet Map Styling & Animations */
+        .leaflet-container { background: transparent !important; font-family: 'Space Grotesk', sans-serif; border-radius: 2rem; }
         .custom-vibrant-marker { display: flex; justify-content: center; align-items: center; }
         .leaflet-popup-content-wrapper {
             background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.05);
             color: #0f172a; backdrop-filter: blur(10px); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
+        
+        /* Flowing Data Animation for Map Routes */
+        .route-flow-forward { stroke-dasharray: 12, 24; animation: flowForward 20s linear infinite; }
+        .route-flow-return { stroke-dasharray: 12, 24; animation: flowReturn 20s linear infinite; }
+        @keyframes flowForward { to { stroke-dashoffset: -1000; } }
+        @keyframes flowReturn { to { stroke-dashoffset: 1000; } }
 
         @keyframes bannerSlideIn { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes bannerPulse { 0%, 100% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.3); } 50% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.5); } }
@@ -194,13 +204,20 @@
         .gallery-item:hover { transform: translateY(-10px) scale(1.02); box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3); border-color: #f8fafc; }
         .gallery-item:hover img { transform: scale(1.1); filter: brightness(1.1); }
 
-        /* HUD Scanner */
+        /* HUD Scanner & Brackets */
         .scanline {
-            width: 100%; height: 4px; background: linear-gradient(to right, transparent, rgba(139, 92, 246, 0.8), transparent);
-            position: absolute; top: 0; left: 0; z-index: 30; opacity: 0.6;
-            animation: scan 3s linear infinite; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+            width: 100%; height: 6px; background: linear-gradient(to right, transparent, rgba(139, 92, 246, 0.9), transparent);
+            position: absolute; top: 0; left: 0; z-index: 30; opacity: 0.7;
+            animation: scan 4s cubic-bezier(0.4, 0, 0.6, 1) infinite; box-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
         }
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+        
+        .hud-bracket { position: absolute; width: 50px; height: 50px; border-color: rgba(139, 92, 246, 0.8); border-style: solid; z-index: 25; pointer-events: none; transition: all 0.5s ease; }
+        .hud-tl { top: 20px; left: 20px; border-width: 4px 0 0 4px; border-radius: 16px 0 0 0; }
+        .hud-tr { top: 20px; right: 20px; border-width: 4px 4px 0 0; border-radius: 0 16px 0 0; }
+        .hud-bl { bottom: 20px; left: 20px; border-width: 0 0 4px 4px; border-radius: 0 0 0 16px; }
+        .hud-br { bottom: 20px; right: 20px; border-width: 0 4px 4px 0; border-radius: 0 0 16px 0; }
+        .group:hover .hud-bracket { width: 70px; height: 70px; border-color: rgba(236, 72, 153, 0.9); box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
 
         /* ----- ADMIN THEME ----- */
         .theme-admin {
@@ -337,22 +354,22 @@
                     Odyssey
                 </h2>
                 
-                <div class="flex flex-col md:flex-row items-center gap-4 text-sm md:text-base font-space font-bold tracking-[0.2em] text-slate-500 mb-12 bg-white/60 border border-white/80 px-8 py-4 rounded-3xl shadow-sm">
-                    <span class="text-slate-800 hover:text-pink-500 transition-colors">ANGAMALY</span>
+                <div class="flex flex-col md:flex-row items-center gap-4 text-sm md:text-base font-space font-bold tracking-[0.2em] text-slate-500 mb-12 bg-white/60 border border-white/80 px-8 py-4 rounded-3xl shadow-sm backdrop-blur-sm hover:bg-white/80 transition-colors">
+                    <span class="text-slate-800 hover:text-pink-500 transition-colors cursor-default">ANGAMALY</span>
                     <div class="w-8 h-px bg-pink-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-pink-400"></div></div>
                     <i data-lucide="chevrons-down" class="md:hidden text-pink-400 w-4 h-4"></i>
-                    <span class="text-slate-800 hover:text-orange-500 transition-colors">MYSORE</span>
+                    <span class="text-slate-800 hover:text-orange-500 transition-colors cursor-default">MYSORE</span>
                     <div class="w-8 h-px bg-orange-300 hidden md:block relative"><div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 border-t border-r border-orange-400"></div></div>
                     <i data-lucide="chevrons-down" class="md:hidden text-orange-400 w-4 h-4"></i>
-                    <span class="text-slate-800 hover:text-violet-500 transition-colors">BANGALORE</span>
+                    <span class="text-slate-800 hover:text-violet-500 transition-colors cursor-default">BANGALORE</span>
                 </div>
 
-                <p class="max-w-2xl text-slate-600 text-lg md:text-xl font-medium leading-relaxed mb-12">
+                <p class="max-w-2xl text-slate-600 text-lg md:text-xl font-medium leading-relaxed mb-12 bg-white/30 backdrop-blur-md p-4 rounded-xl border border-white/40 shadow-sm">
                     6 Friends. 1 Citroën Aircross X 7-Seater.<br>Hundreds of kilometers mapping a beautiful adventure.
                 </p>
 
-                <!-- Restored & Enhanced Start Button -->
-                <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-white/80 overflow-hidden rounded-2xl border border-white transition-all hover:border-pink-300 shadow-soft-color hover:shadow-glow-pink">
+                <!-- Start Button -->
+                <a href="#countdown-section" class="group relative inline-flex px-10 py-5 bg-white overflow-hidden rounded-2xl border border-pink-200 transition-all hover:border-pink-400 shadow-soft-color hover:shadow-glow-pink">
                     <div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-pink-100 to-transparent skew-x-[-45deg] group-hover:animate-[shimmer_1.5s_infinite]"></div>
                     <span class="relative font-space font-bold tracking-[0.2em] text-slate-800 flex items-center gap-3 text-sm md:text-base group-hover:text-pink-600 transition-colors">
                         START THE JOURNEY <i data-lucide="arrow-down-circle" class="text-pink-500 group-hover:translate-y-1 transition-transform w-5 h-5"></i>
@@ -391,7 +408,7 @@
             </div>
         </section>
 
-        <!-- Restored & Enhanced: The Machine (Video Display) -->
+        <!-- Futuristic Video / Machine Section -->
         <section id="machine" class="py-32 px-4 relative z-10">
             <div class="max-w-7xl mx-auto relative z-10">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 reveal">
@@ -407,15 +424,21 @@
                 </div>
 
                 <!-- Video Display Container -->
-                <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-white group hover:shadow-2xl transition-all duration-500">
+                <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2.5rem] overflow-hidden border border-white/80 shadow-soft-color reveal bg-slate-900 group hover:shadow-2xl transition-all duration-500">
                     
+                    <!-- HUD Cyber Brackets -->
+                    <div class="hud-bracket hud-tl"></div>
+                    <div class="hud-bracket hud-tr"></div>
+                    <div class="hud-bracket hud-bl"></div>
+                    <div class="hud-bracket hud-br"></div>
+
                     <!-- HUD Scanner Line -->
                     <div class="scanline"></div>
 
                     <!-- THE VIDEO TAG -->
                     <video 
                         id="car-video" 
-                        class="w-full h-full object-cover pointer-events-none filter brightness-95 group-hover:brightness-105 transition-all duration-700 transform group-hover:scale-105" 
+                        class="w-full h-full object-cover pointer-events-none filter brightness-95 contrast-125 group-hover:brightness-105 transition-all duration-700 transform group-hover:scale-105" 
                         src="./assets/aircross-spin.mp4" 
                         muted 
                         playsinline 
@@ -426,24 +449,24 @@
                     <!-- Overlay HUD -->
                     <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between z-20">
                         <div class="flex justify-between items-start w-full">
-                            <div class="text-slate-800 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full font-space text-xs tracking-[0.3em] font-bold shadow-sm flex items-center border border-white/50">
-                                <span class="inline-block w-2 h-2 bg-pink-500 rounded-full animate-pulse mr-2"></span> CAM_01
+                            <div class="text-white bg-black/40 backdrop-blur-md px-4 py-2 rounded-full font-space text-xs tracking-[0.3em] font-bold shadow-sm flex items-center border border-white/20">
+                                <span class="inline-block w-2 h-2 bg-pink-500 rounded-full animate-pulse mr-2 shadow-[0_0_10px_#ec4899]"></span> CAM_01
                             </div>
-                            <div class="text-right bg-white/80 backdrop-blur-md px-5 py-2 rounded-2xl shadow-sm border border-white/50">
-                                <div class="text-slate-900 font-space font-black text-lg text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-pink-500">AX-7 PLATFORM</div>
-                                <div class="text-slate-500 font-space font-bold text-xs tracking-widest">7-SEATER CONFIG</div>
+                            <div class="text-right bg-black/40 backdrop-blur-md px-5 py-2 rounded-2xl shadow-sm border border-white/20">
+                                <div class="font-space font-black text-lg text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">AX-7 PLATFORM</div>
+                                <div class="text-slate-300 font-space font-bold text-xs tracking-widest">7-SEATER CONFIG</div>
                             </div>
                         </div>
                         
                         <div class="flex justify-between items-end w-full">
-                            <div class="bg-white/85 backdrop-blur-md border border-white/60 p-5 rounded-2xl pointer-events-auto max-w-[280px] shadow-lg transform transition-transform hover:scale-105 cursor-default">
-                                <div class="text-xs font-space font-bold text-violet-500 tracking-widest mb-3 border-b border-slate-200 pb-2 flex items-center gap-2">
+                            <div class="bg-black/50 backdrop-blur-md border border-violet-500/50 p-5 rounded-2xl pointer-events-auto max-w-[280px] shadow-lg transform transition-transform hover:scale-105 cursor-default group/stats">
+                                <div class="text-xs font-space font-bold text-violet-400 tracking-widest mb-3 border-b border-white/20 pb-2 flex items-center gap-2">
                                     <i data-lucide="bar-chart-2" class="w-4 h-4"></i> VEHICLE SPECS
                                 </div>
-                                <ul class="space-y-3 text-sm font-space font-medium">
-                                    <li class="flex justify-between items-center"><span class="text-slate-500 text-xs">CREW LIMIT</span> <span class="font-bold text-slate-900">06/07</span></li>
-                                    <li class="flex justify-between items-center"><span class="text-slate-500 text-xs">CARGO</span> <span class="font-bold text-slate-900">MAX CAPACITY</span></li>
-                                    <li class="flex justify-between items-center"><span class="text-slate-500 text-xs">SYSTEM STATUS</span> <span class="font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 animate-pulse">OPTIMAL</span></li>
+                                <ul class="space-y-3 text-sm font-space font-medium text-white">
+                                    <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">CREW LIMIT</span> <span class="font-bold">06/07</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">CARGO</span> <span class="font-bold">MAX CAPACITY</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-slate-300 text-xs">SYSTEM STATUS</span> <span class="font-bold text-emerald-400 bg-emerald-900/50 px-2 py-0.5 rounded border border-emerald-500/50 animate-pulse">OPTIMAL</span></li>
                                 </ul>
                             </div>
                         </div>
@@ -452,7 +475,7 @@
             </div>
         </section>
 
-        <!-- Route Section -->
+        <!-- Route Map Section with Data Flow -->
         <section id="route" class="py-32 px-4 relative z-10">
             <div class="max-w-7xl mx-auto relative z-10">
                 <div class="text-center mb-16 reveal">
@@ -483,13 +506,13 @@
                     </div>
                 </div>
                 <div id="emptyGalleryMessage" class="text-center py-12 reveal glass-panel rounded-2xl mx-auto max-w-lg">
-                    <i data-lucide="image-off" class="w-12 h-12 mx-auto text-slate-300 mb-4"></i>
+                    <i data-lucide="image-off" class="w-12 h-12 mx-auto text-slate-300 mb-4 animate-pulse"></i>
                     <p class="text-slate-500 font-space font-bold tracking-widest">AWAITING MISSION DATA</p>
                 </div>
             </div>
         </section>
 
-        <!-- Restored & Enhanced: Crew Section -->
+        <!-- Crew Section -->
         <section id="crew" class="py-32 px-4 relative z-10">
             <div class="max-w-7xl mx-auto">
                 <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal">
@@ -505,7 +528,6 @@
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
-                    
                     <!-- Crew Card 1 -->
                     <div class="glass-panel p-8 rounded-3xl group hover:-translate-y-3 transition-all duration-500 reveal border-t-4 border-t-transparent hover:border-t-pink-500">
                         <div class="flex justify-between items-start mb-8">
@@ -600,7 +622,7 @@
                     <span class="hover:text-yellow-500 transition-colors">ABRAHAM</span>
                 </div>
                 <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-xs font-bold text-slate-400 font-space tracking-widest">
-                    <div class="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 text-emerald-600">
+                    <div class="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 text-emerald-600 shadow-sm">
                         <i data-lucide="check-circle" class="w-4 h-4"></i> SYSTEMS READY
                     </div>
                     <a href="#admin" class="px-5 py-2.5 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-full hover:shadow-lg hover:-translate-y-1 transition-all inline-flex items-center gap-2 border border-slate-700">
@@ -628,10 +650,18 @@
                         </p>
                         <p class="text-xs text-slate-500 mb-8">Authenticating via Firebase Auth</p>
                     </div>
+                    
+                    <!-- NEW EXPLICIT EMAIL FIELD -->
+                    <div class="flex flex-col gap-2 text-left mb-4">
+                        <label class="text-sm font-semibold text-glow-cyan flex items-center gap-2"><i data-lucide="mail" class="w-3 h-3"></i> ADMIN EMAIL</label>
+                        <input type="email" id="emailInput" class="login-input" placeholder="admin@aircross.com" autocomplete="off">
+                    </div>
+
                     <div class="flex flex-col gap-2 text-left mb-4">
                         <label class="text-sm font-semibold text-glow-cyan flex items-center gap-2"><i data-lucide="key" class="w-3 h-3"></i> ACCESS CODE</label>
                         <input type="password" id="passwordInput" class="login-input" placeholder="••••••••••••" autocomplete="off">
                     </div>
+                    
                     <div id="errorMessage" style="display: none; color: #f87171; font-size: 0.875rem;" class="text-center"></div>
                     <button class="btn-admin btn-admin-primary w-full flex justify-center items-center gap-2" onclick="window.authenticateAdmin()">
                         <i data-lucide="unlock" class="w-4 h-4"></i> UNLOCK PORTAL
@@ -734,9 +764,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = "aircross-odyssey-main";
-        
-        // IMPORTANT: Must match the email you created in Firebase Console
-        const ADMIN_EMAIL = "admin@aircross.com"; 
 
         // State
         let publicBanners = [];
@@ -857,13 +884,24 @@
         // ADMIN AUTHENTICATION
         // ==========================================
         window.authenticateAdmin = async () => {
+            const email = document.getElementById('emailInput').value.trim();
             const pwd = document.getElementById('passwordInput').value;
             const btn = document.querySelector('#loginScreen .btn-admin-primary');
+            
+            if(!email || !pwd) {
+                const err = document.getElementById('errorMessage');
+                err.textContent = "Please enter both Email and Access Code.";
+                err.style.display = 'block';
+                setTimeout(() => err.style.display = 'none', 3000);
+                return;
+            }
+            
             const originalText = btn.innerHTML;
             btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> AUTHENTICATING...`;
             
             try {
-                await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pwd);
+                // Secure login using explicit email and password
+                await signInWithEmailAndPassword(auth, email, pwd);
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('dashboard').classList.add('active');
                 renderAdminBanners();
@@ -1154,7 +1192,7 @@
             window.addEventListener("scroll", reveal);
             reveal();
 
-            // Leaflet
+            // Leaflet Map Initialization
             const mapData = [
                 { id: "001", name: "ANGAMALY", status: "DEPARTURE", desc: "Origin point. Systems initialized.", color: "text-pink-500", bg: "bg-pink-100", coords: [10.2191, 76.2506], markerHex: '#ec4899'},
                 { id: "002", name: "MYSORE", status: "WAYPOINT", desc: "Mid-point coordinates reached.", color: "text-orange-500", bg: "bg-orange-100", coords: [12.2958, 76.6394], markerHex: '#f97316'},
@@ -1163,7 +1201,18 @@
             const realMap = L.map('real-map', { zoomControl: false }).setView([11.6, 76.8], 7);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 20 }).addTo(realMap);
             L.control.zoom({ position: 'bottomright' }).addTo(realMap);
-            L.polyline(mapData.map(d=>d.coords), { color: '#8b5cf6', weight: 4, opacity: 0.8, dashArray: '10, 10' }).addTo(realMap);
+
+            // Forward Route (Angamaly -> Mysore -> Bangalore)
+            const forwardCoords = mapData.map(d=>d.coords);
+            L.polyline(forwardCoords, { color: '#ec4899', weight: 6, opacity: 0.8 }).addTo(realMap);
+            // Animated overlay for forward route
+            L.polyline(forwardCoords, { color: '#ffffff', weight: 2, className: 'route-flow-forward' }).addTo(realMap);
+
+            // Return Route (Bangalore -> Angamaly)
+            const returnCoords = [mapData[2].coords, mapData[0].coords];
+            L.polyline(returnCoords, { color: '#8b5cf6', weight: 4, opacity: 0.5, dashArray: '5, 5' }).addTo(realMap);
+            // Animated overlay for return route
+            L.polyline(returnCoords, { color: '#06b6d4', weight: 3, className: 'route-flow-return' }).addTo(realMap);
             
             function updateMapInfo(index) {
                 const hud = document.getElementById('map-hud');
@@ -1193,7 +1242,7 @@
             });
             updateMapInfo(0);
 
-            // Three.js Dynamic Wavy Grid Background
+            // Three.js Dynamic Wavy Grid Background with Floating Particles
             const container = document.getElementById('hero-canvas-container');
             if(container && !container.hasChildNodes()) {
                 const scene = new THREE.Scene();
@@ -1205,31 +1254,49 @@
                 renderer.setPixelRatio(window.devicePixelRatio);
                 container.appendChild(renderer.domElement);
                 
+                // The Wavy Wireframe Plane
                 const geo = new THREE.PlaneGeometry(200, 200, 60, 60);
                 const mat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, wireframe: true, transparent: true, opacity: 0.2 });
                 const plane = new THREE.Mesh(geo, mat);
                 plane.rotation.x = -Math.PI / 2; plane.position.y = -8;
                 scene.add(plane);
                 
-                // Keep track of original Z positions for the wave effect
+                // Add floating data particles (stars)
+                const starsGeo = new THREE.BufferGeometry();
+                const starsCount = 500;
+                const posArray = new Float32Array(starsCount * 3);
+                for(let i=0; i<starsCount*3; i++) {
+                    posArray[i] = (Math.random() - 0.5) * 150;
+                }
+                starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                const starsMat = new THREE.PointsMaterial({ size: 0.15, color: 0x06b6d4, transparent: true, opacity: 0.8 });
+                const starPoints = new THREE.Points(starsGeo, starsMat);
+                starPoints.position.y = -10;
+                scene.add(starPoints);
+
                 const count = geo.attributes.position.count;
                 
                 function animate() {
                     requestAnimationFrame(animate);
                     const time = Date.now() * 0.001;
                     
-                    // Create fluid wave motion
+                    // Wave motion for the grid
                     const positions = plane.geometry.attributes.position;
                     for (let i = 0; i < count; i++) {
                         const x = positions.getX(i);
                         const y = positions.getY(i);
-                        // Math.sin for waves across x and y
                         positions.setZ(i, Math.sin(x * 0.1 + time) * 1.5 + Math.cos(y * 0.1 + time) * 1.5);
                     }
                     positions.needsUpdate = true;
                     
                     plane.position.z += 0.02; 
                     if (plane.position.z > 5) plane.position.z = 0; 
+
+                    // Particle motion
+                    starPoints.rotation.y += 0.0005;
+                    starPoints.position.y += 0.02;
+                    if(starPoints.position.y > 20) starPoints.position.y = -10;
+
                     renderer.render(scene, camera);
                 }
                 animate();
