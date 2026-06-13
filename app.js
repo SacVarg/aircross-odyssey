@@ -222,7 +222,7 @@ window.toggleNoteStatus = async (id, isCompleted) => {
 };
 
 window.deleteNote = async (id, event) => {
-    event.stopPropagation(); // Prevents the card from toggling completion status when deleting
+    event.stopPropagation();
     if(!confirm('Delete this idea permanently?')) return;
     try {
         await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'notes', id.toString()));
@@ -579,7 +579,17 @@ function activateHyperdrive() {
     setTimeout(() => { pv.classList.remove('hyperdrive-active', 'hyperdrive-shake'); hyperdriveMode = false; showToast('ORBIT STABILIZED', 'success'); }, 4000);
 }
 
-// MAP & GRAPHICS INIT (THE FULL RESTORED FUNCTION)
+// ==========================================
+// MAP & GRAPHICS INIT (FIXED)
+// ==========================================
+window.closeMapHud = () => {
+    const hud = document.getElementById('map-hud');
+    if(hud) {
+        hud.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+        hud.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+    }
+};
+
 function initMapAndGraphics() {
     function reveal() {
         var reveals = document.querySelectorAll(".reveal");
@@ -616,29 +626,42 @@ function initMapAndGraphics() {
             const hud = document.getElementById('map-hud');
             const data = mapData[index];
             hud.innerHTML = `
-                <div class="flex justify-between items-center mb-5 border-b border-slate-100 pb-4">
-                    <div class="font-space font-bold text-xs tracking-[0.2em] text-slate-400">NAV PNT ${data.id}</div>
-                    <div class="${data.color} ${data.bg} text-[10px] tracking-widest font-bold px-3 py-1.5 rounded-md shadow-sm border border-white">${data.status}</div>
+                <button onclick="window.closeMapHud()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full p-1 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+                <div class="flex justify-between items-center mb-3 border-b border-slate-100 pb-3 pr-6">
+                    <div class="font-space font-bold text-[10px] tracking-[0.2em] text-slate-400">NAV PNT ${data.id}</div>
+                    <div class="${data.color} ${data.bg} text-[9px] tracking-widest font-bold px-2 py-1 rounded shadow-sm border border-white">${data.status}</div>
                 </div>
-                <h3 class="text-3xl font-black font-space mb-3 tracking-tight text-slate-800">${data.name}</h3>
-                <p class="text-sm text-slate-500 leading-relaxed font-medium mb-6">${data.desc}</p>
-                <div class="flex items-center gap-2 text-xs font-space font-bold text-slate-400 bg-slate-50 px-3 py-2 rounded-lg">
-                    <i data-lucide="crosshair" class="w-4 h-4"></i> LAT: ${data.coords[0].toFixed(4)} LNG: ${data.coords[1].toFixed(4)}
+                <h3 class="text-xl font-black font-space mb-1 tracking-tight text-slate-800">${data.name}</h3>
+                <p class="text-xs text-slate-500 leading-relaxed font-medium mb-4">${data.desc}</p>
+                <div class="flex items-center gap-2 text-[10px] font-space font-bold text-slate-400 bg-slate-50 px-2 py-1.5 rounded-md">
+                    <i data-lucide="crosshair" class="w-3 h-3"></i> LAT: ${data.coords[0].toFixed(4)} LNG: ${data.coords[1].toFixed(4)}
                 </div>
             `;
             lucide.createIcons();
+            
+            // Show the HUD with transition
+            hud.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+            hud.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+            
             realMap.setView(data.coords, 8, { animate: true });
         }
+        
         mapData.forEach((loc, index) => {
             const vibrantIcon = L.divIcon({
                 className: 'custom-vibrant-marker',
-                html: `<div class="relative flex items-center justify-center"><div class="absolute w-12 h-12 rounded-full animate-ping" style="background-color: ${loc.markerHex}; opacity: 0.4;"></div><div class="w-6 h-6 rounded-full border-4 border-white shadow-lg z-10" style="background-color: ${loc.markerHex};"></div></div>`,
+                html: `<div class="relative flex items-center justify-center cursor-pointer group">
+                          <div class="absolute w-12 h-12 rounded-full animate-ping" style="background-color: ${loc.markerHex}; opacity: 0.4;"></div>
+                          <div class="w-6 h-6 rounded-full border-4 border-white shadow-lg z-10 group-hover:scale-125 transition-transform duration-300" style="background-color: ${loc.markerHex};"></div>
+                       </div>`,
                 iconSize: [48, 48], iconAnchor: [24, 24]
             });
             const marker = L.marker(loc.coords, { icon: vibrantIcon }).addTo(realMap);
             marker.on('click', () => updateMapInfo(index));
         });
-        updateMapInfo(0);
+        
+        // Removed auto-initialization so the HUD stays hidden until a marker is clicked!
     }
 
     // Three.js
