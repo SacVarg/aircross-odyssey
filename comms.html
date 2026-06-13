@@ -1,1 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOYAGER | Secure Comms</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], space: ['Space Grotesk', 'sans-serif'] }, colors: { emerald: '#10b981', cyan: '#06b6d4', violet: '#8b5cf6' } } }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="theme-public min-h-screen pb-20">
 
+    <div class="blob-bg blob-1"></div><div class="blob-bg blob-2"></div><div class="blob-bg blob-3"></div>
+
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/50 backdrop-blur-xl border-b border-white/60 shadow-sm">
+        <a href="index.html" class="font-space font-bold text-xl tracking-[0.2em] text-slate-800 flex items-center gap-2 hover:text-cyan-600 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5 text-cyan-500"></i> BACK
+        </a>
+        <div class="text-xs font-space font-bold tracking-widest text-cyan-600 bg-cyan-50 px-4 py-2 rounded-full border border-cyan-200">
+            SECURE CHANNEL
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto pt-32 px-4 relative z-10">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800 cyber-title">Crew Comms</h1>
+            <p class="text-slate-500 mt-4 font-medium">Intercepted audio and text transmissions from the Chariot.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Transmission Form -->
+            <div class="lg:col-span-1">
+                <div class="glass-panel p-6 md:p-8 rounded-3xl border-t-4 border-t-cyan-500 relative shadow-[0_10px_40px_rgba(6,182,212,0.15)]">
+                    <h3 class="font-space font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <i data-lucide="terminal" class="w-5 h-5 text-cyan-500"></i> TRANSMIT LOG
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 tracking-wider mb-2 block">IDENTIFY</label>
+                            <select id="commAuthor" class="w-full bg-white/60 border border-slate-200 rounded-xl p-3 text-sm font-space font-bold text-slate-700 outline-none focus:border-cyan-500">
+                                <option value="Loading...">Syncing Crew...</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-xs font-bold text-slate-500 tracking-wider block">MESSAGE</label>
+                                <span id="recordStatus" class="text-[10px] font-bold text-slate-400">Audio ready</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <textarea id="commMessage" rows="4" class="flex-1 bg-white/60 border border-slate-200 rounded-xl p-3 text-sm outline-none resize-none focus:border-cyan-500" placeholder="Enter text..."></textarea>
+                                <button id="recordBtn" onclick="window.toggleRecord()" class="w-12 h-12 shrink-0 bg-white/60 border border-slate-200 rounded-xl text-slate-500 flex justify-center items-center hover:bg-slate-100 outline-none transition-colors" title="Click to record voice (15s max)">
+                                    <i data-lucide="mic" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button onclick="window.postComm()" class="w-full py-4 mt-2 bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-space font-bold tracking-widest rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.4)] flex justify-center items-center gap-2 hover:scale-[1.02] transition-transform">
+                            <i data-lucide="send" class="w-4 h-4"></i> DISPATCH
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feed -->
+            <div class="lg:col-span-2">
+                <div class="glass-panel p-4 md:p-6 rounded-3xl h-[600px] flex flex-col shadow-sm">
+                    <div class="text-xs font-bold text-slate-400 tracking-widest mb-4 border-b border-slate-200 pb-4 flex justify-between items-center shrink-0">
+                        <span>LIVE FEED</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> ONLINE</span>
+                    </div>
+                    <div id="commsContainer" class="flex-1 overflow-y-auto pr-2 comms-scrollbar space-y-4">
+                        <div class="text-center py-10 text-slate-400 font-space text-sm">
+                            <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-cyan-500"></i> Syncing encrypted logs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+    <!-- TAILWIND SAFELIST -->
+    <div class="hidden custom-audio text-[10px] text-xs mb-2"></div>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
