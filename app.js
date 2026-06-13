@@ -1,8 +1,23 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { 
+    getAuth, 
+    signInAnonymously, 
+    signInWithEmailAndPassword, 
+    signOut, 
+    onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { 
+    getFirestore, 
+    collection, 
+    onSnapshot, 
+    doc, 
+    setDoc, 
+    deleteDoc 
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Firebase Setup
+// ==========================================
+// FIREBASE CONFIGURATION
+// ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
     authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
@@ -11,73 +26,92 @@ const firebaseConfig = {
     messagingSenderId: "641282553954",
     appId: "1:641282553954:web:4b3fa456d9eda8adf2393b"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = "aircross-odyssey-main";
 
+// ==========================================
+// GLOBAL STATE VARIABLES
+// ==========================================
 let publicBanners = [];
 let publicGallery = [];
 let publicComms = [];
 let publicNotes = [];
+let publicCrew = [];
 let isAuthenticated = false;
 
-// Banner Rotation 
+// Banner State
 let activeBannerIndex = 0;
 let bannerInterval = null;
 
-// Audio Variables
+// Audio Recording State
 let mediaRecorder;
 let audioChunks = [];
 let audioBase64 = null;
 let recordingTimer = null;
 
-// Routing Context Check
+// Routing Context Checks
 const isMainPage = !!document.getElementById('public-view');
 const isNotesPage = !!document.getElementById('newNoteInput');
+const isCommsPage = !!document.getElementById('commMessage');
 let mapInitialized = false;
 
-// Hyperdrive
+// Hyperdrive Easter Egg State
 let hyperdriveMode = false;
 let logoClicks = 0;
 let clickTimer = null;
 
 // ==========================================
-// FIREBASE LISTENERS
+// FIREBASE REAL-TIME LISTENERS
 // ==========================================
 let listenersSetup = false;
+
 function setupFirestoreListeners() {
     if (listenersSetup) return;
     listenersSetup = true;
     
-    if(isMainPage) {
+    // 1. CREW ROSTER (Loaded globally for dropdowns & display)
+    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'crew'), (snapshot) => {
+        publicCrew = snapshot.docs.map(d => d.data()).sort((a, b) => a.crewId.localeCompare(b.crewId));
+        
+        if (isMainPage) {
+            renderPublicCrew();
+            if (isAuthenticated) renderAdminCrew();
+            updateDriverDropdown();
+        }
+        if (isCommsPage || isMainPage) {
+            updateCommsAuthorDropdown();
+        }
+    });
+
+    // 2. MAIN PAGE SPECIFIC LISTENERS (Banners, Gallery, Telemetry)
+    if (isMainPage) {
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), (snapshot) => {
             publicBanners = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
             renderPublicBanners();
-            if(isAuthenticated) renderAdminBanners();
+            if (isAuthenticated) renderAdminBanners();
         });
 
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), (snapshot) => {
             publicGallery = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
             renderPublicGallery();
-            if(isAuthenticated) renderAdminGallery();
-        });
-
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'comms'), (snapshot) => {
-            publicComms = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
-            renderPublicComms();
-            if(isAuthenticated) renderAdminComms();
+            if (isAuthenticated) renderAdminGallery();
         });
 
         onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'telemetry', 'latest'), (docSnap) => {
-            if(docSnap.exists()) {
+            if (docSnap.exists()) {
                 const data = docSnap.data();
-                if(document.getElementById('tel-driver')) document.getElementById('tel-driver').innerText = data.driver || 'UNKNOWN';
-                if(document.getElementById('tel-distance')) document.getElementById('tel-distance').innerText = (data.distance || 0) + ' KM';
-                if(document.getElementById('tel-vibe')) document.getElementById('tel-vibe').innerText = data.vibe || 'UNKNOWN';
+                
+                // Update Public UI
+                if (document.getElementById('tel-driver')) document.getElementById('tel-driver').innerText = data.driver || 'AWAITING';
+                if (document.getElementById('tel-distance')) document.getElementById('tel-distance').innerText = (data.distance || 0) + ' KM';
+                if (document.getElementById('tel-vibe')) document.getElementById('tel-vibe').innerText = data.vibe || 'UNKNOWN';
 
-                if(document.getElementById('adminDist')) {
-                    document.getElementById('adminDriver').value = data.driver || 'ANOOP';
+                // Update Admin Form UI
+                if (document.getElementById('adminDist')) {
+                    document.getElementById('adminDriver').value = data.driver || 'AWAITING';
                     document.getElementById('adminDist').value = data.distance || '';
                     document.getElementById('adminVibe').value = data.vibe || '';
                 }
@@ -85,7 +119,17 @@ function setupFirestoreListeners() {
         });
     }
 
-    if(isNotesPage) {
+    // 3. COMMS LISTENER (Loaded on Main Page and Comms Page)
+    if (isCommsPage || isMainPage) {
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'comms'), (snapshot) => {
+            publicComms = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
+            if (isCommsPage || isMainPage) renderPublicComms();
+            if (isAuthenticated && isMainPage) renderAdminComms();
+        });
+    }
+
+    // 4. NOTES LISTENER (Loaded only on Notes Page)
+    if (isNotesPage) {
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'notes'), (snapshot) => {
             publicNotes = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
             renderNotes();
@@ -93,25 +137,187 @@ function setupFirestoreListeners() {
     }
 }
 
+// Initialize Listeners
 setupFirestoreListeners();
 
+// Handle Authentication State
 onAuthStateChanged(auth, (user) => {
     if (user && !user.isAnonymous) {
         isAuthenticated = true;
-        if(isMainPage) { renderAdminBanners(); renderAdminGallery(); renderAdminComms(); }
+        if (isMainPage) {
+            renderAdminBanners();
+            renderAdminGallery();
+            renderAdminComms();
+            renderAdminCrew();
+        }
     } else {
         isAuthenticated = false;
     }
 });
 
-const initAuth = async () => { try { await signInAnonymously(auth); } catch (error) { console.log(error); } };
+// Auto-Login Anonymously so public visitors can write to database
+const initAuth = async () => {
+    try {
+        await signInAnonymously(auth);
+    } catch (error) {
+        console.error("Anonymous Auth Error:", error);
+    }
+};
 initAuth();
 
 // ==========================================
-// BANNER RENDERING & CONTROLS
+// DYNAMIC CREW RENDERING
+// ==========================================
+function renderPublicCrew() {
+    const container = document.getElementById('dynamic-crew-grid');
+    if (!container) return;
+    
+    if (publicCrew.length === 0) {
+        container.innerHTML = `
+            <div class="text-center col-span-full py-10 text-slate-400 font-space text-sm">
+                Awaiting Crew Roster Data...
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = publicCrew.map(c => `
+        <div class="relative overflow-hidden rounded-2xl bg-slate-900/60 border border-slate-700 backdrop-blur-xl group hover:-translate-y-2 transition-all duration-500 shadow-lg">
+            <div class="absolute top-0 w-full h-1 bg-${c.color}-500 shadow-[0_0_15px_currentColor]"></div>
+            <div class="p-6 md:p-8">
+                <div class="flex justify-between items-start mb-8">
+                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-${c.color}-500/10 border border-${c.color}-500/30 flex items-center justify-center text-3xl font-black font-space text-${c.color}-400 group-hover:scale-110 transition-all">
+                        ${c.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] text-slate-500 font-space font-bold tracking-[0.3em] mb-1">OP-ID</div>
+                        <div class="text-sm font-black text-slate-300 font-space tracking-widest bg-slate-800 px-2 py-1 rounded">${c.crewId}</div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-2xl md:text-3xl font-black font-space tracking-tight text-white mb-2 uppercase">${c.name}</h3>
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-${c.color}-500/10 border border-${c.color}-500/20 text-${c.color}-400 text-xs font-bold tracking-[0.2em] uppercase">
+                        <i data-lucide="shield" class="w-3 h-3"></i> ${c.role}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    lucide.createIcons();
+}
+
+function updateDriverDropdown() {
+    const select = document.getElementById('adminDriver');
+    if (!select) return;
+    
+    const currentVal = select.value;
+    let html = `
+        <option value="AWAITING">AWAITING</option>
+        <option value="AUTOPILOT">AUTOPILOT</option>
+    `;
+    
+    html += publicCrew.map(c => `
+        <option value="${c.name.toUpperCase()}">${c.name.toUpperCase()}</option>
+    `).join('');
+    
+    select.innerHTML = html;
+    
+    if (select.querySelector(`option[value="${currentVal}"]`)) {
+        select.value = currentVal;
+    }
+}
+
+function updateCommsAuthorDropdown() {
+    const select = document.getElementById('commAuthor');
+    if (!select) return;
+    
+    if (publicCrew.length === 0) {
+        select.innerHTML = '<option value="UNKNOWN">Awaiting Roster...</option>';
+        return;
+    }
+    
+    select.innerHTML = publicCrew.map(c => `
+        <option value="${c.name.toUpperCase()}">${c.name.toUpperCase()} (${c.role.substring(0,3).toUpperCase()})</option>
+    `).join('');
+}
+
+window.addCrewMember = async () => {
+    if (!isAuthenticated) return showToast('Not authenticated', 'error');
+    
+    const name = document.getElementById('crewName').value.trim();
+    const role = document.getElementById('crewRole').value.trim();
+    const crewId = document.getElementById('crewId').value.trim();
+    const color = document.getElementById('crewColor').value;
+    
+    if (!name || !role || !crewId) {
+        return showToast('Fill all crew fields', 'error');
+    }
+    
+    const id = Date.now().toString();
+    try {
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'crew', id), { 
+            id, name, role, crewId, color 
+        });
+        
+        document.getElementById('crewName').value = '';
+        document.getElementById('crewRole').value = '';
+        document.getElementById('crewId').value = '';
+        
+        showToast('Crew added', 'success');
+    } catch (e) {
+        showToast('Sync failed', 'error');
+        console.error(e);
+    }
+};
+
+window.deleteCrewMember = async (id) => {
+    if (!isAuthenticated) return;
+    if (!confirm('Remove crew member?')) return;
+    
+    try {
+        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'crew', id.toString()));
+        showToast('Crew removed', 'success');
+    } catch (e) {
+        showToast('Failed to delete', 'error');
+        console.error(e);
+    }
+};
+
+function renderAdminCrew() {
+    const tbody = document.getElementById('adminCrewTableBody');
+    if (!tbody) return;
+    
+    if (publicCrew.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-6 text-slate-500">Roster Empty</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = publicCrew.map(c => `
+        <tr class="border-b border-slate-800">
+            <td class="py-3 text-${c.color}-400 font-bold">${c.name}</td>
+            <td class="py-3 text-slate-300 text-xs">${c.role}</td>
+            <td class="py-3 text-slate-500 font-space">${c.crewId}</td>
+            <td class="py-3">
+                <button class="text-red-400 hover:text-red-300 transition-colors" onclick="window.deleteCrewMember('${c.id}')">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
+    lucide.createIcons();
+}
+
+// ==========================================
+// BANNER RENDERING
 // ==========================================
 function renderPublicBanners() {
-    if(!isMainPage) return;
+    if (!isMainPage) return;
+    
     const activeBanners = publicBanners.filter(b => b.visible);
     const bannerElement = document.getElementById('event-banner');
     
@@ -120,15 +326,19 @@ function renderPublicBanners() {
         clearInterval(bannerInterval); 
         return; 
     }
-
+    
     bannerElement.style.display = 'block';
     
-    if(document.getElementById('banner-prev-btn')) {
-        document.getElementById('banner-prev-btn').style.display = activeBanners.length > 1 ? 'block' : 'none';
-        document.getElementById('banner-next-btn').style.display = activeBanners.length > 1 ? 'block' : 'none';
+    const prevBtn = document.getElementById('banner-prev-btn');
+    const nextBtn = document.getElementById('banner-next-btn');
+    
+    if (prevBtn && nextBtn) {
+        prevBtn.style.display = activeBanners.length > 1 ? 'block' : 'none';
+        nextBtn.style.display = activeBanners.length > 1 ? 'block' : 'none';
     }
 
-    if(activeBannerIndex >= activeBanners.length) activeBannerIndex = 0;
+    if (activeBannerIndex >= activeBanners.length) activeBannerIndex = 0;
+    
     updateBannerUI(activeBanners);
     startBannerTimer(activeBanners);
 }
@@ -136,23 +346,27 @@ function renderPublicBanners() {
 function startBannerTimer(activeBanners) {
     clearInterval(bannerInterval);
     if (activeBanners.length > 1) {
-        bannerInterval = setInterval(() => { window.nextBanner(); }, 8000);
+        bannerInterval = setInterval(() => { 
+            window.nextBanner(); 
+        }, 8000);
     }
 }
 
 window.nextBanner = () => {
     const activeBanners = publicBanners.filter(b => b.visible);
-    if(activeBanners.length <= 1) return;
+    if (activeBanners.length <= 1) return;
+    
     activeBannerIndex = (activeBannerIndex + 1) % activeBanners.length;
-    updateBannerUI(activeBanners);
+    updateBannerUI(activeBanners); 
     startBannerTimer(activeBanners);
 };
 
 window.prevBanner = () => {
     const activeBanners = publicBanners.filter(b => b.visible);
-    if(activeBanners.length <= 1) return;
+    if (activeBanners.length <= 1) return;
+    
     activeBannerIndex = (activeBannerIndex - 1 + activeBanners.length) % activeBanners.length;
-    updateBannerUI(activeBanners);
+    updateBannerUI(activeBanners); 
     startBannerTimer(activeBanners); 
 };
 
@@ -161,56 +375,194 @@ function updateBannerUI(activeBanners) {
     document.getElementById('banner-description').textContent = banner.text;
     document.getElementById('banner-meta').innerHTML = `Broadcast ${activeBannerIndex + 1} of ${activeBanners.length}`;
     
-    const dateOpts = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    document.getElementById('banner-timestamp').textContent = new Date(banner.timestamp).toLocaleString('en-US', dateOpts);
+    // Format Timestamp
+    const dateOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const formattedDate = new Date(banner.timestamp).toLocaleString('en-US', dateOptions);
+    document.getElementById('banner-timestamp').textContent = formattedDate;
     
     const container = document.getElementById('banner-content-container');
-    container.classList.remove('slide-up-anim');
-    void container.offsetWidth; 
+    container.classList.remove('slide-up-anim'); 
+    void container.offsetWidth; // Trigger reflow to restart animation
     container.classList.add('slide-up-anim');
 }
 
 // ==========================================
-// COMMS POSTING (NO PIN)
+// COMMS POSTING & AUDIO LOGIC
 // ==========================================
 window.postComm = async () => {
-    const author = document.getElementById('commAuthor').value;
-    const msg = document.getElementById('commMessage').value.trim();
+    const authorElement = document.getElementById('commAuthor');
+    const msgElement = document.getElementById('commMessage');
+    
+    if (!authorElement || !msgElement) return;
 
-    if(!msg && !audioBase64) return showToast('Enter text or record audio', 'error');
-    if (audioBase64 && audioBase64.length > 900000) return showToast('Audio file too large', 'error');
+    const author = authorElement.value;
+    const msg = msgElement.value.trim();
+
+    if (!msg && !audioBase64) {
+        return showToast('Enter text or record audio', 'error');
+    }
+    
+    if (audioBase64 && audioBase64.length > 900000) {
+        return showToast('Audio file too large', 'error');
+    }
 
     const id = Date.now().toString();
     try {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'comms', id), {
-            id: id, author: author, message: msg, audio: audioBase64 || null, timestamp: Date.now()
+            id: id, 
+            author: author, 
+            message: msg, 
+            audio: audioBase64 || null, 
+            timestamp: Date.now()
         });
-        document.getElementById('commMessage').value = '';
+        
+        msgElement.value = '';
         audioBase64 = null;
-        if(document.getElementById('recordStatus')) {
-            document.getElementById('recordStatus').textContent = 'Audio ready';
-            document.getElementById('recordStatus').className = 'text-[10px] font-bold text-slate-400';
+        
+        const statusElement = document.getElementById('recordStatus');
+        if (statusElement) {
+            statusElement.textContent = 'Audio ready';
+            statusElement.className = 'text-[10px] font-bold text-slate-400';
         }
+        
         showToast('Transmission logged', 'success');
-    } catch (e) { showToast('Transmission failed', 'error'); console.error(e); }
+    } catch (e) {
+        showToast('Transmission failed', 'error');
+        console.error(e);
+    }
 };
 
+window.toggleRecord = async () => {
+    const btn = document.getElementById('recordBtn');
+    const status = document.getElementById('recordStatus');
+    if (!btn || !status) return;
+
+    // STOP RECORDING
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        
+        btn.innerHTML = `<i data-lucide="mic" class="w-5 h-5"></i>`;
+        btn.classList.remove('animate-pulse', 'bg-red-500', 'text-white', 'border-red-600');
+        btn.classList.add('bg-white/50', 'text-slate-500');
+        
+        clearTimeout(recordingTimer); 
+        lucide.createIcons();
+        return;
+    }
+
+    // START RECORDING
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = e => {
+            audioChunks.push(e.data);
+        };
+        
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
+            const reader = new FileReader(); 
+            
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = () => {
+                audioBase64 = reader.result;
+                status.textContent = 'Audio recorded. Ready to post.';
+                status.classList.remove('text-slate-400', 'text-red-500');
+                status.classList.add('text-emerald-500');
+            };
+            
+            // Release the microphone
+            stream.getTracks().forEach(track => track.stop()); 
+        };
+
+        mediaRecorder.start();
+        
+        status.textContent = 'Recording... (Max 15s)';
+        status.classList.remove('text-slate-400', 'text-emerald-500');
+        status.classList.add('text-red-500');
+        
+        btn.innerHTML = `<i data-lucide="square" class="w-4 h-4"></i>`;
+        btn.classList.remove('bg-white/50', 'text-slate-500');
+        btn.classList.add('animate-pulse', 'bg-red-500', 'text-white', 'border-red-600');
+        lucide.createIcons();
+
+        // 15 Second Cutoff Timer
+        recordingTimer = setTimeout(() => {
+            if (mediaRecorder.state === 'recording') { 
+                window.toggleRecord(); 
+                showToast('Max length reached (15s)', 'success'); 
+            }
+        }, 15000);
+
+    } catch (err) {
+        showToast('Microphone access denied', 'error');
+        console.error("Mic error:", err);
+    }
+};
+
+function renderPublicComms() {
+    const container = document.getElementById('commsContainer');
+    if (!container) return;
+    
+    if (publicComms.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-10 text-slate-400 font-space text-sm">
+                No transmissions yet.
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = publicComms.map(c => {
+        const dateOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' };
+        const date = new Date(c.timestamp).toLocaleDateString('en-US', dateOptions);
+        const audioHtml = c.audio ? `<audio src="${c.audio}" controls class="w-full h-8 mt-3 custom-audio"></audio>` : '';
+        const msgHtml = c.message ? `<p class="text-sm text-slate-700 leading-relaxed font-medium">${c.message}</p>` : '';
+        
+        return `
+        <div class="bg-white/60 backdrop-blur-sm border border-white/80 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start mb-2 border-b border-slate-200/50 pb-2">
+                <span class="font-space font-bold text-cyan-600 text-xs tracking-widest flex items-center gap-1">
+                    <i data-lucide="user" class="w-3 h-3"></i> ${c.author}
+                </span>
+                <span class="text-[10px] text-slate-400 font-space bg-white/50 px-2 py-0.5 rounded">
+                    ${date}
+                </span>
+            </div>
+            ${msgHtml} 
+            ${audioHtml}
+        </div>
+        `;
+    }).join('');
+    
+    lucide.createIcons();
+}
+
 // ==========================================
-// NOTES / IDEAS BOARD LOGIC
+// IDEAS BOARD (NOTES)
 // ==========================================
 window.addNote = async () => {
     const input = document.getElementById('newNoteInput');
+    if (!input) return;
+
     const text = input.value.trim();
-    if(!text) return showToast('Enter an idea first', 'error');
+    if (!text) return showToast('Enter an idea first', 'error');
 
     const id = Date.now().toString();
     try {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'notes', id), {
-            id: id, text: text, completed: false, timestamp: Date.now()
+            id: id, 
+            text: text, 
+            completed: false, 
+            timestamp: Date.now()
         });
         input.value = '';
         showToast('Idea added to board', 'success');
-    } catch (e) { showToast('Failed to add idea', 'error'); }
+    } catch (e) {
+        showToast('Failed to add idea', 'error');
+        console.error(e);
+    }
 };
 
 window.toggleNoteStatus = async (id, isCompleted) => {
@@ -218,24 +570,37 @@ window.toggleNoteStatus = async (id, isCompleted) => {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'notes', id.toString()), {
             completed: !isCompleted
         }, { merge: true });
-    } catch (e) { showToast('Failed to update', 'error'); }
+    } catch (e) {
+        showToast('Failed to update', 'error');
+        console.error(e);
+    }
 };
 
 window.deleteNote = async (id, event) => {
-    event.stopPropagation();
-    if(!confirm('Delete this idea permanently?')) return;
+    // Prevent clicking the delete button from toggling the checkmark status
+    if(event) event.stopPropagation();
+    
+    if (!confirm('Delete this idea permanently?')) return;
+    
     try {
         await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'notes', id.toString()));
         showToast('Idea deleted', 'success');
-    } catch (e) { showToast('Failed to delete', 'error'); }
+    } catch (e) {
+        showToast('Failed to delete', 'error');
+        console.error(e);
+    }
 };
 
 function renderNotes() {
     const container = document.getElementById('notesContainer');
-    if(!container) return;
+    if (!container) return;
 
-    if(publicNotes.length === 0) {
-        container.innerHTML = `<div class="text-center col-span-full py-10 text-slate-400 font-space text-sm">No ideas logged yet.</div>`;
+    if (publicNotes.length === 0) {
+        container.innerHTML = `
+            <div class="text-center col-span-full py-10 text-slate-400 font-space text-sm">
+                No ideas logged yet.
+            </div>
+        `;
         return;
     }
 
@@ -261,88 +626,51 @@ function renderNotes() {
                 ${new Date(n.timestamp).toLocaleDateString()}
             </div>
         </div>
-    `}).join('');
+        `;
+    }).join('');
+    
     lucide.createIcons();
 }
 
 // ==========================================
-// AUDIO RECORDING (Comms)
-// ==========================================
-window.toggleRecord = async () => {
-    const btn = document.getElementById('recordBtn');
-    const status = document.getElementById('recordStatus');
-    if(!btn) return;
-
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-        btn.innerHTML = `<i data-lucide="mic" class="w-5 h-5"></i>`;
-        btn.classList.remove('animate-pulse', 'bg-red-500', 'text-white', 'border-red-600');
-        btn.classList.add('bg-white/50', 'text-slate-500');
-        clearTimeout(recordingTimer);
-        lucide.createIcons();
-        return;
-    }
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-        
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = () => {
-                audioBase64 = reader.result;
-                status.textContent = 'Audio recorded. Ready to post.';
-                status.classList.remove('text-slate-400', 'text-red-500');
-                status.classList.add('text-emerald-500');
-            };
-            stream.getTracks().forEach(track => track.stop()); 
-        };
-
-        mediaRecorder.start();
-        status.textContent = 'Recording... (Max 15s)';
-        status.classList.remove('text-slate-400', 'text-emerald-500');
-        status.classList.add('text-red-500');
-        
-        btn.innerHTML = `<i data-lucide="square" class="w-4 h-4"></i>`;
-        btn.classList.remove('bg-white/50', 'text-slate-500');
-        btn.classList.add('animate-pulse', 'bg-red-500', 'text-white', 'border-red-600');
-        lucide.createIcons();
-
-        recordingTimer = setTimeout(() => {
-            if (mediaRecorder.state === 'recording') {
-                window.toggleRecord();
-                showToast('Max length reached (15s)', 'success');
-            }
-        }, 15000);
-    } catch (err) { showToast('Microphone access denied', 'error'); }
-};
-
-// ==========================================
-// EXTERNAL APIS (Weather)
+// WEATHER API
 // ==========================================
 async function fetchWeather() {
-    if(!isMainPage) return;
+    if (!isMainPage) return;
+    
     try {
-        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=10.2191,12.2958,12.9716&longitude=76.2506,76.6394,77.5946&current_weather=true');
+        const url = 'https://api.open-meteo.com/v1/forecast?latitude=10.2191,12.2958,12.9716&longitude=76.2506,76.6394,77.5946&current_weather=true';
+        const res = await fetch(url);
         const data = await res.json();
+        
         const cities = ['ANGAMALY', 'MYSORE', 'BANGALORE'];
         let html = '';
-        if(data && data.length || (data.current_weather && Array.isArray(data))) {
+        
+        if (data && data.length || (data.current_weather && Array.isArray(data))) {
              data.forEach((d, i) => {
                  const temp = d.current_weather ? d.current_weather.temperature : '--';
                  const wind = d.current_weather ? d.current_weather.windspeed : '--';
-                 html += `<div class="flex justify-between items-center gap-6"><span class="text-xs font-space font-bold text-slate-300">${cities[i]}</span><span class="text-xs font-space text-cyan-300 font-bold">${temp}°C <span class="text-slate-500 ml-1 opacity-50">|</span> <span class="text-cyan-600 ml-1">${wind}km/h</span></span></div>`;
+                 html += `
+                    <div class="flex justify-between items-center gap-6">
+                        <span class="text-xs font-space font-bold text-slate-300">${cities[i]}</span>
+                        <span class="text-xs font-space text-cyan-300 font-bold">
+                            ${temp}°C 
+                            <span class="text-slate-500 ml-1 opacity-50">|</span> 
+                            <span class="text-cyan-600 ml-1">${wind}km/h</span>
+                        </span>
+                    </div>
+                 `;
              });
-        } else { html = `<div class="text-xs text-cyan-400 font-space font-bold">ATMOSPHERIC DATA ACQUIRED</div>`; }
+        } else { 
+            html = `<div class="text-xs text-cyan-400 font-space font-bold">ATMOSPHERIC DATA ACQUIRED</div>`; 
+        }
+        
         const wBox = document.getElementById('weather-hud');
-        if(wBox) wBox.innerHTML = html || `<div class="text-xs text-cyan-400 font-space font-bold">SYS ONLINE: 28°C AVG</div>`;
-    } catch(e) {
+        if (wBox) wBox.innerHTML = html || `<div class="text-xs text-cyan-400 font-space font-bold">SYS ONLINE: 28°C AVG</div>`;
+        
+    } catch (e) {
         const wBox = document.getElementById('weather-hud');
-        if(wBox) wBox.innerHTML = `<div class="text-xs text-cyan-400 font-space font-bold">SYS ONLINE: 28°C AVG</div>`;
+        if (wBox) wBox.innerHTML = `<div class="text-xs text-cyan-400 font-space font-bold">SYS ONLINE: 28°C AVG</div>`;
     }
 }
 setTimeout(fetchWeather, 2000);
@@ -351,12 +679,20 @@ setTimeout(fetchWeather, 2000);
 // GALLERY RENDERING
 // ==========================================
 function renderPublicGallery() {
-    if(!isMainPage) return;
+    if (!isMainPage) return;
+    
     const activeGallery = publicGallery.filter(g => g.visible);
     const grid = document.getElementById('public-gallery-grid');
     const emptyMsg = document.getElementById('emptyGalleryMessage');
-    if (activeGallery.length === 0) { grid.innerHTML = ''; emptyMsg.style.display = 'block'; return; }
+    
+    if (activeGallery.length === 0) { 
+        grid.innerHTML = ''; 
+        emptyMsg.style.display = 'block'; 
+        return; 
+    }
+    
     emptyMsg.style.display = 'none';
+    
     grid.innerHTML = activeGallery.map((item) => `
         <div class="gallery-item group cursor-pointer" onclick="window.openLightbox('${item.id}')">
             <img src="${item.image}" alt="Memory" loading="lazy" class="pointer-events-none">
@@ -367,34 +703,129 @@ function renderPublicGallery() {
             </div>
         </div>
     `).join('');
-    lucide.createIcons();
-}
-
-function renderPublicComms() {
-    if(!isMainPage) return;
-    const container = document.getElementById('commsContainer');
-    if(!container) return;
-    if(publicComms.length === 0) { container.innerHTML = `<div class="text-center py-10 text-slate-400 font-space text-sm">No transmissions yet.</div>`; return; }
-    container.innerHTML = publicComms.map(c => {
-        const date = new Date(c.timestamp).toLocaleDateString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'});
-        const audioHtml = c.audio ? `<audio src="${c.audio}" controls class="w-full h-8 mt-3 custom-audio"></audio>` : '';
-        const msgHtml = c.message ? `<p class="text-sm text-slate-700 leading-relaxed font-medium">${c.message}</p>` : '';
-        return `
-        <div class="bg-white/60 backdrop-blur-sm border border-white/80 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex justify-between items-start mb-2 border-b border-slate-200/50 pb-2">
-                <span class="font-space font-bold text-cyan-600 text-xs tracking-widest flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> ${c.author}</span>
-                <span class="text-[10px] text-slate-400 font-space bg-white/50 px-2 py-0.5 rounded">${date}</span>
-            </div>
-            ${msgHtml} ${audioHtml}
-        </div>
-    `}).join('');
+    
     lucide.createIcons();
 }
 
 window.scrollGallery = (direction) => {
     const grid = document.getElementById('public-gallery-grid');
-    if(grid) grid.scrollBy({ left: direction * 320, behavior: 'smooth' });
+    if (grid) {
+        grid.scrollBy({ left: direction * 320, behavior: 'smooth' });
+    }
 };
+
+window.handleImageSelect = async (e) => {
+    if (!isAuthenticated) return showToast('Not authenticated', 'error');
+    
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    showToast('Compressing & Syncing...', 'success');
+    
+    try {
+        const base64 = await new Promise((resolve) => {
+            const reader = new FileReader(); 
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image(); 
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); 
+                    let { width, height } = img;
+                    const max = 1000; 
+                    
+                    if (width > height && width > max) { 
+                        height *= max / width; 
+                        width = max; 
+                    } else if (height > max) { 
+                        width *= max / height; 
+                        height = max; 
+                    }
+                    
+                    canvas.width = width; 
+                    canvas.height = height; 
+                    
+                    const ctx = canvas.getContext('2d'); 
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+            };
+        });
+        
+        const id = Date.now().toString();
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id), { 
+            id: id, 
+            image: base64, 
+            visible: true, 
+            timestamp: Date.now() 
+        });
+        showToast('Memory securely vaulted', 'success');
+        
+    } catch(err) {
+        showToast('Upload failed', 'error');
+        console.error(err);
+    }
+    
+    e.target.value = '';
+};
+
+// ==========================================
+// LIGHTBOX LOGIC
+// ==========================================
+window.openLightbox = (id) => {
+    let currentGalleryId = id; 
+    const item = publicGallery.find(g => g.id === id);
+    if (item) { 
+        document.getElementById('lightboxImage').src = item.image; 
+        document.getElementById('galleryLightbox').classList.add('active'); 
+        document.body.style.overflow = 'hidden'; 
+    }
+};
+
+window.closeLightbox = () => { 
+    const lb = document.getElementById('galleryLightbox'); 
+    if (lb) { 
+        lb.classList.remove('active'); 
+        document.body.style.overflow = 'auto'; 
+    } 
+};
+
+window.nextGalleryImage = () => { 
+    const active = publicGallery.filter(g => g.visible); 
+    // We need a global var to track index if navigating inside modal
+    // For simplicity of scope without adding more globals, we'll extract current src
+    const currentSrc = document.getElementById('lightboxImage').src;
+    const currentItem = active.find(g => currentSrc.includes(g.image));
+    
+    if (currentItem) {
+        const idx = active.findIndex(g => g.id === currentItem.id);
+        if (idx !== -1 && active.length > 0) {
+            window.openLightbox(active[(idx + 1) % active.length].id);
+        }
+    }
+};
+
+window.previousGalleryImage = () => { 
+    const active = publicGallery.filter(g => g.visible); 
+    const currentSrc = document.getElementById('lightboxImage').src;
+    const currentItem = active.find(g => currentSrc.includes(g.image));
+    
+    if (currentItem) {
+        const idx = active.findIndex(g => g.id === currentItem.id);
+        if (idx !== -1 && active.length > 0) {
+            window.openLightbox(active[(idx - 1 + active.length) % active.length].id);
+        }
+    }
+};
+
+document.addEventListener('keydown', (e) => {
+    const lb = document.getElementById('galleryLightbox');
+    if (lb && lb.classList.contains('active')) {
+        if (e.key === 'ArrowRight') window.nextGalleryImage();
+        if (e.key === 'ArrowLeft') window.previousGalleryImage();
+        if (e.key === 'Escape') window.closeLightbox();
+    }
+});
 
 // ==========================================
 // ADMIN AUTHENTICATION
@@ -403,42 +834,95 @@ window.authenticateAdmin = async () => {
     const email = document.getElementById('emailInput').value.trim();
     const pwd = document.getElementById('passwordInput').value;
     const btn = document.querySelector('#loginScreen .btn-admin-primary');
-    if(!email || !pwd) { showToast('Enter both Email and Access Code.', 'error'); return; }
-    const originalText = btn.innerHTML;
+    
+    if (!email || !pwd) { 
+        showToast('Enter both Email and Access Code.', 'error'); 
+        return; 
+    }
+    
+    const originalText = btn.innerHTML; 
     btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> AUTHENTICATING...`;
+    
     try {
         await signInWithEmailAndPassword(auth, email, pwd);
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboard').classList.add('active');
         lucide.createIcons();
-    } catch (error) { showToast('Access Denied. Invalid credentials.', 'error'); } 
-    finally { btn.innerHTML = originalText; lucide.createIcons(); }
+    } catch (error) { 
+        showToast('Access Denied. Invalid credentials.', 'error'); 
+    } finally { 
+        btn.innerHTML = originalText; 
+        lucide.createIcons(); 
+    }
 };
 
 window.logoutAdmin = async () => {
-    try { await signOut(auth); } catch (e) { console.error("Logout error", e); }
-    window.location.hash = ''; window.location.reload();
+    try { 
+        await signOut(auth); 
+    } catch (e) { 
+        console.error("Logout error", e); 
+    }
+    window.location.hash = ''; 
+    window.location.reload();
 };
 
+// ==========================================
+// ADMIN CONTROLS (Banners, Telemetry, Moderation)
+// ==========================================
 window.addBanner = async () => {
-    if(!isAuthenticated) return showToast('Not authenticated', 'error');
+    if (!isAuthenticated) return showToast('Not authenticated', 'error');
     const text = document.getElementById('bannerText').value.trim();
     if (!text) return showToast('Enter text to broadcast', 'error');
+    
     const id = Date.now().toString();
     try {
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id), { id: id, text: text, visible: true, timestamp: Date.now() });
-        document.getElementById('bannerText').value = ''; showToast('Broadcast live synced', 'success');
-    } catch (e) { showToast('Sync failed', 'error'); }
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id), { 
+            id: id, 
+            text: text, 
+            visible: true, 
+            timestamp: Date.now() 
+        });
+        document.getElementById('bannerText').value = ''; 
+        showToast('Broadcast live synced', 'success');
+    } catch (e) { 
+        showToast('Sync failed', 'error'); 
+    }
 };
 
-window.toggleBannerVisibility = async (id, currentVis) => { if(!isAuthenticated) return; await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id.toString()), { visible: !currentVis }, { merge: true }); };
-window.deleteBanner = async (id) => { if(!isAuthenticated || !confirm('Delete transmission from cloud?')) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id.toString())); showToast('Transmission deleted', 'success'); };
-window.toggleGalleryVisibility = async (id, currentVis) => { if(!isAuthenticated) return; await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id.toString()), { visible: !currentVis }, { merge: true }); };
-window.deleteGalleryItem = async (id) => { if(!isAuthenticated || !confirm('Delete memory from cloud?')) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id.toString())); showToast('Memory wiped', 'success'); };
-window.deleteComm = async (id) => { if(!isAuthenticated || !confirm('Delete this crew comm?')) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'comms', id.toString())); showToast('Comm deleted', 'success'); };
+window.toggleBannerVisibility = async (id, currentVis) => { 
+    if (!isAuthenticated) return; 
+    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id.toString()), { 
+        visible: !currentVis 
+    }, { merge: true }); 
+};
+
+window.deleteBanner = async (id) => { 
+    if (!isAuthenticated || !confirm('Delete transmission from cloud?')) return; 
+    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id.toString())); 
+    showToast('Transmission deleted', 'success'); 
+};
+
+window.toggleGalleryVisibility = async (id, currentVis) => { 
+    if (!isAuthenticated) return; 
+    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id.toString()), { 
+        visible: !currentVis 
+    }, { merge: true }); 
+};
+
+window.deleteGalleryItem = async (id) => { 
+    if (!isAuthenticated || !confirm('Delete memory from cloud?')) return; 
+    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id.toString())); 
+    showToast('Memory wiped', 'success'); 
+};
+
+window.deleteComm = async (id) => { 
+    if (!isAuthenticated || !confirm('Delete this crew comm?')) return; 
+    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'comms', id.toString())); 
+    showToast('Comm deleted', 'success'); 
+};
 
 window.updateTelemetry = async () => {
-    if(!isAuthenticated) return;
+    if (!isAuthenticated) return;
     try {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'telemetry', 'latest'), {
             driver: document.getElementById('adminDriver').value,
@@ -447,102 +931,150 @@ window.updateTelemetry = async () => {
             timestamp: Date.now()
         });
         showToast('Telemetry updated', 'success');
-    } catch (e) { showToast('Update failed', 'error'); }
+    } catch (e) { 
+        showToast('Update failed', 'error'); 
+    }
 };
 
+// ==========================================
+// ADMIN RENDERING FUNCTIONS
+// ==========================================
 function renderAdminBanners() {
     const tbody = document.getElementById('bannersTableBody');
-    if(!tbody) return;
-    if(publicBanners.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-500"><i data-lucide="radio" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>No active broadcasts.</td></tr>'; lucide.createIcons(); return; }
-    tbody.innerHTML = publicBanners.map(b => `<tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors"><td class="max-w-xs truncate py-3 font-medium text-slate-300">${b.text}</td><td class="py-3"><label class="toggle-admin"><input type="checkbox" ${b.visible ? 'checked' : ''} onchange="window.toggleBannerVisibility('${b.id}', ${b.visible})"><span class="toggle-slider"></span></label></td><td class="py-3"><button class="btn-admin-danger rounded" onclick="window.deleteBanner('${b.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('');
+    if (!tbody) return;
+    
+    if (publicBanners.length === 0) { 
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center py-6 text-slate-500">
+                    <i data-lucide="radio" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>No active broadcasts.
+                </td>
+            </tr>
+        `; 
+        lucide.createIcons(); 
+        return; 
+    }
+    
+    tbody.innerHTML = publicBanners.map(b => `
+        <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+            <td class="max-w-xs truncate py-3 font-medium text-slate-300">${b.text}</td>
+            <td class="py-3">
+                <label class="toggle-admin">
+                    <input type="checkbox" ${b.visible ? 'checked' : ''} onchange="window.toggleBannerVisibility('${b.id}', ${b.visible})">
+                    <span class="toggle-slider"></span>
+                </label>
+            </td>
+            <td class="py-3">
+                <button class="btn-admin-danger rounded" onclick="window.deleteBanner('${b.id}')">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
     lucide.createIcons();
 }
+
 function renderAdminGallery() {
     const tbody = document.getElementById('galleryTableBody');
-    if(!tbody) return;
-    if(publicGallery.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-500"><i data-lucide="image-off" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>Vault is empty.</td></tr>'; lucide.createIcons(); return; }
-    tbody.innerHTML = publicGallery.map(g => `<tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors"><td class="py-3"><img src="${g.image}" class="w-14 h-14 rounded-lg object-cover border border-slate-700 shadow-md"></td><td class="py-3"><label class="toggle-admin"><input type="checkbox" ${g.visible ? 'checked' : ''} onchange="window.toggleGalleryVisibility('${g.id}', ${g.visible})"><span class="toggle-slider"></span></label></td><td class="py-3"><button class="btn-admin-danger rounded" onclick="window.deleteGalleryItem('${g.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('');
+    if (!tbody) return;
+    
+    if (publicGallery.length === 0) { 
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center py-6 text-slate-500">
+                    <i data-lucide="image-off" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>Vault is empty.
+                </td>
+            </tr>
+        `; 
+        lucide.createIcons(); 
+        return; 
+    }
+    
+    tbody.innerHTML = publicGallery.map(g => `
+        <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+            <td class="py-3">
+                <img src="${g.image}" class="w-14 h-14 rounded-lg object-cover border border-slate-700 shadow-md">
+            </td>
+            <td class="py-3">
+                <label class="toggle-admin">
+                    <input type="checkbox" ${g.visible ? 'checked' : ''} onchange="window.toggleGalleryVisibility('${g.id}', ${g.visible})">
+                    <span class="toggle-slider"></span>
+                </label>
+            </td>
+            <td class="py-3">
+                <button class="btn-admin-danger rounded" onclick="window.deleteGalleryItem('${g.id}')">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
     lucide.createIcons();
 }
+
 function renderAdminComms() {
     const tbody = document.getElementById('adminCommsTableBody');
-    if(!tbody) return;
-    if(publicComms.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-500">No comms logged.</td></tr>'; lucide.createIcons(); return; }
-    tbody.innerHTML = publicComms.map(c => `<tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors"><td class="py-3 text-cyan-400 font-bold text-xs">${c.author}</td><td class="py-3 text-slate-300 max-w-xs truncate">${c.message || '---'} ${c.audio ? '[AUDIO]' : ''}</td><td class="py-3 text-slate-500 text-xs">${new Date(c.timestamp).toLocaleDateString()}</td><td class="py-3"><button class="btn-admin-danger rounded" onclick="window.deleteComm('${c.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('');
+    if (!tbody) return;
+    
+    if (publicComms.length === 0) { 
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-6 text-slate-500">No comms logged.</td>
+            </tr>
+        `; 
+        lucide.createIcons(); 
+        return; 
+    }
+    
+    tbody.innerHTML = publicComms.map(c => {
+        const dateOptions = { month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit' };
+        const date = new Date(c.timestamp).toLocaleDateString('en-US', dateOptions);
+        const audioLabel = c.audio ? '<span class="text-emerald-400 font-bold ml-2 text-[10px] bg-emerald-900/30 px-1 py-0.5 rounded">[AUDIO]</span>' : '';
+        
+        return `
+        <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+            <td class="py-3 text-cyan-400 font-bold text-xs">${c.author}</td>
+            <td class="py-3 text-slate-300 max-w-xs truncate">${c.message || '---'} ${audioLabel}</td>
+            <td class="py-3 text-slate-500 text-xs">${date}</td>
+            <td class="py-3">
+                <button class="btn-admin-danger rounded" onclick="window.deleteComm('${c.id}')">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </td>
+        </tr>
+        `;
+    }).join('');
+    
     lucide.createIcons();
 }
 
-// IMAGE COMPRESSION & UPLOAD
-const dropZone = document.getElementById('dropZone');
-if(dropZone) {
-    const imageInput = document.getElementById('imageInput');
-    dropZone.addEventListener('click', () => imageInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); dropZone.style.borderColor = '#06b6d4'; });
-    dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('drag-over'); dropZone.style.borderColor = ''; });
-    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); dropZone.style.borderColor = ''; window.handleImageSelect({target: {files: e.dataTransfer.files}}); });
-}
-
-function compressImage(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader(); reader.readAsDataURL(file);
-        reader.onload = (e) => {
-            const img = new Image(); img.src = e.target.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas'); let { width, height } = img;
-                const max = 1000; 
-                if (width > height && width > max) { height *= max / width; width = max; } else if (height > max) { width *= max / height; height = max; }
-                canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.8));
-            };
-        };
-    });
-}
-
-window.handleImageSelect = async (e) => {
-    if(!isAuthenticated) return showToast('Not authenticated', 'error');
-    const file = e.target.files[0];
-    if (!file) return;
-    showToast('Compressing & Syncing data...', 'success');
-    try {
-        const base64 = await compressImage(file);
-        const id = Date.now().toString();
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', id), { id: id, image: base64, visible: true, timestamp: Date.now() });
-        showToast('Memory securely vaulted', 'success');
-    } catch(err) { showToast('Upload failed', 'error'); }
-    e.target.value = '';
-};
-
-// LIGHTBOX
-window.openLightbox = (id) => {
-    currentGalleryId = id; const item = publicGallery.find(g => g.id === id);
-    if(item) { document.getElementById('lightboxImage').src = item.image; document.getElementById('galleryLightbox').classList.add('active'); document.body.style.overflow = 'hidden'; }
-};
-window.closeLightbox = () => { const lb = document.getElementById('galleryLightbox'); if(lb){ lb.classList.remove('active'); document.body.style.overflow = 'auto'; } };
-window.nextGalleryImage = () => { const active = publicGallery.filter(g => g.visible); const idx = active.findIndex(g => g.id === currentGalleryId); if(idx !== -1 && active.length > 0) window.openLightbox(active[(idx + 1) % active.length].id); };
-window.previousGalleryImage = () => { const active = publicGallery.filter(g => g.visible); const idx = active.findIndex(g => g.id === currentGalleryId); if(idx !== -1 && active.length > 0) window.openLightbox(active[(idx - 1 + active.length) % active.length].id); };
-
-document.addEventListener('keydown', (e) => {
-    const lb = document.getElementById('galleryLightbox');
-    if(lb && lb.classList.contains('active')) {
-        if(e.key === 'ArrowRight') window.nextGalleryImage();
-        if(e.key === 'ArrowLeft') window.previousGalleryImage();
-        if(e.key === 'Escape') window.closeLightbox();
-    }
-});
-
-// UTILS & ROUTING
+// ==========================================
+// UTILITIES & ROUTING
+// ==========================================
 function showToast(msg, type) {
     const container = document.getElementById('toastContainer');
-    if(!container) return;
+    if (!container) return;
+    
     const t = document.createElement('div');
     t.className = `toast ${type} flex items-center gap-3`; 
-    t.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5"></i> <span>${msg}</span>`;
-    container.appendChild(t); lucide.createIcons();
-    setTimeout(() => { t.style.animation = 'slideIn 0.3s ease reverse'; setTimeout(()=>t.remove(), 300); }, 3000);
+    t.innerHTML = `
+        <i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5"></i> 
+        <span>${msg}</span>
+    `;
+    
+    container.appendChild(t); 
+    lucide.createIcons();
+    
+    setTimeout(() => { 
+        t.style.animation = 'slideIn 0.3s ease reverse'; 
+        setTimeout(() => t.remove(), 300); 
+    }, 3000);
 }
 
 function handleRoute() {
-    if(!isMainPage) return;
+    if (!isMainPage) return;
+    
     const hash = window.location.hash;
     if (hash === '#admin') {
         document.getElementById('public-view').style.display = 'none';
@@ -552,52 +1084,78 @@ function handleRoute() {
     } else {
         document.getElementById('admin-view').style.display = 'none';
         document.getElementById('public-view').style.display = 'block';
-        if(!mapInitialized) { setTimeout(initMapAndGraphics, 100); mapInitialized = true; }
+        if (!mapInitialized) { 
+            setTimeout(initMapAndGraphics, 100); 
+            mapInitialized = true; 
+        }
     }
 }
+
 window.addEventListener('hashchange', handleRoute);
 
 window.addEventListener('load', () => {
     setTimeout(() => {
         const loader = document.getElementById('loader');
-        if(loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 800); }
-        if(isMainPage) handleRoute();
+        if (loader) { 
+            loader.style.opacity = '0'; 
+            setTimeout(() => loader.style.display = 'none', 800); 
+        }
+        if (isMainPage) handleRoute();
         lucide.createIcons();
     }, 1000);
 });
 
-// HYPERDRIVE
+// HYPERDRIVE EASTER EGG
 window.triggerHyperdrive = () => {
-    logoClicks++; clearTimeout(clickTimer);
-    if(logoClicks >= 3 && !hyperdriveMode) { activateHyperdrive(); logoClicks = 0; } 
-    else { clickTimer = setTimeout(()=> { logoClicks=0; }, 1000); }
+    logoClicks++; 
+    clearTimeout(clickTimer);
+    
+    if (logoClicks >= 3 && !hyperdriveMode) { 
+        activateHyperdrive(); 
+        logoClicks = 0; 
+    } else { 
+        clickTimer = setTimeout(() => { logoClicks = 0; }, 1000); 
+    }
 };
+
 function activateHyperdrive() {
-    if(!isMainPage) return;
-    hyperdriveMode = true; showToast('WARNING: HYPERDRIVE ENGAGED', 'error'); 
-    const pv = document.getElementById('public-view'); pv.classList.add('hyperdrive-active', 'hyperdrive-shake');
-    setTimeout(() => { pv.classList.remove('hyperdrive-active', 'hyperdrive-shake'); hyperdriveMode = false; showToast('ORBIT STABILIZED', 'success'); }, 4000);
+    if (!isMainPage) return;
+    
+    hyperdriveMode = true; 
+    showToast('WARNING: HYPERDRIVE ENGAGED', 'error'); 
+    
+    const pv = document.getElementById('public-view'); 
+    pv.classList.add('hyperdrive-active', 'hyperdrive-shake');
+    
+    setTimeout(() => { 
+        pv.classList.remove('hyperdrive-active', 'hyperdrive-shake'); 
+        hyperdriveMode = false; 
+        showToast('ORBIT STABILIZED', 'success'); 
+    }, 4000);
 }
 
 // ==========================================
-// MAP & GRAPHICS INIT (FIXED)
+// MAP & GRAPHICS INIT
 // ==========================================
 window.closeMapHud = () => {
     const hud = document.getElementById('map-hud');
-    if(hud) {
+    if (hud) {
         hud.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
         hud.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
     }
 };
 
 function initMapAndGraphics() {
+    // Scroll Reveal Animation Initialization
     function reveal() {
-        var reveals = document.querySelectorAll(".reveal");
-        for (var i = 0; i < reveals.length; i++) {
-            var windowHeight = window.innerHeight;
-            var elementTop = reveals[i].getBoundingClientRect().top;
-            var elementVisible = 100;
-            if (elementTop < windowHeight - elementVisible) reveals[i].classList.add("active");
+        const reveals = document.querySelectorAll(".reveal");
+        for (let i = 0; i < reveals.length; i++) {
+            const windowHeight = window.innerHeight;
+            const elementTop = reveals[i].getBoundingClientRect().top;
+            const elementVisible = 100;
+            if (elementTop < windowHeight - elementVisible) {
+                reveals[i].classList.add("active");
+            }
         }
     }
     window.addEventListener("scroll", reveal);
@@ -609,12 +1167,20 @@ function initMapAndGraphics() {
         { id: "003", name: "BANGALORE", status: "DESTINATION", desc: "Final target acquired.", color: "text-violet-500", bg: "bg-violet-100", coords: [12.9716, 77.5946], markerHex: '#8b5cf6'}
     ];
     
-    if(document.getElementById('real-map')) {
+    // Leaflet Map Initialization
+    if (document.getElementById('real-map')) {
         const realMap = L.map('real-map', { zoomControl: false }).setView([11.6, 76.8], 7);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 20 }).addTo(realMap);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { 
+            attribution: '&copy; OpenStreetMap', 
+            subdomains: 'abcd', 
+            maxZoom: 20 
+        }).addTo(realMap);
+        
         L.control.zoom({ position: 'bottomright' }).addTo(realMap);
 
-        const forwardCoords = mapData.map(d=>d.coords);
+        const forwardCoords = mapData.map(d => d.coords);
+        
         L.polyline(forwardCoords, { color: '#ec4899', weight: 6, opacity: 0.8 }).addTo(realMap);
         L.polyline(forwardCoords, { color: '#ffffff', weight: 2, className: 'route-flow-forward' }).addTo(realMap);
 
@@ -625,6 +1191,7 @@ function initMapAndGraphics() {
         function updateMapInfo(index) {
             const hud = document.getElementById('map-hud');
             const data = mapData[index];
+            
             hud.innerHTML = `
                 <button onclick="window.closeMapHud()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full p-1 transition-colors">
                     <i data-lucide="x" class="w-4 h-4"></i>
@@ -651,25 +1218,27 @@ function initMapAndGraphics() {
         mapData.forEach((loc, index) => {
             const vibrantIcon = L.divIcon({
                 className: 'custom-vibrant-marker',
-                html: `<div class="relative flex items-center justify-center cursor-pointer group">
-                          <div class="absolute w-12 h-12 rounded-full animate-ping" style="background-color: ${loc.markerHex}; opacity: 0.4;"></div>
-                          <div class="w-6 h-6 rounded-full border-4 border-white shadow-lg z-10 group-hover:scale-125 transition-transform duration-300" style="background-color: ${loc.markerHex};"></div>
-                       </div>`,
-                iconSize: [48, 48], iconAnchor: [24, 24]
+                html: `
+                    <div class="relative flex items-center justify-center cursor-pointer group">
+                        <div class="absolute w-12 h-12 rounded-full animate-ping" style="background-color: ${loc.markerHex}; opacity: 0.4;"></div>
+                        <div class="w-6 h-6 rounded-full border-4 border-white shadow-lg z-10 group-hover:scale-125 transition-transform duration-300" style="background-color: ${loc.markerHex};"></div>
+                    </div>
+                `,
+                iconSize: [48, 48], 
+                iconAnchor: [24, 24]
             });
             const marker = L.marker(loc.coords, { icon: vibrantIcon }).addTo(realMap);
             marker.on('click', () => updateMapInfo(index));
         });
-        
-        // Removed auto-initialization so the HUD stays hidden until a marker is clicked!
     }
 
-    // Three.js
+    // Three.js Background Initialization
     const container = document.getElementById('hero-canvas-container');
-    if(container && !container.hasChildNodes()) {
+    if (container && !container.hasChildNodes()) {
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 8, 25);
+        
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -678,19 +1247,25 @@ function initMapAndGraphics() {
         const geo = new THREE.PlaneGeometry(200, 200, 60, 60);
         const mat = new THREE.MeshBasicMaterial({ color: 0x059669, wireframe: true, transparent: true, opacity: 0.7 });
         const plane = new THREE.Mesh(geo, mat);
-        plane.rotation.x = -Math.PI / 2; plane.position.y = -8;
+        plane.rotation.x = -Math.PI / 2; 
+        plane.position.y = -8;
         scene.add(plane);
 
         const geo2 = new THREE.PlaneGeometry(200, 200, 40, 40);
         const mat2 = new THREE.MeshBasicMaterial({ color: 0x06b6d4, wireframe: true, transparent: true, opacity: 0.3 });
         const plane2 = new THREE.Mesh(geo2, mat2);
-        plane2.rotation.x = -Math.PI / 2; plane2.position.y = -10;
+        plane2.rotation.x = -Math.PI / 2; 
+        plane2.position.y = -10;
         scene.add(plane2);
         
         const starsGeo = new THREE.BufferGeometry();
         const starsCount = 500;
         const posArray = new Float32Array(starsCount * 3);
-        for(let i=0; i<starsCount*3; i++) { posArray[i] = (Math.random() - 0.5) * 150; }
+        
+        for (let i = 0; i < starsCount * 3; i++) { 
+            posArray[i] = (Math.random() - 0.5) * 150; 
+        }
+        
         starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         const starsMat = new THREE.PointsMaterial({ size: 0.2, color: 0x10b981, transparent: true, opacity: 0.9 });
         const starPoints = new THREE.Points(starsGeo, starsMat);
@@ -720,12 +1295,16 @@ function initMapAndGraphics() {
             }
             positions2.needsUpdate = true;
             
-            plane.position.z += 0.02 * speedMod; if (plane.position.z > 5) plane.position.z = 0; 
-            plane2.position.z += 0.01 * speedMod; if (plane2.position.z > 5) plane2.position.z = 0; 
+            plane.position.z += 0.02 * speedMod; 
+            if (plane.position.z > 5) plane.position.z = 0; 
+            
+            plane2.position.z += 0.01 * speedMod; 
+            if (plane2.position.z > 5) plane2.position.z = 0; 
 
             starPoints.rotation.y += 0.0005 * speedMod;
             starPoints.position.y += 0.02 * speedMod;
-            if(starPoints.position.y > 20) starPoints.position.y = -10;
+            
+            if (starPoints.position.y > 20) starPoints.position.y = -10;
 
             renderer.render(scene, camera);
         }
@@ -738,15 +1317,18 @@ function initMapAndGraphics() {
         });
     }
 
-    // Countdown Setup
-    if(document.getElementById('cd-days')) {
+    // Countdown Timer Initialization
+    if (document.getElementById('cd-days')) {
         const targetDate = new Date("2026-07-11T00:30:00Z").getTime();
+        
         setInterval(() => {
             const now = new Date().getTime();
             const dist = targetDate - now;
-            if(dist < 0) return;
+            
+            if (dist < 0) return;
+            
             const d = document.getElementById('cd-days');
-            if(d) {
+            if (d) {
                 d.innerText = Math.floor(dist / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
                 document.getElementById('cd-hours').innerText = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
                 document.getElementById('cd-minutes').innerText = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
