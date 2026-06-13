@@ -56,6 +56,7 @@ let recordingTimer = null;
 const isMainPage = !!document.getElementById('public-view');
 const isNotesPage = !!document.getElementById('newNoteInput');
 const isCommsPage = !!document.getElementById('commMessage');
+const isGalleryPage = !!document.getElementById('gallery-dynamic-container');
 let mapInitialized = false;
 
 // Hyperdrive Easter Egg State
@@ -72,10 +73,9 @@ function setupFirestoreListeners() {
     if (listenersSetup) return;
     listenersSetup = true;
     
-    // 1. CREW ROSTER (Loaded globally for dropdowns & display)
+    // 1. CREW ROSTER
     onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'crew'), (snapshot) => {
         publicCrew = snapshot.docs.map(d => d.data()).sort((a, b) => a.crewId.localeCompare(b.crewId));
-        
         if (isMainPage) {
             renderPublicCrew();
             if (isAuthenticated) renderAdminCrew();
@@ -86,7 +86,7 @@ function setupFirestoreListeners() {
         }
     });
 
-    // 2. MAIN PAGE SPECIFIC LISTENERS (Banners, Gallery, Telemetry)
+    // 2. MAIN PAGE SPECIFIC LISTENERS
     if (isMainPage) {
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), (snapshot) => {
             publicBanners = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
@@ -94,22 +94,13 @@ function setupFirestoreListeners() {
             if (isAuthenticated) renderAdminBanners();
         });
 
-        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), (snapshot) => {
-            publicGallery = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
-            renderPublicGallery();
-            if (isAuthenticated) renderAdminGallery();
-        });
-
         onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'telemetry', 'latest'), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                
-                // Update Public UI
                 if (document.getElementById('tel-driver')) document.getElementById('tel-driver').innerText = data.driver || 'AWAITING';
                 if (document.getElementById('tel-distance')) document.getElementById('tel-distance').innerText = (data.distance || 0) + ' KM';
                 if (document.getElementById('tel-vibe')) document.getElementById('tel-vibe').innerText = data.vibe || 'UNKNOWN';
 
-                // Update Admin Form UI
                 if (document.getElementById('adminDist')) {
                     document.getElementById('adminDriver').value = data.driver || 'AWAITING';
                     document.getElementById('adminDist').value = data.distance || '';
@@ -119,7 +110,16 @@ function setupFirestoreListeners() {
         });
     }
 
-    // 3. COMMS LISTENER (Loaded on Main Page and Comms Page)
+    // 3. GALLERY LISTENER (For Admin Panel and Dedicated Gallery Page)
+    if (isMainPage || isGalleryPage) {
+        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), (snapshot) => {
+            publicGallery = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
+            if (isGalleryPage) renderDedicatedGallery();
+            if (isMainPage && isAuthenticated) renderAdminGallery();
+        });
+    }
+
+    // 4. COMMS LISTENER
     if (isCommsPage || isMainPage) {
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'comms'), (snapshot) => {
             publicComms = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
@@ -128,7 +128,7 @@ function setupFirestoreListeners() {
         });
     }
 
-    // 4. NOTES LISTENER (Loaded only on Notes Page)
+    // 5. NOTES LISTENER
     if (isNotesPage) {
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'notes'), (snapshot) => {
             publicNotes = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
@@ -164,6 +164,108 @@ const initAuth = async () => {
     }
 };
 initAuth();
+
+
+// ==========================================
+// DEDICATED GALLERY (GRID/LIST VIEWS)
+// ==========================================
+window.toggleGalleryView = (viewType) => {
+    if (!isGalleryPage) return;
+    
+    document.getElementById('gallery-view-state').value = viewType;
+    
+    // Update Button Styling
+    const btnGrid = document.getElementById('btn-view-grid');
+    const btnList = document.getElementById('btn-view-list');
+    
+    if (viewType === 'grid') {
+        btnGrid.className = "p-2.5 rounded-lg bg-slate-800 text-purple-400 shadow-sm transition-all";
+        btnList.className = "p-2.5 rounded-lg text-slate-500 hover:text-slate-300 transition-all";
+    } else {
+        btnList.className = "p-2.5 rounded-lg bg-slate-800 text-purple-400 shadow-sm transition-all";
+        btnGrid.className = "p-2.5 rounded-lg text-slate-500 hover:text-slate-300 transition-all";
+    }
+    
+    renderDedicatedGallery();
+};
+
+function renderDedicatedGallery() {
+    if (!isGalleryPage) return;
+    
+    const activeGallery = publicGallery.filter(g => g.visible);
+    const container = document.getElementById('gallery-dynamic-container');
+    const emptyMsg = document.getElementById('emptyGalleryMessage');
+    
+    if (activeGallery.length === 0) {
+        container.innerHTML = '';
+        emptyMsg.classList.remove('hidden');
+        emptyMsg.classList.add('block');
+        return;
+    }
+    
+    emptyMsg.classList.remove('block');
+    emptyMsg.classList.add('hidden');
+    
+    const currentView = document.getElementById('gallery-view-state').value;
+    
+    if (currentView === 'grid') {
+        container.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
+        container.innerHTML = activeGallery.map(item => `
+            <div class="relative group cursor-pointer overflow-hidden rounded-2xl border border-slate-700 shadow-lg bg-slate-900 aspect-square" onclick="window.openLightbox('${item.id}')">
+                <img src="${item.image}" alt="Memory" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                
+                <!-- Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                    <div class="flex justify-between items-end">
+                        <div class="text-white text-[10px] font-space tracking-widest bg-black/50 px-2 py-1 rounded backdrop-blur-md border border-white/10">
+                            ${new Date(item.timestamp).toLocaleDateString()}
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.downloadImage('${item.image}', 'voyager-${item.id}.jpg'); event.stopPropagation();" class="bg-white/10 backdrop-blur-md rounded-full p-2 border border-white/20 hover:bg-white/30 transition-colors" title="Download">
+                                <i data-lucide="download" class="w-4 h-4 text-white"></i>
+                            </button>
+                            <button onclick="window.openLightbox('${item.id}'); event.stopPropagation();" class="bg-purple-500/80 backdrop-blur-md rounded-full p-2 border border-purple-400 hover:bg-purple-500 transition-colors shadow-[0_0_15px_rgba(168,85,247,0.5)]" title="Enlarge">
+                                <i data-lucide="maximize-2" class="w-4 h-4 text-white"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        container.className = "flex flex-col space-y-8 max-w-3xl mx-auto";
+        container.innerHTML = activeGallery.map(item => `
+            <div class="relative overflow-hidden rounded-3xl border border-slate-800 shadow-2xl bg-slate-900">
+                <div class="w-full h-[300px] md:h-[500px] cursor-pointer" onclick="window.openLightbox('${item.id}')">
+                    <img src="${item.image}" alt="Memory" loading="lazy" class="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-700">
+                </div>
+                <div class="p-6 bg-slate-900 flex justify-between items-center border-t border-slate-800">
+                    <div>
+                        <p class="text-xs text-purple-500 font-space font-bold tracking-widest mb-1">LOG ENTRY</p>
+                        <p class="text-slate-300 font-medium">${new Date(item.timestamp).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="window.downloadImage('${item.image}', 'voyager-${item.id}.jpg')" class="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors font-space text-xs font-bold tracking-widest border border-slate-700">
+                            <i data-lucide="download" class="w-4 h-4"></i> DOWNLOAD
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    lucide.createIcons();
+}
+
+window.downloadImage = (dataUrl, filename) => {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+
 
 // ==========================================
 // DYNAMIC CREW RENDERING
@@ -375,14 +477,13 @@ function updateBannerUI(activeBanners) {
     document.getElementById('banner-description').textContent = banner.text;
     document.getElementById('banner-meta').innerHTML = `Broadcast ${activeBannerIndex + 1} of ${activeBanners.length}`;
     
-    // Format Timestamp
     const dateOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     const formattedDate = new Date(banner.timestamp).toLocaleString('en-US', dateOptions);
     document.getElementById('banner-timestamp').textContent = formattedDate;
     
     const container = document.getElementById('banner-content-container');
     container.classList.remove('slide-up-anim'); 
-    void container.offsetWidth; // Trigger reflow to restart animation
+    void container.offsetWidth; 
     container.classList.add('slide-up-anim');
 }
 
@@ -472,7 +573,6 @@ window.toggleRecord = async () => {
                 status.classList.add('text-emerald-500');
             };
             
-            // Release the microphone
             stream.getTracks().forEach(track => track.stop()); 
         };
 
@@ -487,7 +587,6 @@ window.toggleRecord = async () => {
         btn.classList.add('animate-pulse', 'bg-red-500', 'text-white', 'border-red-600');
         lucide.createIcons();
 
-        // 15 Second Cutoff Timer
         recordingTimer = setTimeout(() => {
             if (mediaRecorder.state === 'recording') { 
                 window.toggleRecord(); 
@@ -577,7 +676,6 @@ window.toggleNoteStatus = async (id, isCompleted) => {
 };
 
 window.deleteNote = async (id, event) => {
-    // Prevent clicking the delete button from toggling the checkmark status
     if(event) event.stopPropagation();
     
     if (!confirm('Delete this idea permanently?')) return;
@@ -675,45 +773,10 @@ async function fetchWeather() {
 }
 setTimeout(fetchWeather, 2000);
 
-// ==========================================
-// GALLERY RENDERING
-// ==========================================
-function renderPublicGallery() {
-    if (!isMainPage) return;
-    
-    const activeGallery = publicGallery.filter(g => g.visible);
-    const grid = document.getElementById('public-gallery-grid');
-    const emptyMsg = document.getElementById('emptyGalleryMessage');
-    
-    if (activeGallery.length === 0) { 
-        grid.innerHTML = ''; 
-        emptyMsg.style.display = 'block'; 
-        return; 
-    }
-    
-    emptyMsg.style.display = 'none';
-    
-    grid.innerHTML = activeGallery.map((item) => `
-        <div class="gallery-item group cursor-pointer" onclick="window.openLightbox('${item.id}')">
-            <img src="${item.image}" alt="Memory" loading="lazy" class="pointer-events-none">
-            <div class="absolute inset-0 bg-gradient-to-t from-emerald-900/80 via-emerald-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5 pointer-events-none">
-                <div class="bg-white/20 backdrop-blur-md rounded-full p-2 border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.4)] pointer-events-auto hover:bg-white/40 transition-colors" onclick="window.openLightbox('${item.id}'); event.stopPropagation();">
-                    <i data-lucide="maximize-2" class="w-5 h-5 text-white"></i>
-                </div>
-            </div>
-        </div>
-    `).join('');
-    
-    lucide.createIcons();
-}
 
-window.scrollGallery = (direction) => {
-    const grid = document.getElementById('public-gallery-grid');
-    if (grid) {
-        grid.scrollBy({ left: direction * 320, behavior: 'smooth' });
-    }
-};
-
+// ==========================================
+// ADMIN IMAGE UPLOAD LOGIC
+// ==========================================
 window.handleImageSelect = async (e) => {
     if (!isAuthenticated) return showToast('Not authenticated', 'error');
     
@@ -773,7 +836,6 @@ window.handleImageSelect = async (e) => {
 // LIGHTBOX LOGIC
 // ==========================================
 window.openLightbox = (id) => {
-    let currentGalleryId = id; 
     const item = publicGallery.find(g => g.id === id);
     if (item) { 
         document.getElementById('lightboxImage').src = item.image; 
@@ -792,8 +854,6 @@ window.closeLightbox = () => {
 
 window.nextGalleryImage = () => { 
     const active = publicGallery.filter(g => g.visible); 
-    // We need a global var to track index if navigating inside modal
-    // For simplicity of scope without adding more globals, we'll extract current src
     const currentSrc = document.getElementById('lightboxImage').src;
     const currentItem = active.find(g => currentSrc.includes(g.image));
     
