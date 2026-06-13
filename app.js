@@ -594,7 +594,7 @@ function initMapAndGraphics() {
     });
     updateMapInfo(0);
 
-    // Three.js Dynamic Wavy Grid
+    // Three.js
     const container = document.getElementById('hero-canvas-container');
     if(container && !container.hasChildNodes()) {
         const scene = new THREE.Scene();
@@ -605,21 +605,18 @@ function initMapAndGraphics() {
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
         
-        // MAIN EMERALD GRID
         const geo = new THREE.PlaneGeometry(200, 200, 60, 60);
         const mat = new THREE.MeshBasicMaterial({ color: 0x059669, wireframe: true, transparent: true, opacity: 0.7 });
         const plane = new THREE.Mesh(geo, mat);
         plane.rotation.x = -Math.PI / 2; plane.position.y = -8;
         scene.add(plane);
 
-        // SECONDARY CYAN GRID 
         const geo2 = new THREE.PlaneGeometry(200, 200, 40, 40);
         const mat2 = new THREE.MeshBasicMaterial({ color: 0x06b6d4, wireframe: true, transparent: true, opacity: 0.3 });
         const plane2 = new THREE.Mesh(geo2, mat2);
         plane2.rotation.x = -Math.PI / 2; plane2.position.y = -10;
         scene.add(plane2);
         
-        // FLOATING DATA PARTICLES
         const starsGeo = new THREE.BufferGeometry();
         const starsCount = 500;
         const posArray = new Float32Array(starsCount * 3);
@@ -672,7 +669,6 @@ function initMapAndGraphics() {
         });
     }
 
-    // Countdown Setup
     const targetDate = new Date("2026-07-11T00:30:00Z").getTime();
     setInterval(() => {
         const now = new Date().getTime();
@@ -686,3 +682,4 @@ function initMapAndGraphics() {
             document.getElementById('cd-seconds').innerText = Math.floor((dist % (1000 * 60)) / 1000).toString().padStart(2, '0');
         }
     }, 1000);
+}
