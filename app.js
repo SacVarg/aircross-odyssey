@@ -42,10 +42,6 @@ let publicNotes = [];
 let publicCrew = [];
 let isAuthenticated = false;
 
-// Banner State
-let activeBannerIndex = 0;
-let bannerInterval = null;
-
 // Audio Recording State
 let mediaRecorder;
 let audioChunks = [];
@@ -110,7 +106,7 @@ function setupFirestoreListeners() {
         });
     }
 
-    // 3. GALLERY LISTENER (For Admin Panel and Dedicated Gallery Page)
+    // 3. GALLERY LISTENER
     if (isMainPage || isGalleryPage) {
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), (snapshot) => {
             publicGallery = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
@@ -155,7 +151,6 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Auto-Login Anonymously so public visitors can write to database
 const initAuth = async () => {
     try {
         await signInAnonymously(auth);
@@ -165,110 +160,60 @@ const initAuth = async () => {
 };
 initAuth();
 
-
 // ==========================================
-// DEDICATED GALLERY (GRID/LIST VIEWS)
+// BANNER RENDERING (THE NEW TERMINAL FEED)
 // ==========================================
-window.toggleGalleryView = (viewType) => {
-    if (!isGalleryPage) return;
+function renderPublicBanners() {
+    if (!isMainPage) return;
     
-    document.getElementById('gallery-view-state').value = viewType;
+    const activeBanners = publicBanners.filter(b => b.visible);
+    const container = document.getElementById('bulletin-board-container');
+    const content = document.getElementById('bulletin-content');
     
-    // Update Button Styling
-    const btnGrid = document.getElementById('btn-view-grid');
-    const btnList = document.getElementById('btn-view-list');
+    if (!container || !content) return;
     
-    if (viewType === 'grid') {
-        btnGrid.className = "p-2.5 rounded-lg bg-slate-800 text-purple-400 shadow-sm transition-all";
-        btnList.className = "p-2.5 rounded-lg text-slate-500 hover:text-slate-300 transition-all";
-    } else {
-        btnList.className = "p-2.5 rounded-lg bg-slate-800 text-purple-400 shadow-sm transition-all";
-        btnGrid.className = "p-2.5 rounded-lg text-slate-500 hover:text-slate-300 transition-all";
+    if (activeBanners.length === 0) { 
+        container.style.display = 'none'; 
+        return; 
     }
     
-    renderDedicatedGallery();
-};
+    container.style.display = 'block';
 
-function renderDedicatedGallery() {
-    if (!isGalleryPage) return;
+    const dateOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     
-    const activeGallery = publicGallery.filter(g => g.visible);
-    const container = document.getElementById('gallery-dynamic-container');
-    const emptyMsg = document.getElementById('emptyGalleryMessage');
-    
-    if (activeGallery.length === 0) {
-        container.innerHTML = '';
-        emptyMsg.classList.remove('hidden');
-        emptyMsg.classList.add('block');
-        return;
-    }
-    
-    emptyMsg.classList.remove('block');
-    emptyMsg.classList.add('hidden');
-    
-    const currentView = document.getElementById('gallery-view-state').value;
-    
-    if (currentView === 'grid') {
-        container.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
-        container.innerHTML = activeGallery.map(item => `
-            <div class="relative group cursor-pointer overflow-hidden rounded-2xl border border-slate-700 shadow-lg bg-slate-900 aspect-square" onclick="window.openLightbox('${item.id}')">
-                <img src="${item.image}" alt="Memory" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                
-                <!-- Overlay -->
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                    <div class="flex justify-between items-end">
-                        <div class="text-white text-[10px] font-space tracking-widest bg-black/50 px-2 py-1 rounded backdrop-blur-md border border-white/10">
-                            ${new Date(item.timestamp).toLocaleDateString()}
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="window.downloadImage('${item.image}', 'voyager-${item.id}.jpg'); event.stopPropagation();" class="bg-white/10 backdrop-blur-md rounded-full p-2 border border-white/20 hover:bg-white/30 transition-colors" title="Download">
-                                <i data-lucide="download" class="w-4 h-4 text-white"></i>
-                            </button>
-                            <button onclick="window.openLightbox('${item.id}'); event.stopPropagation();" class="bg-purple-500/80 backdrop-blur-md rounded-full p-2 border border-purple-400 hover:bg-purple-500 transition-colors shadow-[0_0_15px_rgba(168,85,247,0.5)]" title="Enlarge">
-                                <i data-lucide="maximize-2" class="w-4 h-4 text-white"></i>
-                            </button>
-                        </div>
-                    </div>
+    const bannersHtml = activeBanners.map((b, index) => {
+        const formattedDate = new Date(b.timestamp).toLocaleString('en-US', dateOptions).toUpperCase();
+        const isLatest = index === 0;
+        
+        const borderClass = isLatest ? 'border-cyan-500/50 bg-cyan-900/10' : 'border-slate-700/50 bg-slate-800/20';
+        const dateColor = isLatest ? 'text-cyan-400' : 'text-slate-500';
+        const textColor = isLatest ? 'text-white' : 'text-slate-300';
+        const dot = isLatest 
+            ? `<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse mr-2 inline-block shadow-[0_0_8px_#22d3ee]"></span>` 
+            : `<span class="w-1.5 h-1.5 rounded-full bg-slate-600 mr-2 inline-block"></span>`;
+        
+        return `
+            <div class="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-6 p-3 mb-3 rounded-xl border-l-2 ${borderClass} transition-colors hover:bg-slate-700/30">
+                <div class="shrink-0 text-[10px] font-space font-bold tracking-widest ${dateColor} sm:w-36 flex items-center pt-0.5">
+                    ${dot} ${formattedDate}
+                </div>
+                <div class="text-sm font-medium ${textColor} leading-relaxed">
+                    ${b.text}
                 </div>
             </div>
-        `).join('');
-    } else {
-        container.className = "flex flex-col space-y-8 max-w-3xl mx-auto";
-        container.innerHTML = activeGallery.map(item => `
-            <div class="relative overflow-hidden rounded-3xl border border-slate-800 shadow-2xl bg-slate-900">
-                <div class="w-full h-[300px] md:h-[500px] cursor-pointer" onclick="window.openLightbox('${item.id}')">
-                    <img src="${item.image}" alt="Memory" loading="lazy" class="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-700">
-                </div>
-                <div class="p-6 bg-slate-900 flex justify-between items-center border-t border-slate-800">
-                    <div>
-                        <p class="text-xs text-purple-500 font-space font-bold tracking-widest mb-1">LOG ENTRY</p>
-                        <p class="text-slate-300 font-medium">${new Date(item.timestamp).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
-                    <div class="flex gap-3">
-                        <button onclick="window.downloadImage('${item.image}', 'voyager-${item.id}.jpg')" class="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors font-space text-xs font-bold tracking-widest border border-slate-700">
-                            <i data-lucide="download" class="w-4 h-4"></i> DOWNLOAD
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
+        `;
+    }).join('');
+
+    // Duplicate the HTML inside the container to create a seamless infinite scrolling loop
+    content.innerHTML = bannersHtml + bannersHtml;
     
-    lucide.createIcons();
+    // Dynamically adjust animation speed based on the number of items (approx 6 seconds per item)
+    const duration = Math.max(20, activeBanners.length * 6);
+    content.style.animationDuration = `${duration}s`;
 }
 
-window.downloadImage = (dataUrl, filename) => {
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-};
-
-
 // ==========================================
-// DYNAMIC CREW RENDERING
+// DYNAMIC CREW RENDERING: CONCEPT 8 (RADAR)
 // ==========================================
 function renderPublicCrew() {
     const container = document.getElementById('dynamic-crew-grid');
@@ -276,35 +221,89 @@ function renderPublicCrew() {
     
     if (publicCrew.length === 0) {
         container.innerHTML = `
-            <div class="text-center col-span-full py-10 text-slate-400 font-space text-sm">
+            <div class="text-center col-span-full py-20 text-slate-400 font-space text-sm">
                 Awaiting Crew Roster Data...
             </div>
         `;
         return;
     }
 
-    container.innerHTML = publicCrew.map(c => `
-        <div class="relative overflow-hidden rounded-2xl bg-slate-900/60 border border-slate-700 backdrop-blur-xl group hover:-translate-y-2 transition-all duration-500 shadow-lg">
-            <div class="absolute top-0 w-full h-1 bg-${c.color}-500 shadow-[0_0_15px_currentColor]"></div>
-            <div class="p-6 md:p-8">
-                <div class="flex justify-between items-start mb-8">
-                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-${c.color}-500/10 border border-${c.color}-500/30 flex items-center justify-center text-3xl font-black font-space text-${c.color}-400 group-hover:scale-110 transition-all">
-                        ${c.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div class="text-right">
-                        <div class="text-[10px] text-slate-500 font-space font-bold tracking-[0.3em] mb-1">OP-ID</div>
-                        <div class="text-sm font-black text-slate-300 font-space tracking-widest bg-slate-800 px-2 py-1 rounded">${c.crewId}</div>
-                    </div>
+    // Define constellation coordinate mappings (up to 8 positions for layout)
+    const positions = [
+        { top: '25%', left: '50%' }, 
+        { top: '45%', left: '30%' },
+        { top: '55%', left: '70%' }, 
+        { top: '75%', left: '45%' },
+        { top: '35%', left: '80%' }, 
+        { top: '80%', left: '75%' },
+        { top: '85%', left: '20%' }, 
+        { top: '25%', left: '20%' }
+    ];
+
+    // Generate connecting lines for the constellation effect
+    let svgLines = `<svg class="absolute inset-0 w-full h-full pointer-events-none opacity-30 z-0">`;
+    for(let i = 0; i < publicCrew.length - 1; i++) {
+        let p1 = positions[i % positions.length];
+        let p2 = positions[(i + 1) % positions.length];
+        
+        // Primary connection
+        svgLines += `<line x1="${p1.left}" y1="${p1.top}" x2="${p2.left}" y2="${p2.top}" stroke="#10b981" stroke-width="1" stroke-dasharray="4 4" />`;
+        
+        // Secondary connection to make it look like a web
+        if (i + 2 < publicCrew.length) {
+            let p3 = positions[(i + 2) % positions.length];
+            svgLines += `<line x1="${p1.left}" y1="${p1.top}" x2="${p3.left}" y2="${p3.top}" stroke="#06b6d4" stroke-width="0.5" stroke-dasharray="2 6" />`;
+        }
+    }
+    svgLines += `</svg>`;
+
+    // Generate Crew Nodes
+    let nodes = publicCrew.map((c, i) => {
+        const pos = positions[i % positions.length];
+        return `
+            <div class="absolute group cursor-pointer flex flex-col items-center justify-center transform -translate-x-1/2 -translate-y-1/2 z-10" style="top: ${pos.top}; left: ${pos.left};">
+                
+                <div class="relative flex items-center justify-center">
+                    <div class="absolute w-8 h-8 rounded-full animate-ping bg-${c.color}-500 opacity-20"></div>
+                    <div class="w-3 h-3 rounded-full bg-${c.color}-400 shadow-[0_0_10px_currentColor] border border-white"></div>
                 </div>
-                <div>
-                    <h3 class="text-2xl md:text-3xl font-black font-space tracking-tight text-white mb-2 uppercase">${c.name}</h3>
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-${c.color}-500/10 border border-${c.color}-500/20 text-${c.color}-400 text-xs font-bold tracking-[0.2em] uppercase">
-                        <i data-lucide="shield" class="w-3 h-3"></i> ${c.role}
+                
+                <div class="mt-2 text-[10px] md:text-xs font-space font-bold tracking-[0.2em] text-slate-500 group-hover:text-${c.color}-500 transition-colors uppercase">
+                    ${c.name}
+                </div>
+                
+                <div class="absolute top-10 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none w-[200px] text-center transform scale-95 group-hover:scale-100 z-20">
+                    <div class="bg-white/90 backdrop-blur-md border border-${c.color}-300 p-3 rounded-xl shadow-lg inline-block relative">
+                        
+                        <div class="absolute -top-3 -left-3 w-3 h-3 border-t-2 border-l-2 border-${c.color}-500 rounded-tl"></div>
+                        <div class="absolute -bottom-3 -right-3 w-3 h-3 border-b-2 border-r-2 border-${c.color}-500 rounded-br"></div>
+                        
+                        <p class="text-[9px] font-bold tracking-widest text-slate-400 mb-1">ID: ${c.crewId}</p>
+                        <p class="text-xs font-black tracking-widest text-${c.color}-600 uppercase">${c.role}</p>
                     </div>
                 </div>
             </div>
+        `;
+    }).join('');
+
+    // Render Container
+    container.innerHTML = `
+        <div class="relative w-full h-[500px] md:h-[600px] bg-slate-900/5 rounded-[3rem] border border-slate-200/50 backdrop-blur-sm overflow-hidden shadow-inner">
+            
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 z-0">
+                <div class="w-[80%] h-[80%] rounded-full border border-emerald-500/30"></div>
+                <div class="absolute w-[60%] h-[60%] rounded-full border border-emerald-500/20"></div>
+                <div class="absolute w-[40%] h-[40%] rounded-full border border-emerald-500/10"></div>
+            </div>
+            
+            <div class="absolute top-1/2 left-1/2 w-[50%] h-[2px] bg-gradient-to-r from-emerald-500/80 to-transparent origin-left animate-[spin_10s_linear_infinite] pointer-events-none z-0"></div>
+
+            ${svgLines}
+            ${nodes}
+
         </div>
-    `).join('');
+    `;
+    
     lucide.createIcons();
 }
 
@@ -415,80 +414,7 @@ function renderAdminCrew() {
 }
 
 // ==========================================
-// BANNER RENDERING
-// ==========================================
-function renderPublicBanners() {
-    if (!isMainPage) return;
-    
-    const activeBanners = publicBanners.filter(b => b.visible);
-    const bannerElement = document.getElementById('event-banner');
-    
-    if (activeBanners.length === 0) { 
-        bannerElement.style.display = 'none'; 
-        clearInterval(bannerInterval); 
-        return; 
-    }
-    
-    bannerElement.style.display = 'block';
-    
-    const prevBtn = document.getElementById('banner-prev-btn');
-    const nextBtn = document.getElementById('banner-next-btn');
-    
-    if (prevBtn && nextBtn) {
-        prevBtn.style.display = activeBanners.length > 1 ? 'block' : 'none';
-        nextBtn.style.display = activeBanners.length > 1 ? 'block' : 'none';
-    }
-
-    if (activeBannerIndex >= activeBanners.length) activeBannerIndex = 0;
-    
-    updateBannerUI(activeBanners);
-    startBannerTimer(activeBanners);
-}
-
-function startBannerTimer(activeBanners) {
-    clearInterval(bannerInterval);
-    if (activeBanners.length > 1) {
-        bannerInterval = setInterval(() => { 
-            window.nextBanner(); 
-        }, 8000);
-    }
-}
-
-window.nextBanner = () => {
-    const activeBanners = publicBanners.filter(b => b.visible);
-    if (activeBanners.length <= 1) return;
-    
-    activeBannerIndex = (activeBannerIndex + 1) % activeBanners.length;
-    updateBannerUI(activeBanners); 
-    startBannerTimer(activeBanners);
-};
-
-window.prevBanner = () => {
-    const activeBanners = publicBanners.filter(b => b.visible);
-    if (activeBanners.length <= 1) return;
-    
-    activeBannerIndex = (activeBannerIndex - 1 + activeBanners.length) % activeBanners.length;
-    updateBannerUI(activeBanners); 
-    startBannerTimer(activeBanners); 
-};
-
-function updateBannerUI(activeBanners) {
-    const banner = activeBanners[activeBannerIndex];
-    document.getElementById('banner-description').textContent = banner.text;
-    document.getElementById('banner-meta').innerHTML = `Broadcast ${activeBannerIndex + 1} of ${activeBanners.length}`;
-    
-    const dateOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    const formattedDate = new Date(banner.timestamp).toLocaleString('en-US', dateOptions);
-    document.getElementById('banner-timestamp').textContent = formattedDate;
-    
-    const container = document.getElementById('banner-content-container');
-    container.classList.remove('slide-up-anim'); 
-    void container.offsetWidth; 
-    container.classList.add('slide-up-anim');
-}
-
-// ==========================================
-// COMMS POSTING & AUDIO LOGIC
+// COMMS LOGIC
 // ==========================================
 window.postComm = async () => {
     const authorElement = document.getElementById('commAuthor');
@@ -773,6 +699,103 @@ async function fetchWeather() {
 }
 setTimeout(fetchWeather, 2000);
 
+// ==========================================
+// DEDICATED GALLERY (GRID/LIST VIEWS)
+// ==========================================
+window.toggleGalleryView = (viewType) => {
+    if (!isGalleryPage) return;
+    
+    document.getElementById('gallery-view-state').value = viewType;
+    
+    const btnGrid = document.getElementById('btn-view-grid');
+    const btnList = document.getElementById('btn-view-list');
+    
+    if (viewType === 'grid') {
+        btnGrid.className = "p-2.5 rounded-lg bg-slate-800 text-purple-400 shadow-sm transition-all";
+        btnList.className = "p-2.5 rounded-lg text-slate-500 hover:text-slate-300 transition-all";
+    } else {
+        btnList.className = "p-2.5 rounded-lg bg-slate-800 text-purple-400 shadow-sm transition-all";
+        btnGrid.className = "p-2.5 rounded-lg text-slate-500 hover:text-slate-300 transition-all";
+    }
+    
+    renderDedicatedGallery();
+};
+
+function renderDedicatedGallery() {
+    if (!isGalleryPage) return;
+    
+    const activeGallery = publicGallery.filter(g => g.visible);
+    const container = document.getElementById('gallery-dynamic-container');
+    const emptyMsg = document.getElementById('emptyGalleryMessage');
+    
+    if (activeGallery.length === 0) {
+        container.innerHTML = '';
+        emptyMsg.classList.remove('hidden');
+        emptyMsg.classList.add('block');
+        return;
+    }
+    
+    emptyMsg.classList.remove('block');
+    emptyMsg.classList.add('hidden');
+    
+    const currentView = document.getElementById('gallery-view-state').value;
+    
+    if (currentView === 'grid') {
+        container.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
+        container.innerHTML = activeGallery.map(item => `
+            <div class="relative group cursor-pointer overflow-hidden rounded-2xl border border-slate-700 shadow-lg bg-slate-900 aspect-square" onclick="window.openLightbox('${item.id}')">
+                <img src="${item.image}" alt="Memory" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                    <div class="flex justify-between items-end">
+                        <div class="text-white text-[10px] font-space tracking-widest bg-black/50 px-2 py-1 rounded backdrop-blur-md border border-white/10">
+                            ${new Date(item.timestamp).toLocaleDateString()}
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.downloadImage('${item.image}', 'voyager-${item.id}.jpg'); event.stopPropagation();" class="bg-white/10 backdrop-blur-md rounded-full p-2 border border-white/20 hover:bg-white/30 transition-colors" title="Download">
+                                <i data-lucide="download" class="w-4 h-4 text-white"></i>
+                            </button>
+                            <button onclick="window.openLightbox('${item.id}'); event.stopPropagation();" class="bg-purple-500/80 backdrop-blur-md rounded-full p-2 border border-purple-400 hover:bg-purple-500 transition-colors shadow-[0_0_15px_rgba(168,85,247,0.5)]" title="Enlarge">
+                                <i data-lucide="maximize-2" class="w-4 h-4 text-white"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        container.className = "flex flex-col space-y-8 max-w-3xl mx-auto";
+        container.innerHTML = activeGallery.map(item => `
+            <div class="relative overflow-hidden rounded-3xl border border-slate-800 shadow-2xl bg-slate-900">
+                <div class="w-full h-[300px] md:h-[500px] cursor-pointer" onclick="window.openLightbox('${item.id}')">
+                    <img src="${item.image}" alt="Memory" loading="lazy" class="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-700">
+                </div>
+                <div class="p-6 bg-slate-900 flex justify-between items-center border-t border-slate-800">
+                    <div>
+                        <p class="text-xs text-purple-500 font-space font-bold tracking-widest mb-1">LOG ENTRY</p>
+                        <p class="text-slate-300 font-medium">${new Date(item.timestamp).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="window.downloadImage('${item.image}', 'voyager-${item.id}.jpg')" class="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors font-space text-xs font-bold tracking-widest border border-slate-700">
+                            <i data-lucide="download" class="w-4 h-4"></i> DOWNLOAD
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    lucide.createIcons();
+}
+
+window.downloadImage = (dataUrl, filename) => {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
 
 // ==========================================
 // ADMIN IMAGE UPLOAD LOGIC
