@@ -136,7 +136,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // IMPORT FIREBASE AUTHENTICATION
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // Immutable Project Environment Initialization Data Config
@@ -150,7 +149,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app); // INITIALIZE AUTH
+        const auth = getAuth(app);
         const db = getFirestore(app);
         const signalScope = "aircross-odyssey-main";
 
@@ -183,7 +182,6 @@
             
             localCallsign = sanitizedValue;
             
-            // Grab the button to show a loading state
             const connectBtn = document.querySelector('#setup-panel button');
             const originalBtnText = connectBtn.innerHTML;
             connectBtn.innerHTML = `CONNECTING...`;
@@ -212,13 +210,11 @@
             } catch (err) {
                 console.error("Hardware pipeline assignment failed.", err);
                 
-                // STRICT FIX: Force the UI to stay on the setup panel and reset the button
                 document.getElementById('radio-panel').classList.add('hidden');
                 document.getElementById('setup-panel').classList.remove('hidden');
                 connectBtn.innerHTML = originalBtnText;
                 connectBtn.disabled = false;
 
-                // DIAGNOSTIC CHECK: Translate the browser's strict error codes
                 let errorReason = err.name || "Unknown Error";
                 let detailedMsg = "";
 
@@ -246,7 +242,6 @@
             const nodeCollectionRef = collection(channelDocRef, 'nodes');
             const selfRecordDocRef = doc(nodeCollectionRef, localPeerId);
 
-            // Announce presence context tracking callsign configurations
             await setDoc(selfRecordDocRef, {
                 id: localPeerId,
                 callsign: localCallsign,
@@ -254,12 +249,10 @@
                 timestamp: Date.now()
             });
 
-            // Automatically purge session configuration tracking maps upon browser workspace shutdown operations
             window.addEventListener('beforeunload', async () => {
                 await deleteDoc(selfRecordDocRef);
             });
 
-            // Universal Synchronization Stream: Listen to online nodes list fluctuations
             onSnapshot(nodeCollectionRef, async (snapshot) => {
                 const updatedRoster = [];
                 snapshot.forEach(docSnap => {
@@ -269,7 +262,6 @@
                 onlineRosterData = updatedRoster;
                 updateVisualRosterDisplay();
 
-                // Connect to newly entered sibling instances
                 for (const node of updatedRoster) {
                     if (node.id !== localPeerId && !runtimeConnections[node.id]) {
                         if (localPeerId > node.id) {
@@ -279,7 +271,6 @@
                 }
             });
 
-            // Signal Mailbox Dispatcher: Listen recursively for signaling packets
             const dynamicSignalingInboxRef = collection(selfRecordDocRef, 'signals');
             onSnapshot(dynamicSignalingInboxRef, async (snapshot) => {
                 snapshot.forEach(async (changeDoc) => {
@@ -294,7 +285,6 @@
                         await handleIncomingIceCandidate(senderId, signalData.candidate);
                     }
                     
-                    // Instantly drop read transactional items to retain high throughput
                     await deleteDoc(doc(dynamicSignalingInboxRef, changeDoc.id));
                 });
             });
@@ -309,12 +299,10 @@
             const connectionInstance = new RTCPeerConnection(rtcIceConfiguration);
             runtimeConnections[targetSiblingId] = connectionInstance;
 
-            // Inject local hardware media track references into connection layout
             localStream.getTracks().forEach(track => {
                 connectionInstance.addTrack(track, localStream);
             });
 
-            // Channel pipeline listeners processing candidate handshakes
             connectionInstance.onicecandidate = async (event) => {
                 if (event.candidate) {
                     await dispatchSignalPacket(targetSiblingId, {
@@ -324,13 +312,11 @@
                 }
             };
 
-            // Stream pipeline listener logging matched multi-peer connections fields
             connectionInstance.ontrack = (event) => {
                 if (!remoteStreams[targetSiblingId]) {
                     const compositeStream = new MediaStream();
                     remoteStreams[targetSiblingId] = compositeStream;
                     
-                    // Create an offline background native audio processing element
                     const audioSinkElement = document.createElement('audio');
                     audioSinkElement.id = `sink-element-${targetSiblingId}`;
                     audioSinkElement.autoplay = true;
@@ -341,7 +327,6 @@
                 remoteStreams[targetSiblingId].addTrack(event.track);
             };
 
-            // Connection state debugging mapping logs
             connectionInstance.onconnectionstatechange = () => {
                 if (connectionInstance.connectionState === 'disconnected' || connectionInstance.connectionState === 'failed') {
                     terminatePeerSession(targetSiblingId);
@@ -420,7 +405,6 @@
             const totalNodesCounter = document.getElementById('node-count-display');
             if (!displayContainer) return;
 
-            // Account for total registered matrix objects synced
             totalNodesCounter.innerText = `${onlineRosterData.length} / 6`;
 
             displayContainer.innerHTML = onlineRosterData.map(node => {
@@ -462,12 +446,20 @@
 
             let currentlyBroadcastingFlag = false;
 
-            const engageVoiceTransmissionPipeline = async () => {
+            const engageVoiceTransmissionPipeline = async (e) => {
+                if (e) e.preventDefault(); // Catch overlapping ghost touch events
                 if (currentlyBroadcastingFlag) return;
                 currentlyBroadcastingFlag = true;
 
-                // Natively ungate local audio capture stream tracks
-                localStream.getAudioTracks().forEach(track => { track.enabled = true; });
+                // OPTIMISTIC UI FIX: Instantly update the local roster to show 'XMTR LIVE'
+                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
+                if (selfNode) selfNode.activeTransmission = true;
+                updateVisualRosterDisplay();
+
+                // Natively ungate local audio capture stream tracks instantly
+                if (localStream) {
+                    localStream.getAudioTracks().forEach(track => { track.enabled = true; });
+                }
 
                 // UI adjustments
                 pttButtonNode.classList.add('transmitting');
@@ -477,16 +469,25 @@
                 globalBroadcastBanner.innerText = "BROADCAST ENVELOPE OPEN // ON AIR";
                 globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
 
+                // Sync status to cloud in the background
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: true }, { merge: true });
             };
 
-            const disengageVoiceTransmissionPipeline = async () => {
+            const disengageVoiceTransmissionPipeline = async (e) => {
+                if (e && e.type !== 'mouseleave') e.preventDefault();
                 if (!currentlyBroadcastingFlag) return;
                 currentlyBroadcastingFlag = false;
 
+                // OPTIMISTIC UI FIX: Instantly revert local roster back to 'MUTED'
+                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
+                if (selfNode) selfNode.activeTransmission = false;
+                updateVisualRosterDisplay();
+
                 // Instantly isolate audio stream processing
-                localStream.getAudioTracks().forEach(track => { track.enabled = false; });
+                if (localStream) {
+                    localStream.getAudioTracks().forEach(track => { track.enabled = false; });
+                }
 
                 // Reset UI frameworks
                 pttButtonNode.classList.remove('transmitting');
@@ -496,6 +497,7 @@
                 globalBroadcastBanner.innerText = "FREQUENCY RETICULE: STANDBY";
                 globalBroadcastBanner.className = "w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase";
 
+                // Sync standby status to cloud in the background
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: false }, { merge: true });
             };
@@ -503,13 +505,10 @@
             // Desk mouse interaction mapping
             pttButtonNode.addEventListener('mousedown', engageVoiceTransmissionPipeline);
             window.addEventListener('mouseup', disengageVoiceTransmissionPipeline);
-            window.addEventListener('mouseleave', disengageVoiceTransmissionPipeline);
+            pttButtonNode.addEventListener('mouseleave', disengageVoiceTransmissionPipeline);
 
-            // Handheld mobile multi-touch execution handling
-            pttButtonNode.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                engageVoiceTransmissionPipeline();
-            });
+            // Handheld mobile multi-touch execution handling (using passive: false to allow preventDefault)
+            pttButtonNode.addEventListener('touchstart', engageVoiceTransmissionPipeline, { passive: false });
             window.addEventListener('touchend', disengageVoiceTransmissionPipeline);
             window.addEventListener('touchcancel', disengageVoiceTransmissionPipeline);
         }
