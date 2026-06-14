@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700;900&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -33,7 +32,7 @@
             background-size: 30px 30px;
         }
         
-        /* STRICT TOUCH LOCK: Prevents the phone from scrolling or misfiring touchcancel events */
+        /* HARDWARE FIX: touch-action: none prevents the browser from scrolling and misfiring the touchcancel event */
         .ptt-btn {
             user-select: none;
             -webkit-user-select: none;
@@ -41,23 +40,11 @@
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .ptt-btn.transmitting {
+        .ptt-btn:active, .ptt-btn.transmitting {
             transform: scale(0.94);
             box-shadow: 0 0 50px rgba(236, 72, 153, 0.6);
             border-color: #ec4899;
             background: rgba(236, 72, 153, 0.2);
-        }
-
-        /* SPEAKER IDENTIFICATION: Massive visual change for whoever is transmitting */
-        .card-speaking {
-            border-color: #ec4899 !important;
-            background-color: rgba(236, 72, 153, 0.15) !important;
-            box-shadow: 0 0 25px rgba(236, 72, 153, 0.4) !important;
-            transform: scale(1.03);
-            z-index: 10;
-        }
-        .card-speaking .callsign-text {
-            color: #f472b6 !important;
         }
     </style>
 </head>
@@ -140,6 +127,8 @@
         </div>
     </main>
 
+    <div id="audio-renderer-sink" style="position: absolute; width: 0; height: 0; visibility: hidden; overflow: hidden;" aria-hidden="true"></div>
+
     <footer class="w-full text-center py-4 text-[9px] font-space font-bold tracking-[0.3em] text-slate-600 z-10">
         VOYAGER MESH PROTOCOL V4 // ENCRYPTED END-TO-END
     </footer>
@@ -173,7 +162,7 @@
         const remoteStreams = {};       
         let onlineRosterData = [];     
 
-        // Extended robust STUN servers to guarantee NAT punch-through for mobile devices
+        // Extended robust STUN servers to guarantee NAT punch-through
         const rtcIceConfiguration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -196,11 +185,9 @@
                     }
                 } catch (e) { console.error("Error cleaning up:", e); }
             }
-            // Hard redirect back to index.html
             window.location.replace('index.html');
         };
 
-        // Fallback cleanup if they close the browser tab completely
         window.addEventListener('beforeunload', () => {
             if (isConnected) {
                 const selfRecordDocRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
@@ -230,10 +217,7 @@
             try {
                 await signInAnonymously(auth);
 
-                // Request hardware capturing pipelines
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                
-                // Securely mute audio output natively to start
                 localStream.getAudioTracks().forEach(track => { track.enabled = false; });
                 
                 document.getElementById('setup-panel').classList.add('hidden');
@@ -265,7 +249,6 @@
             const nodeCollectionRef = collection(channelDocRef, 'nodes');
             const selfRecordDocRef = doc(nodeCollectionRef, localPeerId);
 
-            // Announce presence context tracking
             await setDoc(selfRecordDocRef, {
                 id: localPeerId,
                 callsign: localCallsign,
@@ -273,14 +256,16 @@
                 lastActive: Date.now()
             });
 
-            // GHOST USER FIX: "Heartbeat" mechanism. Ping DB every 5 seconds.
+            // Heartbeat mechanism to sweep ghost users
             setInterval(async () => {
                 if (isConnected) {
-                    await setDoc(selfRecordDocRef, { lastActive: Date.now() }, { merge: true });
+                    try {
+                        await setDoc(selfRecordDocRef, { lastActive: Date.now() }, { merge: true });
+                    } catch(e) {}
                 }
             }, 5000);
 
-            // Listen to online nodes
+            // Listen to online nodes and trigger Visual Updates
             onSnapshot(nodeCollectionRef, async (snapshot) => {
                 const updatedRoster = [];
                 const currentTime = Date.now();
@@ -288,7 +273,6 @@
                 snapshot.forEach(docSnap => {
                     if (docSnap.exists()) {
                         const nodeData = docSnap.data();
-                        // Sweep ghost users who haven't pinged in 15 seconds
                         if (currentTime - (nodeData.lastActive || 0) < 15000) {
                             updatedRoster.push(nodeData);
                         } else {
@@ -298,9 +282,10 @@
                 });
 
                 onlineRosterData = updatedRoster;
+                
+                // Triggers the newly fixed UI update logic
                 updateVisualRosterDisplay();
 
-                // Connect to newly entered sibling instances
                 for (const node of updatedRoster) {
                     if (node.id !== localPeerId && !runtimeConnections[node.id]) {
                         if (localPeerId > node.id) {
@@ -310,7 +295,7 @@
                 }
             });
 
-            // Signal Mailbox Dispatcher: Robust docChanges approach prevents race conditions
+            // Signal Mailbox Dispatcher
             const dynamicSignalingInboxRef = collection(selfRecordDocRef, 'signals');
             onSnapshot(dynamicSignalingInboxRef, (snapshot) => {
                 snapshot.docChanges().forEach(async (change) => {
@@ -330,7 +315,6 @@
                             console.error("Signaling Error:", err);
                         }
                         
-                        // Delete the packet after processing it
                         await deleteDoc(change.doc.ref);
                     }
                 });
@@ -345,16 +329,12 @@
 
             const connectionInstance = new RTCPeerConnection(rtcIceConfiguration);
             runtimeConnections[targetSiblingId] = connectionInstance;
-            
-            // Queue for incoming ICE candidates if they arrive before remote description
             connectionInstance.pendingCandidates = [];
 
-            // Inject local hardware media tracks
             localStream.getTracks().forEach(track => {
                 connectionInstance.addTrack(track, localStream);
             });
 
-            // Transmit ICE Candidates
             connectionInstance.onicecandidate = async (event) => {
                 if (event.candidate) {
                     await dispatchSignalPacket(targetSiblingId, {
@@ -364,7 +344,6 @@
                 }
             };
 
-            // FIX: Robust Audio Playback creation
             connectionInstance.ontrack = (event) => {
                 if (!remoteStreams[targetSiblingId]) {
                     const compositeStream = new MediaStream();
@@ -376,9 +355,7 @@
                     audioSinkElement.playsInline = true;
                     audioSinkElement.srcObject = compositeStream;
                     
-                    // Attach to body natively
                     document.body.appendChild(audioSinkElement);
-
                     audioSinkElement.play().catch(e => console.error("Audio playback deferred", e));
                 }
                 remoteStreams[targetSiblingId].addTrack(event.track);
@@ -393,39 +370,24 @@
             if (createOfferContext) {
                 const createdOffer = await connectionInstance.createOffer();
                 await connectionInstance.setLocalDescription(createdOffer);
-                
-                await dispatchSignalPacket(targetSiblingId, {
-                    type: 'offer',
-                    sdp: createdOffer.sdp
-                });
+                await dispatchSignalPacket(targetSiblingId, { type: 'offer', sdp: createdOffer.sdp });
             }
         }
 
         async function dispatchSignalPacket(receiverId, cargoData) {
             const targetInboxRef = collection(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', receiverId, 'signals');
             const dynamicPacketId = Math.random().toString(36).substring(2, 11);
-            
-            await setDoc(doc(targetInboxRef, dynamicPacketId), {
-                ...cargoData,
-                sender: localPeerId,
-                timestamp: Date.now()
-            });
+            await setDoc(doc(targetInboxRef, dynamicPacketId), { ...cargoData, sender: localPeerId, timestamp: Date.now() });
         }
 
         async function handleIncomingOffer(senderId, sdpData) {
             await initializePeerConnection(senderId, false);
             const connection = runtimeConnections[senderId];
-            
             await connection.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: sdpData }));
             
             const matchingAnswer = await connection.createAnswer();
             await connection.setLocalDescription(matchingAnswer);
-            
-            await dispatchSignalPacket(senderId, {
-                type: 'answer',
-                sdp: matchingAnswer.sdp
-            });
-
+            await dispatchSignalPacket(senderId, { type: 'answer', sdp: matchingAnswer.sdp });
             processPendingCandidates(connection);
         }
 
@@ -443,7 +405,6 @@
                 if (connection.remoteDescription && connection.remoteDescription.type) {
                     await connection.addIceCandidate(new RTCIceCandidate(iceCandidateData));
                 } else {
-                    // Queue candidate if remote description isn't set yet (Prevents Audio Failure)
                     connection.pendingCandidates.push(iceCandidateData);
                 }
             }
@@ -468,47 +429,59 @@
             }
             const sinkNode = document.getElementById(`sink-element-${siblingId}`);
             if (sinkNode) sinkNode.remove();
-            
             updateVisualRosterDisplay();
         }
 
         // ==========================================
-        // INTERFACE MODULATION & SPEAKER IDENTIFICATION
+        // UI FIX: SMART DOM MANIPULATION FOR INDICATORS
         // ==========================================
         function updateVisualRosterDisplay() {
-            const displayContainer = document.getElementById('peer-roster-grid');
-            const totalNodesCounter = document.getElementById('node-count-display');
-            if (!displayContainer) return;
+            const grid = document.getElementById('peer-roster-grid');
+            document.getElementById('node-count-display').innerText = `${onlineRosterData.length} / 6`;
 
-            totalNodesCounter.innerText = `${onlineRosterData.length} / 6`;
+            // Step 1: Remove cards of users who left
+            const onlineIds = onlineRosterData.map(n => n.id);
+            Array.from(grid.children).forEach(card => {
+                const cardId = card.id.replace('peer-card-', '');
+                if (!onlineIds.includes(cardId)) {
+                    card.remove();
+                }
+            });
 
-            displayContainer.innerHTML = onlineRosterData.map(node => {
+            // Step 2: Add or properly update cards without deleting their HTML (Prevents flickering/broken icons)
+            onlineRosterData.forEach(node => {
+                let card = document.getElementById(`peer-card-${node.id}`);
                 const isSelf = node.id === localPeerId;
-                
-                // SPEAKER IDENTIFICATION FIX: Directly read the transmission state from Firebase to highlight the card.
-                const baseClasses = "border rounded-xl p-4 flex flex-col justify-between transition-all duration-200";
-                const isSpeakingClass = node.activeTransmission ? "card-speaking" : "border-slate-800 bg-slate-950/40";
-                
-                const labelColorOverride = node.activeTransmission ? "" : "text-slate-400";
-                const dynamicCallsignTag = isSelf ? `${node.callsign} (YOU)` : node.callsign;
-                
-                const transmissionSubstatusIndicator = node.activeTransmission
-                    ? `<span class="text-[9px] font-space font-black tracking-widest text-pink-500 animate-pulse flex items-center gap-1"><i data-lucide="radio" class="w-3 h-3"></i> XMTR LIVE</span>`
-                    : `<span class="text-[9px] font-space font-bold tracking-widest text-slate-600 flex items-center gap-1"><i data-lucide="mic-off" class="w-3 h-3"></i> MUTED</span>`;
+                const displayName = isSelf ? `${node.callsign} (YOU)` : node.callsign;
+                const isSpeaking = node.activeTransmission === true;
 
-                return `
-                    <div class="${baseClasses} ${isSpeakingClass}">
-                        <div class="text-xs font-space font-black tracking-wide truncate uppercase callsign-text ${labelColorOverride}">
-                            ${dynamicCallsignTag}
-                        </div>
-                        <div class="mt-3 flex items-center justify-between">
-                            ${transmissionSubstatusIndicator}
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                if (!card) {
+                    card = document.createElement('div');
+                    card.id = `peer-card-${node.id}`;
+                    card.innerHTML = `
+                        <div class="callsign-label text-xs font-space font-black tracking-wide truncate uppercase"></div>
+                        <div class="status-indicator mt-2 text-[9px] font-space font-bold tracking-widest uppercase"></div>
+                    `;
+                    grid.appendChild(card);
+                }
 
-            lucide.createIcons();
+                // Inject the proper classes based on transmission state
+                const label = card.querySelector('.callsign-label');
+                const status = card.querySelector('.status-indicator');
+                label.innerText = displayName;
+
+                if (isSpeaking) {
+                    card.className = "border rounded-xl p-3 flex flex-col justify-between transition-all duration-200 border-pink-500 bg-pink-500/10 shadow-[0_0_15px_rgba(236,72,153,0.2)] transform scale-[1.02]";
+                    label.className = "callsign-label text-xs font-space font-black tracking-wide truncate uppercase text-pink-400";
+                    status.className = "status-indicator mt-2 text-[9px] font-space font-black tracking-widest uppercase text-pink-500 animate-pulse";
+                    status.innerText = "XMTR LIVE";
+                } else {
+                    card.className = "border rounded-xl p-3 flex flex-col justify-between transition-all duration-200 border-slate-800 bg-slate-950/40";
+                    label.className = "callsign-label text-xs font-space font-black tracking-wide truncate uppercase text-slate-400";
+                    status.className = "status-indicator mt-2 text-[9px] font-space font-bold tracking-widest uppercase text-slate-600";
+                    status.innerText = "STANDBY";
+                }
+            });
         }
 
         // ==========================================
@@ -523,12 +496,10 @@
             let isTransmitting = false;
 
             const engageVoiceTransmissionPipeline = async (e) => {
-                // Prevent multi-firing on mobile touch screens
                 if (e) { e.preventDefault(); e.stopPropagation(); }
                 if (isTransmitting) return;
                 isTransmitting = true;
 
-                // Natively ungate local audio capture stream tracks
                 if (localStream) {
                     localStream.getAudioTracks().forEach(track => { track.enabled = true; });
                 }
@@ -541,14 +512,11 @@
                 globalBroadcastBanner.innerText = "BROADCAST ENVELOPE OPEN // ON AIR";
                 globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
 
-                // Optimistic UI update instantly locally
-                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
-                if (selfNode) selfNode.activeTransmission = true;
-                updateVisualRosterDisplay();
-
-                // Sync status to cloud (this instantly highlights your card on everyone else's screen)
-                const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
-                await setDoc(databaseNodeRef, { activeTransmission: true, lastActive: Date.now() }, { merge: true });
+                // Ensure the database flags you as active so other screens highlight you!
+                try {
+                    const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
+                    await setDoc(databaseNodeRef, { activeTransmission: true, lastActive: Date.now() }, { merge: true });
+                } catch(e) { console.error("Database status error:", e); }
             };
 
             const disengageVoiceTransmissionPipeline = async (e) => {
@@ -556,7 +524,6 @@
                 if (!isTransmitting) return;
                 isTransmitting = false;
 
-                // Instantly isolate audio stream processing
                 if (localStream) {
                     localStream.getAudioTracks().forEach(track => { track.enabled = false; });
                 }
@@ -569,20 +536,17 @@
                 globalBroadcastBanner.innerText = "FREQUENCY RETICULE: STANDBY";
                 globalBroadcastBanner.className = "w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase";
 
-                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
-                if (selfNode) selfNode.activeTransmission = false;
-                updateVisualRosterDisplay();
-
-                // Sync standby status to cloud
-                const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
-                await setDoc(databaseNodeRef, { activeTransmission: false, lastActive: Date.now() }, { merge: true });
+                try {
+                    const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
+                    await setDoc(databaseNodeRef, { activeTransmission: false, lastActive: Date.now() }, { merge: true });
+                } catch(e) {}
             };
 
             const disengageFromWindow = async () => {
                 if (isTransmitting) { disengageVoiceTransmissionPipeline(); }
             };
 
-            // MOBILE: Strict touch event overrides 
+            // MOBILE: Strict touch event overrides (passive: false prevents scrolling to lock in the touch)
             pttButtonNode.addEventListener('touchstart', engageVoiceTransmissionPipeline, { passive: false });
             pttButtonNode.addEventListener('touchend', disengageVoiceTransmissionPipeline, { passive: false });
             pttButtonNode.addEventListener('touchcancel', disengageVoiceTransmissionPipeline, { passive: false });
@@ -592,7 +556,6 @@
             window.addEventListener('mouseup', disengageFromWindow);
         }
 
-        // Boot lucide icons
         lucide.createIcons();
     </script>
 </body>
