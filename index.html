@@ -13,19 +13,6 @@
     
     <link rel="stylesheet" href="styles.css">
     
-    <style>
-        .bulletin-scroll {
-            animation: scrollUp linear infinite;
-        }
-        .bulletin-container:hover .bulletin-scroll {
-            animation-play-state: paused;
-        }
-        @keyframes scrollUp {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-50%); }
-        }
-    </style>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -176,12 +163,13 @@
                 </span>
             </div>
             
-            <div class="relative h-[120px] overflow-hidden rounded-b-xl">
-                <div class="absolute top-0 left-0 w-full h-6 bg-gradient-to-b from-slate-900 to-transparent z-10 pointer-events-none"></div>
-                <div class="absolute bottom-0 left-0 w-full h-6 bg-gradient-to-t from-slate-900 to-transparent z-10 pointer-events-none"></div>
+            <div id="bulletin-scroll-wrapper" class="relative h-[240px] overflow-y-auto custom-scrollbar pr-2 rounded-b-xl">
+                <div class="sticky top-0 left-0 w-full h-6 bg-gradient-to-b from-slate-900 to-transparent z-10 pointer-events-none"></div>
                 
-                <div id="bulletin-content" class="flex flex-col bulletin-scroll">
+                <div id="bulletin-content" class="flex flex-col pb-6">
                     </div>
+
+                <div class="sticky bottom-0 left-0 w-full h-6 bg-gradient-to-t from-slate-900 to-transparent z-10 pointer-events-none"></div>
             </div>
         </div>
 
@@ -386,15 +374,15 @@
                 <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal">
                     <div>
                         <h3 class="text-emerald-500 font-space font-bold tracking-[0.3em] text-xs mb-3 flex items-center gap-2">
-                            <i data-lucide="crosshair" class="w-4 h-4"></i> RADAR SCANS
+                            <i data-lucide="cpu" class="w-4 h-4"></i> PERSONNEL
                         </h3>
-                        <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">Mission Roster</h2>
+                        <h2 class="text-4xl md:text-5xl font-black font-space uppercase text-slate-800">Squadron Data</h2>
                     </div>
                 </div>
 
-                <div id="dynamic-crew-grid" class="reveal w-full">
-                    <div class="text-center py-20 text-slate-400 font-space text-sm">
-                        <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-500"></i> Calibrating Radar...
+                <div id="dynamic-crew-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 reveal w-full">
+                    <div class="text-center col-span-full py-20 text-slate-400 font-space text-sm">
+                        <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-500"></i> Fetching records...
                     </div>
                 </div>
             </div>
@@ -518,7 +506,7 @@
 
             <div class="admin-section glass-admin animate-in mb-8">
                 <h2 class="text-xl font-space font-bold text-white mb-4 flex items-center gap-2">
-                    <i data-lucide="users" class="w-5 h-5 inline text-orange-400"></i> CREW ROSTER
+                    <i data-lucide="users" class="w-5 h-5 inline text-orange-400"></i> SQUADRON ROSTER
                 </h2>
                 
                 <div class="mb-6 p-5 bg-slate-900/60 rounded-xl border border-slate-700/50">
@@ -665,7 +653,7 @@
 
     <div id="toastContainer"></div>
     
-    <div class="hidden bg-slate-800/50 truncate max-w-xs text-slate-300 text-cyan-400 text-emerald-400 text-pink-400 text-orange-400 text-violet-400 text-yellow-400 text-slate-500 text-red-400 text-xs font-bold border-b border-slate-800 hover:bg-slate-800/50 transition-colors py-3 w-14 h-14 rounded-lg object-cover shadow-md line-through opacity-60 bg-emerald-50 border-emerald-200 glass-panel border-white/80 text-slate-700 hover:text-emerald-400 bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border-slate-200/50 pb-2 bg-white/50 px-2 py-0.5 rounded leading-relaxed font-medium mt-3 custom-audio pointer-events-none pointer-events-auto bg-gradient-to-t from-emerald-900/80 via-emerald-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5 bg-white/20 backdrop-blur-md rounded-full border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.4)] hover:bg-white/40 text-white w-5 h-5 animate-pulse bg-emerald-900/30 ml-2 px-1 text-center py-10 text-slate-400 font-space text-sm col-span-full opacity-100 scale-100 scale-95 hover:scale-125 hover:scale-110 cursor-pointer hover:bg-slate-200 hover:text-slate-600 bg-slate-100 pr-6 pb-3 text-[9px] text-[10px] py-1 border-t-2 border-l-2 border-b-2 border-r-2 rounded-tl rounded-br w-[200px] animate-[spin_10s_linear_infinite] origin-top-left border-emerald-500 border-cyan-500 border-pink-500 border-orange-500 border-violet-500 border-yellow-500 text-emerald-600 text-cyan-600 text-pink-600 text-orange-600 text-violet-600 text-yellow-600 border-emerald-300 border-cyan-300 border-pink-300 border-orange-300 border-violet-300 border-yellow-300 bg-emerald-400 bg-cyan-400 bg-pink-400 bg-orange-400 bg-violet-400 bg-yellow-400 bg-emerald-500 bg-cyan-500 bg-pink-500 bg-orange-500 bg-violet-500 bg-yellow-500 border-cyan-500/50 bg-cyan-900/10 border-slate-700/50 bg-slate-800/20 hover:bg-slate-700/30 pt-0.5 shadow-[0_0_8px_#22d3ee] sm:items-start sm:flex-row sm:w-36 mb-3 rounded-xl border-l-2 gap-2 sm:gap-6"></div>
+    <div class="hidden bg-slate-800/50 truncate max-w-xs text-slate-300 text-cyan-400 text-emerald-400 text-pink-400 text-orange-400 text-violet-400 text-yellow-400 text-slate-500 text-red-400 text-xs font-bold border-b border-slate-800 hover:bg-slate-800/50 transition-colors py-3 w-14 h-14 rounded-lg object-cover shadow-md line-through opacity-60 bg-emerald-50 border-emerald-200 glass-panel border-white/80 text-slate-700 hover:text-emerald-400 bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border-slate-200/50 pb-2 bg-white/50 px-2 py-0.5 rounded leading-relaxed font-medium mt-3 custom-audio pointer-events-none pointer-events-auto bg-gradient-to-t from-emerald-900/80 via-emerald-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5 bg-white/20 backdrop-blur-md rounded-full border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.4)] hover:bg-white/40 text-white w-5 h-5 animate-pulse bg-emerald-900/30 ml-2 px-1 text-center py-10 text-slate-400 font-space text-sm col-span-full opacity-100 scale-100 scale-95 hover:scale-125 hover:scale-110 cursor-pointer hover:bg-slate-200 hover:text-slate-600 bg-slate-100 pr-6 pb-3 text-[9px] text-[10px] py-1 border-t-2 border-l-2 border-b-2 border-r-2 rounded-tl rounded-br w-[200px] animate-[spin_10s_linear_infinite] origin-top-left border-emerald-500 border-cyan-500 border-pink-500 border-orange-500 border-violet-500 border-yellow-500 text-emerald-600 text-cyan-600 text-pink-600 text-orange-600 text-violet-600 text-yellow-600 border-emerald-300 border-cyan-300 border-pink-300 border-orange-300 border-violet-300 border-yellow-300 bg-emerald-400 bg-cyan-400 bg-pink-400 bg-orange-400 bg-violet-400 bg-yellow-400 bg-emerald-500 bg-cyan-500 bg-pink-500 bg-orange-500 bg-violet-500 bg-yellow-500 border-cyan-500/50 bg-cyan-900/10 border-slate-700/50 bg-slate-800/20 hover:bg-slate-700/30 pt-0.5 shadow-[0_0_8px_#22d3ee] sm:items-start sm:flex-row sm:w-36 mb-3 rounded-xl border-l-2 gap-2 sm:gap-6 border-emerald-500/40 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.3)] text-emerald-500/70 border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.3)] text-cyan-500/70 border-pink-500/40 bg-pink-500/10 shadow-[0_0_20px_rgba(236,72,153,0.3)] text-pink-500/70 border-orange-500/40 bg-orange-500/10 shadow-[0_0_20px_rgba(249,115,22,0.3)] text-orange-500/70 border-violet-500/40 bg-violet-500/10 shadow-[0_0_20px_rgba(139,92,246,0.3)] text-violet-500/70 border-yellow-500/40 bg-yellow-500/10 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-yellow-500/70 drop-shadow-[0_0_15px_currentColor] text-5xl sm:text-6xl animate-in fade-in slide-in-from-top-2 bg-slate-900/90 shadow-[0_5px_15px_rgba(0,0,0,0.3)] rotate-45 -top-2 left-1/2 -translate-x-1/2 z-20 z-10 group-hover:text-emerald-300 group-hover:text-cyan-300 group-hover:text-pink-300 group-hover:text-orange-300 group-hover:text-violet-300 group-hover:text-yellow-300 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 aspect-square overflow-y-auto"></div>
 
     <script type="module" src="app.js"></script>
 </body>
