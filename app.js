@@ -48,6 +48,9 @@ let audioChunks = [];
 let audioBase64 = null;
 let recordingTimer = null;
 
+// Temporary Crew Photo Holder
+let tempCrewPhoto = null;
+
 // Routing Context Checks
 const isMainPage = !!document.getElementById('public-view');
 const isNotesPage = !!document.getElementById('newNoteInput');
@@ -238,7 +241,7 @@ function renderPublicBanners() {
 }
 
 // ==========================================
-// DYNAMIC CREW RENDERING: PERIODIC TABLE
+// DYNAMIC CREW RENDERING: COMPACT PERIODIC TABLE
 // ==========================================
 function renderPublicCrew() {
     const container = document.getElementById('dynamic-crew-grid');
@@ -258,29 +261,52 @@ function renderPublicCrew() {
         const elementSymbol = c.name.substring(0, 3);
         
         return `
-        <div class="relative group cursor-pointer flex flex-col" onclick="window.toggleCrewDetails('${c.id}')">
+        <div class="relative cursor-pointer flex flex-col" onclick="window.toggleCrewDetails('${c.id}')">
             
-            <div class="aspect-square bg-slate-900 border-2 border-${c.color}-500/40 rounded-xl flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 hover:bg-${c.color}-500/10 hover:border-${c.color}-500 hover:shadow-[0_0_20px_rgba(var(--color-${c.color}),0.3)] shadow-lg">
+            <div class="aspect-square bg-slate-900 border-2 border-${c.color}-500/40 rounded-xl flex flex-col items-center justify-center relative transition-all duration-300 hover:bg-${c.color}-500/10 hover:border-${c.color}-500 hover:shadow-[0_0_20px_rgba(var(--color-${c.color}),0.3)] shadow-lg group">
                 
-                <div class="absolute top-2 right-2 text-[10px] font-space text-${c.color}-500/70 font-black tracking-wider">
+                <div class="absolute top-1.5 right-1.5 text-[9px] font-space text-${c.color}-500/70 font-black tracking-wider">
                     ${c.crewId}
                 </div>
                 
-                <div class="text-5xl sm:text-6xl font-black font-space text-${c.color}-400 drop-shadow-[0_0_15px_currentColor] group-hover:scale-110 transition-transform duration-300">
+                <div class="text-3xl sm:text-4xl font-black font-space text-${c.color}-400 drop-shadow-[0_0_15px_currentColor] group-hover:scale-110 transition-transform duration-300">
                     ${c.name.charAt(0).toUpperCase()}
                 </div>
                 
-                <div class="absolute bottom-2 left-0 w-full text-center text-[9px] font-space font-bold tracking-[0.2em] text-slate-500 uppercase group-hover:text-${c.color}-300 transition-colors">
+                <div class="absolute bottom-1.5 left-0 w-full text-center text-[8px] font-space font-bold tracking-[0.2em] text-slate-500 uppercase group-hover:text-${c.color}-300 transition-colors">
                     ${elementSymbol}
                 </div>
             </div>
             
-            <div id="crew-detail-${c.id}" class="crew-detail-tag hidden mt-3 bg-slate-900/90 backdrop-blur-md border border-${c.color}-500/50 rounded-lg p-3 text-center shadow-[0_5px_15px_rgba(0,0,0,0.3)] relative z-20">
+            <div id="crew-detail-${c.id}" class="crew-detail-tag hidden absolute top-[110%] left-1/2 -translate-x-1/2 w-64 sm:w-80 bg-slate-900/95 backdrop-blur-xl border border-${c.color}-500/50 rounded-xl p-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-50 text-left">
                 
-                <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-t border-l border-${c.color}-500/50 rotate-45"></div>
+                <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 border-t border-l border-${c.color}-500/50 rotate-45"></div>
                 
-                <div class="text-sm font-black text-white font-space uppercase tracking-widest relative z-10">${c.name}</div>
-                <div class="text-[10px] text-${c.color}-400 font-space tracking-[0.2em] uppercase mt-1 relative z-10 font-bold">${c.role}</div>
+                <div class="flex gap-4 items-center relative z-10">
+                    <div class="shrink-0 w-16 h-16 rounded-lg border border-${c.color}-500/50 bg-${c.color}-500/10 flex items-center justify-center overflow-hidden">
+                        ${c.photo 
+                            ? `<img src="${c.photo}" alt="${c.name}" class="w-full h-full object-cover">` 
+                            : `<span class="text-2xl font-black text-${c.color}-400 font-space">${c.name.charAt(0).toUpperCase()}</span>`
+                        }
+                    </div>
+                    
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[10px] text-${c.color}-400 font-bold tracking-[0.2em] uppercase mb-0.5">
+                            ID: ${c.crewId}
+                        </div>
+                        <div class="text-lg font-black text-white font-space tracking-wider truncate uppercase">
+                            ${c.name}
+                        </div>
+                        <div class="text-xs text-slate-400 font-medium tracking-widest uppercase truncate">
+                            ${c.role}
+                        </div>
+                    </div>
+                </div>
+                
+                ${c.description 
+                    ? `<div class="mt-4 pt-3 border-t border-slate-700/50 text-xs text-slate-300 leading-relaxed font-medium relative z-10">${c.description}</div>` 
+                    : ''
+                }
             </div>
         </div>
         `;
@@ -340,6 +366,56 @@ function updateCommsAuthorDropdown() {
     `).join('');
 }
 
+// Crew Image Upload Logic
+window.handleCrewPhotoSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const btn = document.getElementById('crewPhotoBtn');
+    btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin text-emerald-400"></i>`;
+    lucide.createIcons();
+
+    try {
+        tempCrewPhoto = await new Promise((resolve) => {
+            const reader = new FileReader(); 
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image(); 
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); 
+                    let { width, height } = img;
+                    // Compress to a small square for avatars (max 300px)
+                    const max = 300; 
+                    
+                    if (width > height && width > max) { 
+                        height *= max / width; 
+                        width = max; 
+                    } else if (height > max) { 
+                        width *= max / height; 
+                        height = max; 
+                    }
+                    
+                    canvas.width = width; 
+                    canvas.height = height; 
+                    
+                    const ctx = canvas.getContext('2d'); 
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+            };
+        });
+        
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> PHOTO ADDED`;
+        btn.classList.add('border-emerald-500', 'text-emerald-400');
+        lucide.createIcons();
+    } catch(err) {
+        btn.innerHTML = `<i data-lucide="camera" class="w-4 h-4"></i> ADD PHOTO`;
+        showToast('Photo processing failed', 'error');
+        lucide.createIcons();
+    }
+};
+
 window.addCrewMember = async () => {
     if (!isAuthenticated) return showToast('Not authenticated', 'error');
     
@@ -347,22 +423,37 @@ window.addCrewMember = async () => {
     const role = document.getElementById('crewRole').value.trim();
     const crewId = document.getElementById('crewId').value.trim();
     const color = document.getElementById('crewColor').value;
+    const desc = document.getElementById('crewDesc').value.trim();
     
     if (!name || !role || !crewId) {
-        return showToast('Fill all crew fields', 'error');
+        return showToast('Fill Name, Role, and ID', 'error');
     }
     
     const id = Date.now().toString();
     try {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'crew', id), { 
-            id, name, role, crewId, color 
+            id, 
+            name, 
+            role, 
+            crewId, 
+            color,
+            description: desc || null,
+            photo: tempCrewPhoto || null
         });
         
+        // Reset Form
         document.getElementById('crewName').value = '';
         document.getElementById('crewRole').value = '';
         document.getElementById('crewId').value = '';
+        document.getElementById('crewDesc').value = '';
+        tempCrewPhoto = null;
         
-        showToast('Crew added', 'success');
+        const photoBtn = document.getElementById('crewPhotoBtn');
+        photoBtn.innerHTML = `<i data-lucide="camera" class="w-4 h-4"></i> ADD PHOTO`;
+        photoBtn.classList.remove('border-emerald-500', 'text-emerald-400');
+        
+        showToast('Operative Added', 'success');
+        lucide.createIcons();
     } catch (e) {
         showToast('Sync failed', 'error');
         console.error(e);
@@ -375,7 +466,7 @@ window.deleteCrewMember = async (id) => {
     
     try {
         await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'crew', id.toString()));
-        showToast('Crew removed', 'success');
+        showToast('Operative Removed', 'success');
     } catch (e) {
         showToast('Failed to delete', 'error');
         console.error(e);
@@ -389,7 +480,7 @@ function renderAdminCrew() {
     if (publicCrew.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="4" class="text-center py-6 text-slate-500">Roster Empty</td>
+                <td colspan="5" class="text-center py-6 text-slate-500">Roster Empty</td>
             </tr>
         `;
         return;
@@ -397,6 +488,12 @@ function renderAdminCrew() {
     
     tbody.innerHTML = publicCrew.map(c => `
         <tr class="border-b border-slate-800">
+            <td class="py-3">
+                ${c.photo 
+                    ? `<img src="${c.photo}" class="w-8 h-8 rounded object-cover border border-${c.color}-500/50">`
+                    : `<div class="w-8 h-8 rounded bg-${c.color}-500/20 border border-${c.color}-500/50 flex items-center justify-center text-[10px] font-bold text-${c.color}-400">${c.name.charAt(0)}</div>`
+                }
+            </td>
             <td class="py-3 text-${c.color}-400 font-bold">${c.name}</td>
             <td class="py-3 text-slate-300 text-xs">${c.role}</td>
             <td class="py-3 text-slate-500 font-space">${c.crewId}</td>
