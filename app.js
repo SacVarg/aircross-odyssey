@@ -148,12 +148,14 @@ onAuthStateChanged(auth, (user) => {
             renderAdminGallery();
             renderAdminComms();
             renderAdminCrew();
-            document.getElementById('admin-view').classList.remove('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
         }
     } else {
         isAuthenticated = false;
         if (isMainPage) {
-            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
         }
     }
 });
@@ -168,7 +170,7 @@ const initAuth = async () => {
 initAuth();
 
 // ==========================================
-// BULLETIN BOARD (TERMINAL FEED LOGIC)
+// BULLETIN BOARD (SMART YO-YO FEED LOGIC)
 // ==========================================
 let bulletinScrollInterval = null;
 let bulletinPauseTimeout = null;
@@ -179,7 +181,6 @@ function initBulletinScroll() {
     const wrapper = document.getElementById('bulletin-scroll-wrapper');
     if (!wrapper) return;
 
-    // Attach listeners once
     wrapper.onmouseenter = () => { isBulletinPaused = true; };
     wrapper.onmouseleave = () => { isBulletinPaused = false; };
     wrapper.ontouchstart = () => { isBulletinPaused = true; };
@@ -195,9 +196,7 @@ function startBulletinScroll() {
     clearInterval(bulletinScrollInterval);
     clearTimeout(bulletinPauseTimeout);
     
-    // Slight delay to allow DOM to calculate correct heights
     setTimeout(() => {
-        // If content fits completely inside the wrapper, do not scroll at all
         if (wrapper.scrollHeight <= wrapper.clientHeight) {
             wrapper.scrollTop = 0;
             return; 
@@ -206,21 +205,16 @@ function startBulletinScroll() {
         bulletinScrollInterval = setInterval(() => {
             if (isBulletinPaused || isScrollingUp) return;
 
-            // Scroll down slowly
             wrapper.scrollTop += 0.5;
 
-            // Check if we hit the bottom (with a 1px buffer)
             if (wrapper.scrollTop >= wrapper.scrollHeight - wrapper.clientHeight - 1) {
                 clearInterval(bulletinScrollInterval);
                 
-                // Pause at the bottom for 2 seconds so users can read the last item
                 bulletinPauseTimeout = setTimeout(() => {
                     isScrollingUp = true;
                     
-                    // Smoothly scroll back to the top
                     wrapper.scrollTo({ top: 0, behavior: 'smooth' });
                     
-                    // Wait for smooth scroll to finish, pause briefly, then restart down-scroll
                     bulletinPauseTimeout = setTimeout(() => {
                         isScrollingUp = false;
                         startBulletinScroll();
@@ -251,7 +245,7 @@ function renderPublicBanners() {
 
     const dateOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     
-    // Generate exact 1:1 list (No duplicates)
+    // Strict 1:1 Rendering (No duplicated illusion logs)
     content.innerHTML = activeBanners.map((b, index) => {
         const formattedDate = new Date(b.timestamp).toLocaleString('en-US', dateOptions).toUpperCase();
         const isLatest = index === 0;
@@ -275,12 +269,11 @@ function renderPublicBanners() {
         `;
     }).join('');
 
-    // Start smart yo-yo scroll logic
     initBulletinScroll();
 }
 
 // ==========================================
-// DYNAMIC CREW RENDERING: PERIODIC TABLE + CENTERED DOSSIER MODAL
+// DYNAMIC CREW RENDERING: PERIODIC TABLE + DOSSIER MODAL
 // ==========================================
 function renderPublicCrew() {
     const container = document.getElementById('dynamic-crew-grid');
@@ -298,7 +291,6 @@ function renderPublicCrew() {
     container.innerHTML = publicCrew.map(c => {
         const elementSymbol = c.name.substring(0, 3);
         
-        // If a photo exists, place it as a full-cover background image with a dark fade over it
         const photoBg = c.photo 
             ? `<img src="${c.photo}" alt="${c.name}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300 z-0">
                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent z-0"></div>` 
@@ -381,11 +373,9 @@ window.openCrewDossier = (id) => {
     
     lucide.createIcons();
     
-    // Show Modal Shell
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     
-    // Trigger pop-in animation
     setTimeout(() => {
         content.classList.remove('opacity-0', 'scale-95');
         content.classList.add('opacity-100', 'scale-100');
@@ -398,11 +388,9 @@ window.closeCrewDossier = () => {
     
     if (!content) return;
 
-    // Trigger pop-out animation
     content.classList.remove('opacity-100', 'scale-100');
     content.classList.add('opacity-0', 'scale-95');
     
-    // Hide modal shell after animation completes
     setTimeout(() => {
         if(modal) {
             modal.classList.remove('flex');
@@ -449,7 +437,6 @@ function updateCommsAuthorDropdown() {
     `).join('');
 }
 
-// Crew Profile Picture Base64 Compression
 window.handleCrewPhotoSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -469,7 +456,6 @@ window.handleCrewPhotoSelect = async (e) => {
                     const canvas = document.createElement('canvas'); 
                     let { width, height } = img;
                     
-                    // Compress specifically to a square avatar size (max 300px)
                     const max = 300; 
                     if (width > height && width > max) { 
                         height *= max / width; 
@@ -524,14 +510,12 @@ window.addCrewMember = async () => {
             photo: tempCrewPhoto || null
         });
         
-        // Reset Form
         document.getElementById('crewName').value = '';
         document.getElementById('crewRole').value = '';
         document.getElementById('crewId').value = '';
         document.getElementById('crewDesc').value = '';
         tempCrewPhoto = null;
         
-        // Reset Photo Button
         const photoBtn = document.getElementById('crewPhotoBtn');
         photoBtn.innerHTML = `<i data-lucide="camera" class="w-4 h-4"></i> ADD PHOTO`;
         photoBtn.classList.remove('border-emerald-500', 'text-emerald-400');
@@ -644,7 +628,6 @@ window.toggleRecord = async () => {
     const status = document.getElementById('recordStatus');
     if (!btn || !status) return;
 
-    // STOP RECORDING
     if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
         
@@ -657,7 +640,6 @@ window.toggleRecord = async () => {
         return;
     }
 
-    // START RECORDING
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
@@ -1108,8 +1090,8 @@ window.authenticateAdmin = async () => {
     
     try {
         await signInWithEmailAndPassword(auth, email, pwd);
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('dashboard').classList.add('active');
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
         lucide.createIcons();
     } catch (error) { 
         showToast('Access Denied. Invalid credentials.', 'error'); 
@@ -1340,13 +1322,13 @@ function handleRoute() {
     
     const hash = window.location.hash;
     if (hash === '#admin') {
-        document.getElementById('public-view').style.display = 'none';
-        document.getElementById('admin-view').style.display = 'block';
+        document.getElementById('public-view').classList.add('hidden');
+        document.getElementById('admin-view').classList.remove('hidden');
         document.body.style.overflow = 'auto';
         window.scrollTo(0, 0);
     } else {
-        document.getElementById('admin-view').style.display = 'none';
-        document.getElementById('public-view').style.display = 'block';
+        document.getElementById('admin-view').classList.add('hidden');
+        document.getElementById('public-view').classList.remove('hidden');
         if (!mapInitialized) { 
             setTimeout(initMapAndGraphics, 100); 
             mapInitialized = true; 
