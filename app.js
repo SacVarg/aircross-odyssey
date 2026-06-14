@@ -171,22 +171,65 @@ initAuth();
 // BULLETIN BOARD (TERMINAL FEED LOGIC)
 // ==========================================
 let bulletinScrollInterval = null;
+let bulletinPauseTimeout = null;
+let isBulletinPaused = false;
+let isScrollingUp = false;
+
+function initBulletinScroll() {
+    const wrapper = document.getElementById('bulletin-scroll-wrapper');
+    if (!wrapper) return;
+
+    // Attach listeners once
+    wrapper.onmouseenter = () => { isBulletinPaused = true; };
+    wrapper.onmouseleave = () => { isBulletinPaused = false; };
+    wrapper.ontouchstart = () => { isBulletinPaused = true; };
+    wrapper.ontouchend = () => { isBulletinPaused = false; };
+
+    startBulletinScroll();
+}
 
 function startBulletinScroll() {
     const wrapper = document.getElementById('bulletin-scroll-wrapper');
     if (!wrapper) return;
     
     clearInterval(bulletinScrollInterval);
+    clearTimeout(bulletinPauseTimeout);
     
-    // JS Auto-Scroller
-    bulletinScrollInterval = setInterval(() => {
-        wrapper.scrollTop += 0.5; // Smooth slow scroll down
-        
-        // Loop back to top if we hit the bottom
-        if (wrapper.scrollTop >= wrapper.scrollHeight - wrapper.clientHeight - 1) {
+    // Slight delay to allow DOM to calculate correct heights
+    setTimeout(() => {
+        // If content fits completely inside the wrapper, do not scroll at all
+        if (wrapper.scrollHeight <= wrapper.clientHeight) {
             wrapper.scrollTop = 0;
+            return; 
         }
-    }, 30);
+
+        bulletinScrollInterval = setInterval(() => {
+            if (isBulletinPaused || isScrollingUp) return;
+
+            // Scroll down slowly
+            wrapper.scrollTop += 0.5;
+
+            // Check if we hit the bottom (with a 1px buffer)
+            if (wrapper.scrollTop >= wrapper.scrollHeight - wrapper.clientHeight - 1) {
+                clearInterval(bulletinScrollInterval);
+                
+                // Pause at the bottom for 2 seconds so users can read the last item
+                bulletinPauseTimeout = setTimeout(() => {
+                    isScrollingUp = true;
+                    
+                    // Smoothly scroll back to the top
+                    wrapper.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                    // Wait for smooth scroll to finish, pause briefly, then restart down-scroll
+                    bulletinPauseTimeout = setTimeout(() => {
+                        isScrollingUp = false;
+                        startBulletinScroll();
+                    }, 1500); 
+                    
+                }, 2000); 
+            }
+        }, 30);
+    }, 100);
 }
 
 function renderPublicBanners() {
@@ -195,9 +238,8 @@ function renderPublicBanners() {
     const activeBanners = publicBanners.filter(b => b.visible);
     const container = document.getElementById('bulletin-board-container');
     const content = document.getElementById('bulletin-content');
-    const wrapper = document.getElementById('bulletin-scroll-wrapper');
     
-    if (!container || !content || !wrapper) return;
+    if (!container || !content) return;
     
     if (activeBanners.length === 0) { 
         container.style.display = 'none'; 
@@ -209,7 +251,8 @@ function renderPublicBanners() {
 
     const dateOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     
-    const bannersHtml = activeBanners.map((b, index) => {
+    // Generate exact 1:1 list (No duplicates)
+    content.innerHTML = activeBanners.map((b, index) => {
         const formattedDate = new Date(b.timestamp).toLocaleString('en-US', dateOptions).toUpperCase();
         const isLatest = index === 0;
         
@@ -232,20 +275,12 @@ function renderPublicBanners() {
         `;
     }).join('');
 
-    // Duplicate content once to allow for infinite scroll illusion
-    content.innerHTML = bannersHtml + bannersHtml;
-    
-    // Pause scrolling when user hovers or taps so they can manually scroll
-    wrapper.addEventListener('mouseenter', () => clearInterval(bulletinScrollInterval));
-    wrapper.addEventListener('mouseleave', startBulletinScroll);
-    wrapper.addEventListener('touchstart', () => clearInterval(bulletinScrollInterval));
-    wrapper.addEventListener('touchend', startBulletinScroll);
-    
-    startBulletinScroll();
+    // Start smart yo-yo scroll logic
+    initBulletinScroll();
 }
 
 // ==========================================
-// DYNAMIC CREW RENDERING: PERIODIC TABLE + DOSSIER MODAL
+// DYNAMIC CREW RENDERING: PERIODIC TABLE + CENTERED DOSSIER MODAL
 // ==========================================
 function renderPublicCrew() {
     const container = document.getElementById('dynamic-crew-grid');
@@ -361,14 +396,18 @@ window.closeCrewDossier = () => {
     const modal = document.getElementById('crewDossierModal');
     const content = document.getElementById('crewDossierContent');
     
+    if (!content) return;
+
     // Trigger pop-out animation
     content.classList.remove('opacity-100', 'scale-100');
     content.classList.add('opacity-0', 'scale-95');
     
     // Hide modal shell after animation completes
     setTimeout(() => {
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
+        if(modal) {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
     }, 300);
 };
 
