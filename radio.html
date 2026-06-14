@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -32,7 +33,7 @@
             background-size: 30px 30px;
         }
         
-        /* HARDWARE FIX: touch-action: none prevents the browser from scrolling and misfiring the touchcancel event */
+        /* STRICT TOUCH LOCK: Prevents the phone from scrolling or misfiring touchcancel events */
         .ptt-btn {
             user-select: none;
             -webkit-user-select: none;
@@ -40,7 +41,7 @@
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .ptt-btn:active, .ptt-btn.transmitting {
+        .ptt-btn.transmitting {
             transform: scale(0.94);
             box-shadow: 0 0 50px rgba(236, 72, 153, 0.6);
             border-color: #ec4899;
@@ -67,7 +68,7 @@
             <i data-lucide="radio" class="w-4 h-4 text-pink-500 animate-pulse"></i>
             COMMS LINK // COM-04
         </div>
-        <button onclick="window.leaveRadioAndReturn()" class="text-xs font-space font-bold tracking-widest text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer outline-none">
+        <button onclick="window.leaveRadioAndReturn()" class="text-xs font-space font-bold tracking-widest text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer outline-none relative z-50">
             <i data-lucide="arrow-left" class="w-3 h-3"></i> RETURN
         </button>
     </nav>
@@ -89,7 +90,7 @@
                     <input type="text" id="callsign-input" maxlength="12" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:shadow-[0_0_15px_rgba(16,185,129,0.15)] font-space font-bold tracking-widest uppercase placeholder-slate-700" placeholder="E.G. EAGLE-ONE" autocomplete="off">
                 </div>
                 
-                <button onclick="window.initializeTacticalRadio()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-space font-black tracking-[0.15em] text-sm rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(16,185,129,0.3)] uppercase outline-none">
+                <button onclick="window.initializeTacticalRadio()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-space font-black tracking-[0.15em] text-sm rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(16,185,129,0.3)] uppercase outline-none cursor-pointer relative z-50">
                     Establish Mesh Connection
                 </button>
             </div>
@@ -132,14 +133,12 @@
                 </button>
                 
                 <div class="text-[10px] text-center text-slate-500 font-medium tracking-wide mt-4 leading-relaxed max-w-xs">
-                    Microphone stream is hard-gated. Link opens instantly on press.
+                    Microphone stream is hard-gated. Audio links securely strictly on press.
                 </div>
             </div>
 
         </div>
     </main>
-
-    <div id="audio-renderer-sink" style="position: absolute; width: 0; height: 0; visibility: hidden; overflow: hidden;" aria-hidden="true"></div>
 
     <footer class="w-full text-center py-4 text-[9px] font-space font-bold tracking-[0.3em] text-slate-600 z-10">
         VOYAGER MESH PROTOCOL V4 // ENCRYPTED END-TO-END
@@ -162,10 +161,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app); 
         const db = getFirestore(app);
-        
         const signalScope = "aircross-odyssey-main";
 
-        // Global Architectural Variables
+        // Global State Variables
         let localStream = null;
         let localPeerId = Math.random().toString(36).substring(2, 9);
         let localCallsign = "OPERATIVE";
@@ -175,15 +173,18 @@
         const remoteStreams = {};       
         let onlineRosterData = [];     
 
+        // Extended robust STUN servers to guarantee NAT punch-through for mobile devices
         const rtcIceConfiguration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' }
             ]
         };
 
         // ==========================================
-        // FIXED RETURN BUTTON & CLEANUP LOGIC
+        // GUARANTEED RETURN BUTTON & CLEANUP LOGIC
         // ==========================================
         window.leaveRadioAndReturn = async () => {
             if (isConnected) {
@@ -195,9 +196,11 @@
                     }
                 } catch (e) { console.error("Error cleaning up:", e); }
             }
-            window.location.href = 'index.html';
+            // Hard redirect back to index.html
+            window.location.replace('index.html');
         };
 
+        // Fallback cleanup if they close the browser tab completely
         window.addEventListener('beforeunload', () => {
             if (isConnected) {
                 const selfRecordDocRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
@@ -285,7 +288,7 @@
                 snapshot.forEach(docSnap => {
                     if (docSnap.exists()) {
                         const nodeData = docSnap.data();
-                        // GHOST USER FIX: If a node hasn't pinged in 15 seconds, sweep them.
+                        // Sweep ghost users who haven't pinged in 15 seconds
                         if (currentTime - (nodeData.lastActive || 0) < 15000) {
                             updatedRoster.push(nodeData);
                         } else {
@@ -307,22 +310,29 @@
                 }
             });
 
-            // Signal Mailbox Dispatcher: Listen for direct WebRTC handshakes
+            // Signal Mailbox Dispatcher: Robust docChanges approach prevents race conditions
             const dynamicSignalingInboxRef = collection(selfRecordDocRef, 'signals');
-            onSnapshot(dynamicSignalingInboxRef, async (snapshot) => {
-                snapshot.forEach(async (changeDoc) => {
-                    const signalData = changeDoc.data();
-                    const senderId = signalData.sender;
-                    
-                    if (signalData.type === 'offer') {
-                        await handleIncomingOffer(senderId, signalData.sdp);
-                    } else if (signalData.type === 'answer') {
-                        await handleIncomingAnswer(senderId, signalData.sdp);
-                    } else if (signalData.type === 'ice') {
-                        await handleIncomingIceCandidate(senderId, signalData.candidate);
+            onSnapshot(dynamicSignalingInboxRef, (snapshot) => {
+                snapshot.docChanges().forEach(async (change) => {
+                    if (change.type === 'added') {
+                        const signalData = change.doc.data();
+                        const senderId = signalData.sender;
+                        
+                        try {
+                            if (signalData.type === 'offer') {
+                                await handleIncomingOffer(senderId, signalData.sdp);
+                            } else if (signalData.type === 'answer') {
+                                await handleIncomingAnswer(senderId, signalData.sdp);
+                            } else if (signalData.type === 'ice') {
+                                await handleIncomingIceCandidate(senderId, signalData.candidate);
+                            }
+                        } catch (err) {
+                            console.error("Signaling Error:", err);
+                        }
+                        
+                        // Delete the packet after processing it
+                        await deleteDoc(change.doc.ref);
                     }
-                    
-                    await deleteDoc(doc(dynamicSignalingInboxRef, changeDoc.id));
                 });
             });
         }
@@ -335,13 +345,16 @@
 
             const connectionInstance = new RTCPeerConnection(rtcIceConfiguration);
             runtimeConnections[targetSiblingId] = connectionInstance;
+            
+            // Queue for incoming ICE candidates if they arrive before remote description
+            connectionInstance.pendingCandidates = [];
 
-            // Inject local hardware media track references into connection
+            // Inject local hardware media tracks
             localStream.getTracks().forEach(track => {
                 connectionInstance.addTrack(track, localStream);
             });
 
-            // Process candidate handshakes
+            // Transmit ICE Candidates
             connectionInstance.onicecandidate = async (event) => {
                 if (event.candidate) {
                     await dispatchSignalPacket(targetSiblingId, {
@@ -351,22 +364,22 @@
                 }
             };
 
-            // FIX: Incoming audio renderer
+            // FIX: Robust Audio Playback creation
             connectionInstance.ontrack = (event) => {
                 if (!remoteStreams[targetSiblingId]) {
                     const compositeStream = new MediaStream();
                     remoteStreams[targetSiblingId] = compositeStream;
                     
-                    const audioSinkElement = document.createElement('audio');
+                    const audioSinkElement = new Audio();
                     audioSinkElement.id = `sink-element-${targetSiblingId}`;
                     audioSinkElement.autoplay = true;
                     audioSinkElement.playsInline = true;
                     audioSinkElement.srcObject = compositeStream;
                     
-                    document.getElementById('audio-renderer-sink').appendChild(audioSinkElement);
+                    // Attach to body natively
+                    document.body.appendChild(audioSinkElement);
 
-                    // Force play to overcome some strict browser policies
-                    audioSinkElement.play().catch(e => console.log("Audio Playback deferred until interaction", e));
+                    audioSinkElement.play().catch(e => console.error("Audio playback deferred", e));
                 }
                 remoteStreams[targetSiblingId].addTrack(event.track);
             };
@@ -404,6 +417,7 @@
             const connection = runtimeConnections[senderId];
             
             await connection.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: sdpData }));
+            
             const matchingAnswer = await connection.createAnswer();
             await connection.setLocalDescription(matchingAnswer);
             
@@ -411,19 +425,36 @@
                 type: 'answer',
                 sdp: matchingAnswer.sdp
             });
+
+            processPendingCandidates(connection);
         }
 
         async function handleIncomingAnswer(senderId, sdpData) {
             const connection = runtimeConnections[senderId];
             if (connection) {
                 await connection.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: sdpData }));
+                processPendingCandidates(connection);
             }
         }
 
         async function handleIncomingIceCandidate(senderId, iceCandidateData) {
             const connection = runtimeConnections[senderId];
             if (connection) {
-                await connection.addIceCandidate(new RTCIceCandidate(iceCandidateData));
+                if (connection.remoteDescription && connection.remoteDescription.type) {
+                    await connection.addIceCandidate(new RTCIceCandidate(iceCandidateData));
+                } else {
+                    // Queue candidate if remote description isn't set yet (Prevents Audio Failure)
+                    connection.pendingCandidates.push(iceCandidateData);
+                }
+            }
+        }
+
+        function processPendingCandidates(connection) {
+            if (connection.pendingCandidates && connection.pendingCandidates.length > 0) {
+                connection.pendingCandidates.forEach(async (candidateData) => {
+                    await connection.addIceCandidate(new RTCIceCandidate(candidateData));
+                });
+                connection.pendingCandidates = [];
             }
         }
 
@@ -442,7 +473,7 @@
         }
 
         // ==========================================
-        // INTERFACE MODULATION & SPEAKER HIGHLIGHTING
+        // INTERFACE MODULATION & SPEAKER IDENTIFICATION
         // ==========================================
         function updateVisualRosterDisplay() {
             const displayContainer = document.getElementById('peer-roster-grid');
@@ -454,7 +485,7 @@
             displayContainer.innerHTML = onlineRosterData.map(node => {
                 const isSelf = node.id === localPeerId;
                 
-                // SPEAKER ID FIX: We use Firebase 'activeTransmission' to instantly highlight the speaker's card
+                // SPEAKER IDENTIFICATION FIX: Directly read the transmission state from Firebase to highlight the card.
                 const baseClasses = "border rounded-xl p-4 flex flex-col justify-between transition-all duration-200";
                 const isSpeakingClass = node.activeTransmission ? "card-speaking" : "border-slate-800 bg-slate-950/40";
                 
@@ -489,12 +520,13 @@
             const pttIconElement = document.getElementById('ptt-icon');
             const globalBroadcastBanner = document.getElementById('transmission-banner');
 
-            let currentlyBroadcastingFlag = false;
+            let isTransmitting = false;
 
             const engageVoiceTransmissionPipeline = async (e) => {
-                if (e) e.preventDefault(); // Prevents double-firing on mobile
-                if (currentlyBroadcastingFlag) return;
-                currentlyBroadcastingFlag = true;
+                // Prevent multi-firing on mobile touch screens
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                if (isTransmitting) return;
+                isTransmitting = true;
 
                 // Natively ungate local audio capture stream tracks
                 if (localStream) {
@@ -509,15 +541,20 @@
                 globalBroadcastBanner.innerText = "BROADCAST ENVELOPE OPEN // ON AIR";
                 globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
 
+                // Optimistic UI update instantly locally
+                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
+                if (selfNode) selfNode.activeTransmission = true;
+                updateVisualRosterDisplay();
+
                 // Sync status to cloud (this instantly highlights your card on everyone else's screen)
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: true, lastActive: Date.now() }, { merge: true });
             };
 
             const disengageVoiceTransmissionPipeline = async (e) => {
-                if (e) e.preventDefault();
-                if (!currentlyBroadcastingFlag) return;
-                currentlyBroadcastingFlag = false;
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                if (!isTransmitting) return;
+                isTransmitting = false;
 
                 // Instantly isolate audio stream processing
                 if (localStream) {
@@ -532,16 +569,27 @@
                 globalBroadcastBanner.innerText = "FREQUENCY RETICULE: STANDBY";
                 globalBroadcastBanner.className = "w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase";
 
+                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
+                if (selfNode) selfNode.activeTransmission = false;
+                updateVisualRosterDisplay();
+
                 // Sync standby status to cloud
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: false, lastActive: Date.now() }, { merge: true });
             };
 
-            // FIX: Pointer Events. Unified system that replaces all messy touch/mouse overlaps
-            pttButtonNode.addEventListener('pointerdown', engageVoiceTransmissionPipeline);
-            pttButtonNode.addEventListener('pointerup', disengageVoiceTransmissionPipeline);
-            pttButtonNode.addEventListener('pointerleave', disengageVoiceTransmissionPipeline);
-            pttButtonNode.addEventListener('pointercancel', disengageVoiceTransmissionPipeline);
+            const disengageFromWindow = async () => {
+                if (isTransmitting) { disengageVoiceTransmissionPipeline(); }
+            };
+
+            // MOBILE: Strict touch event overrides 
+            pttButtonNode.addEventListener('touchstart', engageVoiceTransmissionPipeline, { passive: false });
+            pttButtonNode.addEventListener('touchend', disengageVoiceTransmissionPipeline, { passive: false });
+            pttButtonNode.addEventListener('touchcancel', disengageVoiceTransmissionPipeline, { passive: false });
+
+            // DESKTOP: Mouse events 
+            pttButtonNode.addEventListener('mousedown', engageVoiceTransmissionPipeline);
+            window.addEventListener('mouseup', disengageFromWindow);
         }
 
         // Boot lucide icons
