@@ -148,9 +148,13 @@ onAuthStateChanged(auth, (user) => {
             renderAdminGallery();
             renderAdminComms();
             renderAdminCrew();
+            document.getElementById('admin-view').classList.remove('hidden');
         }
     } else {
         isAuthenticated = false;
+        if (isMainPage) {
+            document.getElementById('admin-view').classList.add('hidden');
+        }
     }
 });
 
@@ -241,7 +245,7 @@ function renderPublicBanners() {
 }
 
 // ==========================================
-// DYNAMIC CREW RENDERING: COMPACT PERIODIC TABLE
+// DYNAMIC CREW RENDERING: PERIODIC TABLE + DOSSIER MODAL
 // ==========================================
 function renderPublicCrew() {
     const container = document.getElementById('dynamic-crew-grid');
@@ -257,57 +261,36 @@ function renderPublicCrew() {
     }
 
     container.innerHTML = publicCrew.map(c => {
-        // Abbreviate the name for the element symbol (e.g. ANOOP -> ANO)
         const elementSymbol = c.name.substring(0, 3);
         
+        // If a photo exists, place it as a full-cover background image with a dark fade over it
+        const photoBg = c.photo 
+            ? `<img src="${c.photo}" alt="${c.name}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300 z-0">
+               <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent z-0"></div>` 
+            : '';
+
         return `
-        <div class="relative cursor-pointer flex flex-col" onclick="window.toggleCrewDetails('${c.id}')">
+        <div class="relative cursor-pointer flex flex-col group" onclick="window.openCrewDossier('${c.id}')">
             
-            <div class="aspect-square bg-slate-900 border-2 border-${c.color}-500/40 rounded-xl flex flex-col items-center justify-center relative transition-all duration-300 hover:bg-${c.color}-500/10 hover:border-${c.color}-500 hover:shadow-[0_0_20px_rgba(var(--color-${c.color}),0.3)] shadow-lg group">
+            <div class="aspect-square bg-slate-900 border-2 border-${c.color}-500/40 rounded-xl flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 hover:border-${c.color}-500 hover:shadow-[0_0_20px_rgba(var(--color-${c.color}),0.3)] shadow-lg">
                 
-                <div class="absolute top-1.5 right-1.5 text-[9px] font-space text-${c.color}-500/70 font-black tracking-wider">
+                ${photoBg}
+                
+                <div class="absolute top-1.5 right-1.5 text-[9px] font-space text-${c.color}-400 font-black tracking-wider z-10">
                     ${c.crewId}
                 </div>
                 
-                <div class="text-3xl sm:text-4xl font-black font-space text-${c.color}-400 drop-shadow-[0_0_15px_currentColor] group-hover:scale-110 transition-transform duration-300">
-                    ${c.name.charAt(0).toUpperCase()}
-                </div>
+                ${!c.photo ? `
+                    <div class="text-3xl sm:text-4xl font-black font-space text-${c.color}-400 drop-shadow-[0_0_15px_currentColor] group-hover:scale-110 transition-transform duration-300 z-10">
+                        ${c.name.charAt(0).toUpperCase()}
+                    </div>
+                ` : ''}
                 
-                <div class="absolute bottom-1.5 left-0 w-full text-center text-[8px] font-space font-bold tracking-[0.2em] text-slate-500 uppercase group-hover:text-${c.color}-300 transition-colors">
+                <div class="absolute bottom-1.5 left-0 w-full text-center text-[8px] font-space font-bold tracking-[0.2em] text-slate-400 uppercase group-hover:text-${c.color}-300 transition-colors z-10">
                     ${elementSymbol}
                 </div>
             </div>
             
-            <div id="crew-detail-${c.id}" class="crew-detail-tag hidden absolute top-[110%] left-1/2 -translate-x-1/2 w-64 sm:w-80 bg-slate-900/95 backdrop-blur-xl border border-${c.color}-500/50 rounded-xl p-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-50 text-left">
-                
-                <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 border-t border-l border-${c.color}-500/50 rotate-45"></div>
-                
-                <div class="flex gap-4 items-center relative z-10">
-                    <div class="shrink-0 w-16 h-16 rounded-lg border border-${c.color}-500/50 bg-${c.color}-500/10 flex items-center justify-center overflow-hidden">
-                        ${c.photo 
-                            ? `<img src="${c.photo}" alt="${c.name}" class="w-full h-full object-cover">` 
-                            : `<span class="text-2xl font-black text-${c.color}-400 font-space">${c.name.charAt(0).toUpperCase()}</span>`
-                        }
-                    </div>
-                    
-                    <div class="flex-1 min-w-0">
-                        <div class="text-[10px] text-${c.color}-400 font-bold tracking-[0.2em] uppercase mb-0.5">
-                            ID: ${c.crewId}
-                        </div>
-                        <div class="text-lg font-black text-white font-space tracking-wider truncate uppercase">
-                            ${c.name}
-                        </div>
-                        <div class="text-xs text-slate-400 font-medium tracking-widest uppercase truncate">
-                            ${c.role}
-                        </div>
-                    </div>
-                </div>
-                
-                ${c.description 
-                    ? `<div class="mt-4 pt-3 border-t border-slate-700/50 text-xs text-slate-300 leading-relaxed font-medium relative z-10">${c.description}</div>` 
-                    : ''
-                }
-            </div>
         </div>
         `;
     }).join('');
@@ -315,22 +298,83 @@ function renderPublicCrew() {
     lucide.createIcons();
 }
 
-window.toggleCrewDetails = (id) => {
-    const target = document.getElementById(`crew-detail-${id}`);
-    const isCurrentlyHidden = target.classList.contains('hidden');
+window.openCrewDossier = (id) => {
+    const c = publicCrew.find(x => x.id === id);
+    if (!c) return;
     
-    // Hide all tags first
-    document.querySelectorAll('.crew-detail-tag').forEach(tag => {
-        tag.classList.add('hidden');
-    });
+    const modal = document.getElementById('crewDossierModal');
+    const content = document.getElementById('crewDossierContent');
     
-    // If the clicked one was hidden, show it with animation
-    if (isCurrentlyHidden) {
-        target.classList.remove('hidden');
-        target.classList.add('animate-in', 'fade-in', 'slide-in-from-top-2');
-    }
+    content.innerHTML = `
+        <div class="bg-slate-900/95 backdrop-blur-xl border border-${c.color}-500/50 rounded-2xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+            
+            <div class="absolute top-0 left-0 w-full h-1 bg-${c.color}-500 shadow-[0_0_15px_currentColor] text-${c.color}-500"></div>
+            
+            <button onclick="window.closeCrewDossier()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors bg-slate-800 p-1.5 rounded-full">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+
+            <div class="flex gap-4 sm:gap-5 items-center relative z-10 mt-2">
+                <div class="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-${c.color}-500/50 bg-${c.color}-500/10 flex items-center justify-center overflow-hidden shadow-lg">
+                    ${c.photo 
+                        ? `<img src="${c.photo}" alt="${c.name}" class="w-full h-full object-cover">` 
+                        : `<span class="text-4xl font-black text-${c.color}-400 font-space">${c.name.charAt(0).toUpperCase()}</span>`
+                    }
+                </div>
+                
+                <div class="flex-1 min-w-0">
+                    <div class="inline-block px-2 py-1 bg-slate-800 border border-slate-700 rounded text-[10px] text-${c.color}-400 font-bold tracking-[0.2em] uppercase mb-1.5">
+                        OP-ID: ${c.crewId}
+                    </div>
+                    <div class="text-xl sm:text-2xl font-black text-white font-space tracking-wider truncate uppercase">
+                        ${c.name}
+                    </div>
+                    <div class="text-xs sm:text-sm text-slate-400 font-bold tracking-widest uppercase truncate mt-0.5">
+                        <i data-lucide="shield" class="w-3 h-3 inline mr-1 text-${c.color}-500"></i>${c.role}
+                    </div>
+                </div>
+            </div>
+            
+            ${c.description 
+                ? `<div class="mt-6 pt-4 border-t border-slate-700/50 text-xs sm:text-sm text-slate-300 leading-relaxed font-medium relative z-10 bg-slate-800/30 p-4 rounded-xl">
+                     ${c.description}
+                   </div>` 
+                : ''
+            }
+        </div>
+    `;
+    
+    lucide.createIcons();
+    
+    // Show Modal Shell
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Trigger pop-in animation
+    setTimeout(() => {
+        content.classList.remove('opacity-0', 'scale-95');
+        content.classList.add('opacity-100', 'scale-100');
+    }, 10);
 };
 
+window.closeCrewDossier = () => {
+    const modal = document.getElementById('crewDossierModal');
+    const content = document.getElementById('crewDossierContent');
+    
+    // Trigger pop-out animation
+    content.classList.remove('opacity-100', 'scale-100');
+    content.classList.add('opacity-0', 'scale-95');
+    
+    // Hide modal shell after animation completes
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+};
+
+// ==========================================
+// ADMIN DROPDOWNS & PROFILE UPLOADS
+// ==========================================
 function updateDriverDropdown() {
     const select = document.getElementById('adminDriver');
     if (!select) return;
@@ -366,7 +410,7 @@ function updateCommsAuthorDropdown() {
     `).join('');
 }
 
-// Crew Image Upload Logic
+// Crew Profile Picture Base64 Compression
 window.handleCrewPhotoSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -385,9 +429,9 @@ window.handleCrewPhotoSelect = async (e) => {
                 img.onload = () => {
                     const canvas = document.createElement('canvas'); 
                     let { width, height } = img;
-                    // Compress to a small square for avatars (max 300px)
-                    const max = 300; 
                     
+                    // Compress specifically to a square avatar size (max 300px)
+                    const max = 300; 
                     if (width > height && width > max) { 
                         height *= max / width; 
                         width = max; 
@@ -398,7 +442,6 @@ window.handleCrewPhotoSelect = async (e) => {
                     
                     canvas.width = width; 
                     canvas.height = height; 
-                    
                     const ctx = canvas.getContext('2d'); 
                     ctx.drawImage(img, 0, 0, width, height);
                     resolve(canvas.toDataURL('image/jpeg', 0.8));
@@ -406,8 +449,9 @@ window.handleCrewPhotoSelect = async (e) => {
             };
         });
         
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> PHOTO ADDED`;
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> ADDED`;
         btn.classList.add('border-emerald-500', 'text-emerald-400');
+        btn.classList.remove('text-slate-400', 'border-slate-600');
         lucide.createIcons();
     } catch(err) {
         btn.innerHTML = `<i data-lucide="camera" class="w-4 h-4"></i> ADD PHOTO`;
@@ -448,9 +492,11 @@ window.addCrewMember = async () => {
         document.getElementById('crewDesc').value = '';
         tempCrewPhoto = null;
         
+        // Reset Photo Button
         const photoBtn = document.getElementById('crewPhotoBtn');
         photoBtn.innerHTML = `<i data-lucide="camera" class="w-4 h-4"></i> ADD PHOTO`;
         photoBtn.classList.remove('border-emerald-500', 'text-emerald-400');
+        photoBtn.classList.add('text-slate-400', 'border-slate-600');
         
         showToast('Operative Added', 'success');
         lucide.createIcons();
