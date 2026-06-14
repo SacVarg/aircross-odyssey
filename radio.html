@@ -40,7 +40,7 @@
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .ptt-btn:active, .ptt-btn.transmitting {
+        .ptt-btn.transmitting {
             transform: scale(0.94);
             box-shadow: 0 0 50px rgba(236, 72, 153, 0.6);
             border-color: #ec4899;
@@ -252,7 +252,6 @@
             await setDoc(selfRecordDocRef, {
                 id: localPeerId,
                 callsign: localCallsign,
-                activeTransmission: false,
                 lastActive: Date.now()
             });
 
@@ -282,8 +281,6 @@
                 });
 
                 onlineRosterData = updatedRoster;
-                
-                // Triggers the newly fixed UI update logic
                 updateVisualRosterDisplay();
 
                 for (const node of updatedRoster) {
@@ -433,55 +430,32 @@
         }
 
         // ==========================================
-        // UI FIX: SMART DOM MANIPULATION FOR INDICATORS
+        // SIMPLIFIED, ROCK-SOLID ROSTER DISPLAY
         // ==========================================
         function updateVisualRosterDisplay() {
-            const grid = document.getElementById('peer-roster-grid');
-            document.getElementById('node-count-display').innerText = `${onlineRosterData.length} / 6`;
+            const displayContainer = document.getElementById('peer-roster-grid');
+            const totalNodesCounter = document.getElementById('node-count-display');
+            if (!displayContainer) return;
 
-            // Step 1: Remove cards of users who left
-            const onlineIds = onlineRosterData.map(n => n.id);
-            Array.from(grid.children).forEach(card => {
-                const cardId = card.id.replace('peer-card-', '');
-                if (!onlineIds.includes(cardId)) {
-                    card.remove();
-                }
-            });
+            totalNodesCounter.innerText = `${onlineRosterData.length} / 6`;
 
-            // Step 2: Add or properly update cards without deleting their HTML (Prevents flickering/broken icons)
-            onlineRosterData.forEach(node => {
-                let card = document.getElementById(`peer-card-${node.id}`);
+            // Simple map-to-string rendering. Fast, reliable, no state desyncs.
+            displayContainer.innerHTML = onlineRosterData.map(node => {
                 const isSelf = node.id === localPeerId;
-                const displayName = isSelf ? `${node.callsign} (YOU)` : node.callsign;
-                const isSpeaking = node.activeTransmission === true;
-
-                if (!card) {
-                    card = document.createElement('div');
-                    card.id = `peer-card-${node.id}`;
-                    card.innerHTML = `
-                        <div class="callsign-label text-xs font-space font-black tracking-wide truncate uppercase"></div>
-                        <div class="status-indicator mt-2 text-[9px] font-space font-bold tracking-widest uppercase"></div>
-                    `;
-                    grid.appendChild(card);
-                }
-
-                // Inject the proper classes based on transmission state
-                const label = card.querySelector('.callsign-label');
-                const status = card.querySelector('.status-indicator');
-                label.innerText = displayName;
-
-                if (isSpeaking) {
-                    card.className = "border rounded-xl p-3 flex flex-col justify-between transition-all duration-200 border-pink-500 bg-pink-500/10 shadow-[0_0_15px_rgba(236,72,153,0.2)] transform scale-[1.02]";
-                    label.className = "callsign-label text-xs font-space font-black tracking-wide truncate uppercase text-pink-400";
-                    status.className = "status-indicator mt-2 text-[9px] font-space font-black tracking-widest uppercase text-pink-500 animate-pulse";
-                    status.innerText = "XMTR LIVE";
-                } else {
-                    card.className = "border rounded-xl p-3 flex flex-col justify-between transition-all duration-200 border-slate-800 bg-slate-950/40";
-                    label.className = "callsign-label text-xs font-space font-black tracking-wide truncate uppercase text-slate-400";
-                    status.className = "status-indicator mt-2 text-[9px] font-space font-bold tracking-widest uppercase text-slate-600";
-                    status.innerText = "STANDBY";
-                }
-            });
+                const dynamicCallsignTag = isSelf ? `${node.callsign} (YOU)` : node.callsign;
+                
+                return `
+                    <div class="border rounded-xl p-3 flex flex-col justify-center items-center transition-all duration-200 border-emerald-500/30 bg-slate-900/60 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                        <div class="text-xs font-space font-black tracking-wide truncate uppercase text-emerald-400">
+                            ${dynamicCallsignTag}
+                        </div>
+                        <div class="mt-1 flex items-center gap-1 text-[9px] font-space font-bold tracking-widest text-slate-500 uppercase">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            CONNECTED
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // ==========================================
@@ -504,19 +478,13 @@
                     localStream.getAudioTracks().forEach(track => { track.enabled = true; });
                 }
 
-                // UI adjustments
+                // UI adjustments (Local Only)
                 pttButtonNode.classList.add('transmitting');
                 pttLabelElement.innerText = "TRANSMITTING";
                 pttLabelElement.className = "text-[10px] font-space font-bold tracking-[0.2em] text-pink-400";
                 pttIconElement.className = "w-10 h-10 text-pink-500 drop-shadow-[0_0_8px_#ec4899]";
                 globalBroadcastBanner.innerText = "BROADCAST ENVELOPE OPEN // ON AIR";
                 globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
-
-                // Ensure the database flags you as active so other screens highlight you!
-                try {
-                    const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
-                    await setDoc(databaseNodeRef, { activeTransmission: true, lastActive: Date.now() }, { merge: true });
-                } catch(e) { console.error("Database status error:", e); }
             };
 
             const disengageVoiceTransmissionPipeline = async (e) => {
@@ -528,25 +496,20 @@
                     localStream.getAudioTracks().forEach(track => { track.enabled = false; });
                 }
 
-                // Reset UI frameworks
+                // Reset UI frameworks (Local Only)
                 pttButtonNode.classList.remove('transmitting');
                 pttLabelElement.innerText = "HOLD TO TALK";
                 pttLabelElement.className = "text-[10px] font-space font-bold tracking-[0.2em] text-slate-400";
                 pttIconElement.className = "w-10 h-10 text-slate-400";
                 globalBroadcastBanner.innerText = "FREQUENCY RETICULE: STANDBY";
                 globalBroadcastBanner.className = "w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase";
-
-                try {
-                    const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
-                    await setDoc(databaseNodeRef, { activeTransmission: false, lastActive: Date.now() }, { merge: true });
-                } catch(e) {}
             };
 
             const disengageFromWindow = async () => {
                 if (isTransmitting) { disengageVoiceTransmissionPipeline(); }
             };
 
-            // MOBILE: Strict touch event overrides (passive: false prevents scrolling to lock in the touch)
+            // MOBILE: Strict touch event overrides 
             pttButtonNode.addEventListener('touchstart', engageVoiceTransmissionPipeline, { passive: false });
             pttButtonNode.addEventListener('touchend', disengageVoiceTransmissionPipeline, { passive: false });
             pttButtonNode.addEventListener('touchcancel', disengageVoiceTransmissionPipeline, { passive: false });
