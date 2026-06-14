@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VOYAGER | Tactical Comms Radio</title>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700;900&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS Engine -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -25,10 +23,8 @@
         }
     </script>
     
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Custom Tactical Audio Styles -->
     <style>
         .cyber-grid {
             background-image: 
@@ -54,7 +50,6 @@
 </head>
 <body class="bg-slate-950 text-slate-200 min-h-screen font-sans cyber-grid flex flex-col justify-between overflow-x-hidden">
 
-    <!-- Header Navigation Section -->
     <nav class="w-full px-6 py-4 flex justify-between items-center bg-slate-900/40 backdrop-blur-xl border-b border-slate-800">
         <div class="font-space font-bold text-sm tracking-[0.3em] text-white flex items-center gap-2">
             <i data-lucide="radio" class="w-4 h-4 text-pink-500 animate-pulse"></i>
@@ -65,10 +60,8 @@
         </a>
     </nav>
 
-    <!-- Main Live Radio Interface Container -->
     <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-xl w-full mx-auto z-10">
         
-        <!-- Setup / Entry Phase Screen -->
         <div id="setup-panel" class="w-full bg-slate-900/60 backdrop-blur-md border border-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-300">
             <div class="text-center mb-6">
                 <div class="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
@@ -90,10 +83,8 @@
             </div>
         </div>
 
-        <!-- Live Walkie-Talkie Panel Screen (Hidden by Default) -->
         <div id="radio-panel" class="w-full space-y-6 hidden animate-in fade-in zoom-in-95 duration-300">
             
-            <!-- Frequency Metadata Header Status Card -->
             <div class="w-full bg-slate-900/60 backdrop-blur-md border border-slate-800 p-4 rounded-xl flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="relative flex items-center justify-center">
@@ -111,20 +102,16 @@
                 </div>
             </div>
 
-            <!-- Active Nodes Operational Grid Roster -->
             <div class="w-full bg-slate-900/40 backdrop-blur-md border border-slate-800 p-4 rounded-xl">
                 <div class="text-[10px] font-space font-bold tracking-[0.2em] text-slate-500 uppercase mb-3 pb-2 border-b border-slate-800">CONNECTED MATRIX SQUADRON</div>
                 <div id="peer-roster-grid" class="grid grid-cols-2 gap-2">
-                    <!-- Automatically filled dynamically by peer connection events -->
-                </div>
+                    </div>
             </div>
 
-            <!-- Transmitting HUD Status Banner -->
             <div id="transmission-banner" class="w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase">
                 FREQUENCY RETICULE: STANDBY
             </div>
 
-            <!-- Massive Tactile PTT Press Button Module -->
             <div class="w-full bg-slate-900/40 backdrop-blur-md border border-slate-800 p-8 rounded-2xl flex flex-col items-center justify-center relative">
                 
                 <button id="ptt-trigger-node" class="ptt-btn w-40 h-40 rounded-full bg-slate-950 border-4 border-slate-800 text-slate-400 shadow-2xl flex flex-col items-center justify-center gap-2 relative z-10 cursor-pointer outline-none select-none">
@@ -140,15 +127,12 @@
         </div>
     </main>
 
-    <!-- Deep Global Dynamic Audio Render Receiver Matrix Holder -->
     <div id="audio-renderer-sink" class="hidden" aria-hidden="true"></div>
 
-    <!-- Footer Security Signature Section -->
     <footer class="w-full text-center py-4 text-[9px] font-space font-bold tracking-[0.3em] text-slate-600 z-10">
         VOYAGER MESH PROTOCOL V4 // ENCRYPTED END-TO-END
     </footer>
 
-    <!-- Firebase SDK Modular Packages Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -172,7 +156,7 @@
         let localPeerId = Math.random().toString(36).substring(2, 9);
         let localCallsign = "OPERATIVE";
         
-        const runtimeConnections = {}; // Stores operational active RTCPeerConnection elements indexed by sibling IDs
+        const runtimeConnections = {}; // Stores operational active RTCPeerConnection elements
         const remoteStreams = {};       // Stores external audio feed elements
         let onlineRosterData = [];     // Dynamic snapshots tracking other synchronized system nodes
 
@@ -196,18 +180,24 @@
             
             localCallsign = sanitizedValue;
             
+            // Grab the button to show a loading state
+            const connectBtn = document.querySelector('#setup-panel button');
+            const originalBtnText = connectBtn.innerHTML;
+            connectBtn.innerHTML = `CONNECTING...`;
+            connectBtn.disabled = true;
+            
             try {
                 // Request client hardware capturing device pipelines explicitly isolating audio channels
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 
-                // Securely mute audio output tracks natively on runtime instantiation (Push-to-Talk hard-gate tracking)
+                // Securely mute audio output tracks natively on runtime instantiation
                 localStream.getAudioTracks().forEach(track => { track.enabled = false; });
                 
                 // Swap Interface views natively
                 document.getElementById('setup-panel').classList.add('hidden');
                 document.getElementById('radio-panel').classList.remove('hidden');
                 
-                // Initialize PTT physical trigger listeners maps mapping touch profiles explicitly
+                // Initialize PTT physical trigger listeners
                 setupPushToTalkListeners();
                 
                 // Establish synchronization hooks inside global cloud routing tree databases
@@ -215,7 +205,28 @@
                 
             } catch (err) {
                 console.error("Hardware pipeline assignment failed.", err);
-                alert("CRITICAL FAULT: AUDIO HARDWARE LINK COMPROMISED. RE-EVALUATE HARDWARE PERMISSIONS.");
+                
+                // STRICT FIX: Force the UI to stay on the setup panel and reset the button
+                document.getElementById('radio-panel').classList.add('hidden');
+                document.getElementById('setup-panel').classList.remove('hidden');
+                connectBtn.innerHTML = originalBtnText;
+                connectBtn.disabled = false;
+
+                // DIAGNOSTIC CHECK: Translate the browser's strict error codes
+                let errorReason = err.name || "Unknown Error";
+                let detailedMsg = "";
+
+                if (errorReason === 'NotAllowedError' || errorReason === 'PermissionDeniedError') {
+                    detailedMsg = "Permission Denied. The browser or OS is blocking microphone access. You must manually allow it in your browser settings (tap the lock/aA icon in the URL bar).";
+                } else if (errorReason === 'NotFoundError' || errorReason === 'DevicesNotFoundError') {
+                    detailedMsg = "No microphone hardware found. Ensure your microphone is connected.";
+                } else if (errorReason === 'NotReadableError' || errorReason === 'TrackStartError') {
+                    detailedMsg = "Hardware Lock: Your microphone is currently in use by another application.";
+                } else {
+                    detailedMsg = `System Error: ${errorReason} - ${err.message}`;
+                }
+
+                alert(`CRITICAL FAULT: AUDIO LINK COMPROMISED.\n\nDIAGNOSTIC:\n${detailedMsg}`);
             }
         };
 
@@ -250,7 +261,7 @@
                 onlineRosterData = updatedRoster;
                 updateVisualRosterDisplay();
 
-                // Connect to newly entered sibling instances (Only coordinate connection mechanics if sibling ID evaluates greater than ours)
+                // Connect to newly entered sibling instances
                 for (const node of updatedRoster) {
                     if (node.id !== localPeerId && !runtimeConnections[node.id]) {
                         if (localPeerId > node.id) {
@@ -260,7 +271,7 @@
                 }
             });
 
-            // Signal Mailbox Dispatcher: Listen recursively for signaling files addressed directly to this local connection ID instance
+            // Signal Mailbox Dispatcher: Listen recursively for signaling packets
             const dynamicSignalingInboxRef = collection(doc(nodeCollectionRef, localPeerId), 'signals');
             onSnapshot(dynamicSignalingInboxRef, async (snapshot) => {
                 snapshot.forEach(async (changeDoc) => {
@@ -275,7 +286,7 @@
                         await handleIncomingIceCandidate(senderId, signalData.candidate);
                     }
                     
-                    // Instantly drop read transactional items to retain high throughput values
+                    // Instantly drop read transactional items to retain high throughput
                     await deleteDoc(doc(dynamicSignalingInboxRef, changeDoc.id));
                 });
             });
@@ -290,7 +301,7 @@
             const connectionInstance = new RTCPeerConnection(rtcIceConfiguration);
             runtimeConnections[targetSiblingId] = connectionInstance;
 
-            // Inject local hardware media track references into connection layout frameworks
+            // Inject local hardware media track references into connection layout
             localStream.getTracks().forEach(track => {
                 connectionInstance.addTrack(track, localStream);
             });
@@ -311,7 +322,7 @@
                     const compositeStream = new MediaStream();
                     remoteStreams[targetSiblingId] = compositeStream;
                     
-                    // Create an offline background native audio processing element node safely inside the DOM structure
+                    // Create an offline background native audio processing element
                     const audioSinkElement = document.createElement('audio');
                     audioSinkElement.id = `sink-element-${targetSiblingId}`;
                     audioSinkElement.autoplay = true;
@@ -447,7 +458,7 @@
                 if (currentlyBroadcastingFlag) return;
                 currentlyBroadcastingFlag = true;
 
-                // Natively ungate local audio capture stream tracks instances
+                // Natively ungate local audio capture stream tracks
                 localStream.getAudioTracks().forEach(track => { track.enabled = true; });
 
                 // UI adjustments
@@ -458,7 +469,7 @@
                 globalBroadcastBanner.innerText = "BROADCAST ENVELOPE OPEN // ON AIR";
                 globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
 
-                // Broadcast network status sync parameter flags to other squadron nodes
+                // Broadcast network status sync parameter flags
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: true }, { merge: true });
             };
@@ -467,10 +478,10 @@
                 if (!currentlyBroadcastingFlag) return;
                 currentlyBroadcastingFlag = false;
 
-                // Instantly isolate audio stream processing lines natively on hardware device level
+                // Instantly isolate audio stream processing
                 localStream.getAudioTracks().forEach(track => { track.enabled = false; });
 
-                // Reset UI frameworks properties immediately
+                // Reset UI frameworks
                 pttButtonNode.classList.remove('transmitting');
                 pttLabelElement.innerText = "HOLD TO TALK";
                 pttLabelElement.className = "text-[10px] font-space font-bold tracking-[0.2em] text-slate-400";
@@ -482,11 +493,11 @@
                 await setDoc(databaseNodeRef, { activeTransmission: false }, { merge: true });
             };
 
-            // Desk mouse interaction mapping structures
+            // Desk mouse interaction mapping
             pttButtonNode.addEventListener('mousedown', engageVoiceTransmissionPipeline);
             window.addEventListener('mouseup', disengageVoiceTransmissionPipeline);
 
-            // Handheld mobile multi-touch execution handling profiles
+            // Handheld mobile multi-touch execution handling
             pttButtonNode.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 engageVoiceTransmissionPipeline();
@@ -494,7 +505,7 @@
             window.addEventListener('touchend', disengageVoiceTransmissionPipeline);
         }
 
-        // Boot lucide icons context map frameworks natively early on layout lifecycle phase
+        // Boot lucide icons
         lucide.createIcons();
     </script>
 </body>
