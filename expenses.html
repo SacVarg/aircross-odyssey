@@ -5,18 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VOYAGER | Financial Logs</title>
     
-    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'], space: ['Space Grotesk', 'sans-serif'] },
-                    colors: { brand: { cyan: '#06b6d4', violet: '#8b5cf6', emerald: '#10b981', pink: '#ec4899' } }
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'], 
+                        space: ['Space Grotesk', 'sans-serif'] 
+                    },
+                    colors: { 
+                        brand: { cyan: '#06b6d4', violet: '#8b5cf6', emerald: '#10b981', pink: '#ec4899' } 
+                    }
                 }
             }
         }
@@ -84,7 +87,7 @@
             position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-100%);
             background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(6, 182, 212, 0.3);
             color: white; padding: 0.75rem 1.5rem; border-radius: 99px; font-size: 0.875rem;
-            z-index: 9999; display: flex; items-center; gap: 0.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 9999; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
@@ -119,7 +122,6 @@
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
 
-    <!-- Navigation -->
     <nav class="fixed top-0 w-full z-40 bg-slate-900/50 backdrop-blur-xl border-b border-slate-700/50 px-4 py-4">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <a href="index.html" class="font-space font-bold tracking-[0.2em] text-white flex items-center gap-2">
@@ -131,19 +133,20 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="pt-24 pb-32 px-4 max-w-3xl mx-auto min-h-screen">
         
-        <!-- View 1: Group List -->
         <div id="view-group-list">
             <div class="text-center mb-10">
-                <h1 class="text-3xl md:text-4xl font-space font-black tracking-widest text-white mb-2" style="text-shadow: 0 0 20px rgba(6,182,212,0.5);">EXPENSE MANAGER</h1>
+                <h1 class="text-3xl md:text-4xl font-space font-black tracking-widest text-white mb-2" style="text-shadow: 0 0 20px rgba(6,182,212,0.5);">
+                    EXPENSE MANAGER
+                </h1>
                 <p class="text-slate-400 text-sm font-medium">Select a mission or initialize a new group.</p>
             </div>
 
             <div class="grid grid-cols-1 gap-4" id="groups-container">
-                <!-- Groups injected here -->
-                <div class="text-center py-10"><i data-lucide="loader" class="w-6 h-6 animate-spin mx-auto text-cyan-400"></i></div>
+                <div class="text-center py-10">
+                    <i data-lucide="loader" class="w-6 h-6 animate-spin mx-auto text-cyan-400"></i>
+                </div>
             </div>
 
             <button onclick="openModal('modal-add-group')" class="w-full mt-6 glass-panel py-4 flex items-center justify-center gap-2 text-cyan-400 font-space font-bold tracking-widest hover:bg-cyan-900/20 transition-colors border-dashed border-2 border-cyan-500/30">
@@ -151,29 +154,27 @@
             </button>
         </div>
 
-        <!-- View 2: Group Dashboard -->
         <div id="view-group-detail" class="hide">
             
-            <!-- Dashboard Header -->
             <div class="flex items-center gap-3 mb-6">
                 <button onclick="showView('list')" class="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 </button>
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                     <h2 class="text-2xl font-space font-bold text-white tracking-wide truncate" id="dash-group-name">Group Name</h2>
                     <p class="text-xs text-slate-400 font-space tracking-widest" id="dash-member-count">0 MEMBERS</p>
                 </div>
-                <button onclick="openModal('modal-add-member')" class="p-2 bg-cyan-500/20 text-cyan-400 rounded-full border border-cyan-500/30 hover:bg-cyan-500/40 transition-colors">
+                <button onclick="window.deleteCurrentGroup()" class="p-2 bg-red-500/10 text-red-400 rounded-full border border-red-500/30 hover:bg-red-500/30 transition-colors" title="Delete Group">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </button>
+                <button onclick="openModal('modal-add-member')" class="p-2 bg-cyan-500/20 text-cyan-400 rounded-full border border-cyan-500/30 hover:bg-cyan-500/40 transition-colors" title="Add Member">
                     <i data-lucide="user-plus" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <!-- Members Scroller -->
             <div class="flex gap-3 overflow-x-auto pb-4 mb-2" id="dash-members-list">
-                <!-- Members injected here -->
-            </div>
+                </div>
 
-            <!-- Summary Cards -->
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="glass-panel p-4">
                     <p class="text-xs text-slate-400 font-space font-bold tracking-widest mb-1">TOTAL EXPENSES</p>
@@ -185,55 +186,41 @@
                 </div>
             </div>
 
-            <!-- Tabs -->
             <div class="flex border-b border-slate-700/50 mb-6 font-space font-bold text-sm tracking-widest">
                 <button class="tab-btn active pb-3 px-4 flex-1 text-center" onclick="switchTab('expenses')">EXPENSES</button>
                 <button class="tab-btn pb-3 px-4 flex-1 text-center" onclick="switchTab('balances')">BALANCES</button>
                 <button class="tab-btn pb-3 px-4 flex-1 text-center" onclick="switchTab('settle')">SETTLE UP</button>
             </div>
 
-            <!-- Tab: Expenses -->
             <div id="tab-expenses" class="tab-content active space-y-4">
                 <div id="expenses-container" class="space-y-3">
-                    <!-- Expenses injected here -->
-                </div>
+                    </div>
             </div>
 
-            <!-- Tab: Balances -->
             <div id="tab-balances" class="tab-content space-y-3">
                 <div id="balances-container" class="space-y-3">
-                    <!-- Balances injected here -->
-                </div>
+                    </div>
             </div>
 
-            <!-- Tab: Settle Up -->
             <div id="tab-settle" class="tab-content space-y-4">
                 <div class="bg-violet-900/20 border border-violet-500/30 p-4 rounded-xl mb-4">
                     <p class="text-xs text-violet-300 font-medium">The system automatically calculates the minimum number of transactions required to settle all debts.</p>
                 </div>
                 <div id="suggestions-container" class="space-y-3">
-                    <!-- Suggestions injected here -->
-                </div>
+                    </div>
                 
                 <h3 class="font-space font-bold text-slate-400 text-xs tracking-widest mt-8 mb-4">SETTLEMENT HISTORY</h3>
                 <div id="settlement-history-container" class="space-y-3">
-                    <!-- History injected here -->
-                </div>
+                    </div>
             </div>
 
         </div>
     </main>
 
-    <!-- Floating Action Button -->
     <button id="fab-add-expense" onclick="openExpenseModal()" class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.5)] flex items-center justify-center text-white hover:scale-105 transition-transform z-40 hide">
         <i data-lucide="receipt" class="w-6 h-6"></i>
     </button>
 
-    <!-- ============================================== -->
-    <!-- MODALS -->
-    <!-- ============================================== -->
-
-    <!-- Add Group Modal -->
     <div id="modal-add-group" class="modal" onclick="if(event.target===this) closeModal('modal-add-group')">
         <div class="modal-content p-6">
             <h3 class="text-lg font-space font-bold tracking-widest mb-4">INITIALIZE GROUP</h3>
@@ -248,7 +235,6 @@
         </div>
     </div>
 
-    <!-- Add Member Modal -->
     <div id="modal-add-member" class="modal" onclick="if(event.target===this) closeModal('modal-add-member')">
         <div class="modal-content p-6">
             <h3 class="text-lg font-space font-bold tracking-widest mb-4 text-cyan-400">ADD CREW MEMBER</h3>
@@ -263,10 +249,11 @@
         </div>
     </div>
 
-    <!-- Add Expense Modal -->
     <div id="modal-add-expense" class="modal" onclick="if(event.target===this) closeModal('modal-add-expense')">
         <div class="modal-content p-6">
-            <h3 class="text-lg font-space font-bold tracking-widest mb-4 text-white"><i data-lucide="receipt" class="w-5 h-5 inline text-cyan-400 mr-2"></i> LOG EXPENSE</h3>
+            <h3 class="text-lg font-space font-bold tracking-widest mb-4 text-white" id="modal-expense-title">
+                <i data-lucide="receipt" class="w-5 h-5 inline text-cyan-400 mr-2"></i> LOG EXPENSE
+            </h3>
             <div class="space-y-4">
                 
                 <div class="grid grid-cols-2 gap-3">
@@ -297,10 +284,8 @@
                         <button class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white transition-colors" id="btn-split-custom" onclick="setSplitType('custom')">CUSTOM</button>
                     </div>
 
-                    <!-- Dynamic Split Container -->
                     <div id="split-dynamic-container" class="max-h-[150px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                        <!-- Populated by JS -->
-                    </div>
+                        </div>
                     <div id="split-validation-msg" class="text-xs text-red-400 mt-2 text-center font-medium hidden">Total amounts do not match.</div>
                 </div>
 
@@ -310,7 +295,6 @@
         </div>
     </div>
 
-    <!-- Record Settlement Modal -->
     <div id="modal-settle" class="modal" onclick="if(event.target===this) closeModal('modal-settle')">
         <div class="modal-content p-6 border-violet-500/30">
             <h3 class="text-lg font-space font-bold tracking-widest mb-4 text-violet-400">RECORD SETTLEMENT</h3>
@@ -332,7 +316,6 @@
                     <input type="number" id="stl-amount" class="glass-input text-xl font-bold text-center">
                 </div>
 
-                <!-- Hidden IDs -->
                 <input type="hidden" id="stl-from-id">
                 <input type="hidden" id="stl-to-id">
 
@@ -342,12 +325,11 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast"><i data-lucide="info" class="w-4 h-4"></i> <span id="toast-msg"></span></div>
+    <div id="toast" class="toast">
+        <i data-lucide="info" class="w-4 h-4"></i> 
+        <span id="toast-msg"></span>
+    </div>
 
-    <!-- ============================================== -->
-    <!-- LOGIC -->
-    <!-- ============================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -372,8 +354,11 @@
         let groupMembers = [];
         let groupExpenses = [];
         let groupSettlements = [];
+        let currentBalances = {}; // Track balances globally to validate group deletion
         
-        let currentSplitType = 'equal'; // equal, select, custom
+        let currentSplitType = 'equal'; 
+        let editingExpenseId = null; // Track if we are editing an expense
+        
         let unsubscribeMembers = null;
         let unsubscribeExpenses = null;
         let unsubscribeSettlements = null;
@@ -381,7 +366,7 @@
         // Init Auth
         signInAnonymously(auth).catch(e => console.error(e));
 
-        // Listeners
+        // Listeners for Groups
         onSnapshot(collection(db, `artifacts/${APP_ID}/public/data/exp_groups`), (snap) => {
             allGroups = snap.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
             if(document.getElementById('view-group-list').classList.contains('hide') === false) {
@@ -389,15 +374,28 @@
             }
         });
 
-        // Setup Lucide
+        // Setup Lucide Icons
         lucide.createIcons();
 
         // ----------------------------------------------------
         // UTILS & UI
         // ----------------------------------------------------
-        window.showToast = (msg) => {
+        window.showToast = (msg, type = 'info') => {
             const el = document.getElementById('toast');
             document.getElementById('toast-msg').textContent = msg;
+            
+            // Adjust colors based on error or success
+            if (type === 'error') {
+                el.style.border = '1px solid rgba(248, 113, 113, 0.5)';
+                el.style.color = '#fca5a5';
+            } else if (type === 'success') {
+                el.style.border = '1px solid rgba(16, 185, 129, 0.5)';
+                el.style.color = '#6ee7b7';
+            } else {
+                el.style.border = '1px solid rgba(6, 182, 212, 0.3)';
+                el.style.color = 'white';
+            }
+
             el.classList.add('show');
             setTimeout(() => el.classList.remove('show'), 3000);
         };
@@ -411,7 +409,7 @@
                 document.getElementById('fab-add-expense').classList.add('hide');
                 document.getElementById('view-group-list').classList.remove('hide');
                 currentGroup = null;
-                // Cleanup listeners
+                // Cleanup listeners to save memory
                 if(unsubscribeMembers) { unsubscribeMembers(); unsubscribeMembers = null; }
                 if(unsubscribeExpenses) { unsubscribeExpenses(); unsubscribeExpenses = null; }
                 if(unsubscribeSettlements) { unsubscribeSettlements(); unsubscribeSettlements = null; }
@@ -443,14 +441,14 @@
         // ----------------------------------------------------
         window.createGroup = async () => {
             const name = document.getElementById('inp-group-name').value.trim();
-            if(!name) return showToast('Enter group name');
+            if(!name) return showToast('Enter group name', 'error');
             const id = Date.now().toString();
             try {
                 await setDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_groups`, id), { id, name, timestamp: Date.now() });
                 document.getElementById('inp-group-name').value = '';
                 closeModal('modal-add-group');
-                showToast('Group Created');
-            } catch(e) { showToast('Error creating group'); console.error(e); }
+                showToast('Group Created', 'success');
+            } catch(e) { showToast('Error creating group', 'error'); console.error(e); }
         };
 
         function renderGroupList() {
@@ -476,6 +474,39 @@
             document.getElementById('dash-group-name').textContent = currentGroup.name;
             showView('detail');
             setupGroupListeners(id);
+        };
+
+        window.deleteCurrentGroup = async () => {
+            if(!currentGroup) return;
+
+            // Check if balances are settled
+            let hasUnsettled = false;
+            for(let id in currentBalances) {
+                if(Math.abs(currentBalances[id].net) > 0.05) {
+                    hasUnsettled = true; break;
+                }
+            }
+
+            if(hasUnsettled) {
+                return showToast('Cannot delete. Settle all balances first.', 'error');
+            }
+
+            if(!confirm(`Are you sure you want to delete "${currentGroup.name}"? This will erase all its data.`)) return;
+
+            try {
+                // Delete group document
+                await deleteDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_groups`, currentGroup.id));
+
+                // Cleanup associated records
+                groupMembers.forEach(m => deleteDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_members`, m.id)));
+                groupExpenses.forEach(e => deleteDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_expenses`, e.id)));
+                groupSettlements.forEach(s => deleteDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_settlements`, s.id)));
+
+                showToast('Group deleted successfully', 'success');
+                showView('list');
+            } catch(e) {
+                showToast('Error deleting group', 'error');
+            }
         };
 
         function setupGroupListeners(groupId) {
@@ -507,14 +538,14 @@
         // ----------------------------------------------------
         window.addMember = async () => {
             const name = document.getElementById('inp-member-name').value.trim();
-            if(!name) return showToast('Enter name');
+            if(!name) return showToast('Enter name', 'error');
             const id = Date.now().toString();
             try {
                 await setDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_members`, id), { id, groupId: currentGroup.id, name, timestamp: Date.now() });
                 document.getElementById('inp-member-name').value = '';
                 closeModal('modal-add-member');
-                showToast('Member added');
-            } catch(e) { showToast('Error'); }
+                showToast('Member added', 'success');
+            } catch(e) { showToast('Error', 'error'); }
         };
 
         function renderMembers() {
@@ -536,11 +567,14 @@
         }
 
         // ----------------------------------------------------
-        // EXPENSES
+        // EXPENSES (ADD / EDIT / DELETE)
         // ----------------------------------------------------
         window.openExpenseModal = () => {
-            if(groupMembers.length === 0) return showToast('Add members first');
+            if(groupMembers.length === 0) return showToast('Add members first', 'error');
             
+            // Reset for new expense
+            editingExpenseId = null;
+            document.getElementById('modal-expense-title').innerHTML = '<i data-lucide="receipt" class="w-5 h-5 inline text-cyan-400 mr-2"></i> LOG EXPENSE';
             document.getElementById('exp-title').value = '';
             document.getElementById('exp-amount').value = '';
             document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
@@ -549,7 +583,49 @@
             pBy.innerHTML = groupMembers.map(m => `<option value="${m.id}" class="bg-slate-800">${m.name}</option>`).join('');
             
             setSplitType('equal');
+            lucide.createIcons();
             openModal('modal-add-expense');
+        };
+
+        window.editExpense = (id) => {
+            const exp = groupExpenses.find(e => e.id === id);
+            if(!exp) return;
+
+            editingExpenseId = id;
+            document.getElementById('modal-expense-title').innerHTML = '<i data-lucide="edit" class="w-5 h-5 inline text-cyan-400 mr-2"></i> EDIT EXPENSE';
+            
+            document.getElementById('exp-title').value = exp.title;
+            document.getElementById('exp-amount').value = exp.amount;
+            document.getElementById('exp-date').value = exp.date;
+            
+            const pBy = document.getElementById('exp-paid-by');
+            pBy.innerHTML = groupMembers.map(m => `<option value="${m.id}" class="bg-slate-800">${m.name}</option>`).join('');
+            pBy.value = exp.paidBy;
+
+            // Set split type and wait for DOM update to apply specific split values
+            setSplitType(exp.splitType || 'equal');
+
+            setTimeout(() => {
+                if(exp.splitType === 'select') {
+                    const checks = document.querySelectorAll('.split-sel-check');
+                    checks.forEach(c => { c.checked = !!exp.splits[c.value]; });
+                    updateSelectSplitAmounts();
+                } else if (exp.splitType === 'custom') {
+                    const inputs = document.querySelectorAll('.split-cus-inp');
+                    inputs.forEach(inp => { inp.value = exp.splits[inp.dataset.id] || ''; });
+                }
+            }, 50);
+
+            lucide.createIcons();
+            openModal('modal-add-expense');
+        };
+
+        window.deleteExpense = async (id) => {
+            if(!confirm('Delete this expense?')) return;
+            try {
+                await deleteDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_expenses`, id));
+                showToast('Expense Deleted', 'success');
+            } catch(e) { showToast('Error deleting expense', 'error'); }
         };
 
         window.setSplitType = (type) => {
@@ -624,7 +700,7 @@
             const date = document.getElementById('exp-date').value;
             const paidBy = document.getElementById('exp-paid-by').value;
 
-            if(!total || total <= 0) return showToast('Enter valid amount');
+            if(!total || total <= 0) return showToast('Enter valid amount', 'error');
 
             let splits = {};
             
@@ -635,7 +711,7 @@
             else if(currentSplitType === 'select') {
                 const checks = Array.from(document.querySelectorAll('.split-sel-check'));
                 const selectedIds = checks.filter(c => c.checked).map(c => c.value);
-                if(selectedIds.length === 0) return showToast('Select at least one member');
+                if(selectedIds.length === 0) return showToast('Select at least one member', 'error');
                 const share = total / selectedIds.length;
                 selectedIds.forEach(id => splits[id] = share);
             }
@@ -653,20 +729,17 @@
                 }
             }
 
-            const id = Date.now().toString();
+            const isEdit = !!editingExpenseId;
+            const docId = isEdit ? editingExpenseId : Date.now().toString();
+            const timestamp = isEdit ? groupExpenses.find(e=>e.id === docId).timestamp : Date.now();
+
             try {
-                await setDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_expenses`, id), {
-                    id, groupId: currentGroup.id, title, amount: total, date, paidBy, splits, splitType: currentSplitType, timestamp: Date.now()
+                await setDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_expenses`, docId), {
+                    id: docId, groupId: currentGroup.id, title, amount: total, date, paidBy, splits, splitType: currentSplitType, timestamp: timestamp
                 });
                 closeModal('modal-add-expense');
-                showToast('Expense logged');
-            } catch(e) { showToast('Error saving'); }
-        };
-
-        window.deleteExpense = async (id) => {
-            if(!confirm('Delete this expense?')) return;
-            await deleteDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_expenses`, id));
-            showToast('Deleted');
+                showToast(isEdit ? 'Expense updated' : 'Expense logged', 'success');
+            } catch(e) { showToast('Error saving', 'error'); }
         };
 
         function renderExpenses() {
@@ -696,6 +769,7 @@
                     lastMonth = month;
                 }
 
+                // Explicit buttons for mobile friendliness instead of hover-only
                 html += `
                 <div class="glass-panel p-4 flex gap-4 items-center group relative overflow-hidden">
                     <div class="flex flex-col items-center justify-center shrink-0 w-10 text-slate-400">
@@ -703,15 +777,21 @@
                         <span class="text-xl font-bold text-white">${day}</span>
                     </div>
                     <div class="flex-1 min-w-0 border-l border-slate-700/50 pl-4">
-                        <h4 class="font-bold text-white text-base truncate pr-8">${exp.title}</h4>
+                        <h4 class="font-bold text-white text-base truncate pr-2">${exp.title}</h4>
                         <p class="text-xs text-slate-400 mt-1">Paid by <span class="text-cyan-400 font-medium">${getMemberName(exp.paidBy)}</span></p>
                     </div>
-                    <div class="text-right shrink-0">
+                    <div class="text-right shrink-0 pr-16 md:pr-0">
                         <p class="font-space font-black text-lg text-white">${formatMoney(exp.amount)}</p>
                     </div>
-                    <button onclick="window.deleteExpense('${exp.id}')" class="absolute top-2 right-2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1 bg-slate-800 rounded-md">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    
+                    <div class="absolute top-2 right-2 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        <button onclick="window.editExpense('${exp.id}')" class="p-1.5 bg-slate-800 rounded-md text-slate-400 hover:text-cyan-400 transition-colors" title="Edit">
+                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="window.deleteExpense('${exp.id}')" class="p-1.5 bg-slate-800 rounded-md text-slate-400 hover:text-red-400 transition-colors" title="Delete">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>`;
             });
 
@@ -726,27 +806,27 @@
         function calculateBalances() {
             if(!currentGroup) return;
 
-            let balances = {}; // memberId -> net amount (positive = gets back, negative = owes)
-            groupMembers.forEach(m => balances[m.id] = { name: m.name, paid: 0, share: 0, net: 0 });
+            currentBalances = {}; // Reset global balances tracker
+            groupMembers.forEach(m => currentBalances[m.id] = { name: m.name, paid: 0, share: 0, net: 0 });
 
             // Process Expenses
             groupExpenses.forEach(exp => {
-                if(balances[exp.paidBy]) balances[exp.paidBy].paid += Number(exp.amount);
+                if(currentBalances[exp.paidBy]) currentBalances[exp.paidBy].paid += Number(exp.amount);
                 Object.entries(exp.splits || {}).forEach(([mId, amt]) => {
-                    if(balances[mId]) balances[mId].share += Number(amt);
+                    if(currentBalances[mId]) currentBalances[mId].share += Number(amt);
                 });
             });
 
             // Process Settlements
             groupSettlements.forEach(s => {
-                if(balances[s.from]) balances[s.from].paid += Number(s.amount); // giving money acts like paying an expense
-                if(balances[s.to]) balances[s.to].share += Number(s.amount); // receiving acts like getting your share
+                if(currentBalances[s.from]) currentBalances[s.from].paid += Number(s.amount); 
+                if(currentBalances[s.to]) currentBalances[s.to].share += Number(s.amount); 
             });
 
             // Calculate Net
             let displayHtml = '';
-            for(let id in balances) {
-                const b = balances[id];
+            for(let id in currentBalances) {
+                const b = currentBalances[id];
                 b.net = b.paid - b.share;
                 
                 let statusColor = 'text-slate-400';
@@ -773,7 +853,7 @@
 
             document.getElementById('balances-container').innerHTML = displayHtml || '<div class="text-center py-6 text-slate-500 text-sm">Add expenses to see balances.</div>';
             
-            generateSettlementSuggestions(balances);
+            generateSettlementSuggestions(currentBalances);
         }
 
         function generateSettlementSuggestions(balances) {
@@ -787,7 +867,7 @@
 
             // Greedily settle max debtor with max creditor
             let suggestions = [];
-            let iterations = 0; // infinite loop guard
+            let iterations = 0; 
 
             while(debtors.length > 0 && creditors.length > 0 && iterations < 1000) {
                 iterations++;
@@ -836,7 +916,6 @@
             document.getElementById('stl-to-id').value = toId;
             document.getElementById('stl-from-name').textContent = fromName;
             document.getElementById('stl-to-name').textContent = toName;
-            // Round to 2 decimals for input
             document.getElementById('stl-amount').value = Math.round(amount * 100) / 100;
             openModal('modal-settle');
         };
@@ -846,7 +925,7 @@
             const toId = document.getElementById('stl-to-id').value;
             const amount = Number(document.getElementById('stl-amount').value);
 
-            if(!amount || amount <= 0) return showToast('Invalid amount');
+            if(!amount || amount <= 0) return showToast('Invalid amount', 'error');
 
             const id = Date.now().toString();
             try {
@@ -854,14 +933,18 @@
                     id, groupId: currentGroup.id, from: fromId, to: toId, amount, date: new Date().toISOString(), timestamp: Date.now()
                 });
                 closeModal('modal-settle');
-                showToast('Settlement Recorded');
-            } catch(e) { showToast('Error saving settlement'); }
+                showToast('Settlement Recorded', 'success');
+            } catch(e) { showToast('Error saving settlement', 'error'); }
         };
 
         window.deleteSettlement = async (id) => {
             if(!confirm('Delete this settlement record?')) return;
-            await deleteDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_settlements`, id));
-            showToast('Deleted');
+            try {
+                await deleteDoc(doc(db, `artifacts/${APP_ID}/public/data/exp_settlements`, id));
+                showToast('Settlement deleted', 'success');
+            } catch (e) {
+                showToast('Failed to delete', 'error');
+            }
         };
 
         function renderSettlements() {
@@ -878,14 +961,13 @@
                         <span class="text-slate-300 font-medium">${getMemberName(s.to)}</span>
                     </div>
                     <div class="font-space text-sm font-bold text-white pr-6">${formatMoney(s.amount)}</div>
-                    <button onclick="window.deleteSettlement('${s.id}')" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onclick="window.deleteSettlement('${s.id}')" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-slate-900 rounded p-1">
                         <i data-lucide="x-circle" class="w-4 h-4"></i>
                     </button>
                 </div>
             `).join('');
             lucide.createIcons();
         }
-
     </script>
 </body>
 </html>
