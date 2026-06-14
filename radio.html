@@ -5,126 +5,515 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VOYAGER | Tactical Comms Radio</title>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        space: ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        .cyber-grid { background-image: radial-gradient(circle, rgba(16, 185, 129, 0.05) 1px, transparent 1px); background-size: 30px 30px; }
-        .ptt-btn { transition: all 0.2s; user-select: none; touch-action: none; }
-        .ptt-btn.transmitting { transform: scale(0.95); box-shadow: 0 0 50px #ec4899; border-color: #ec4899; background: #881337; }
-        .is-speaking { border: 3px solid #ec4899 !important; box-shadow: 0 0 30px #ec4899; }
+        .cyber-grid {
+            background-image: 
+                linear-gradient(to right, rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        
+        .ptt-btn {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .ptt-btn:active, .ptt-btn.transmitting {
+            transform: scale(0.96);
+            box-shadow: 0 0 50px rgba(236, 72, 153, 0.6);
+            border-color: #ec4899;
+            background: rgba(236, 72, 153, 0.2);
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 min-h-screen font-sans cyber-grid flex flex-col">
+<body class="bg-slate-950 text-slate-200 min-h-screen font-sans cyber-grid flex flex-col justify-between overflow-x-hidden">
 
-    <nav class="w-full px-6 py-4 flex justify-between items-center bg-slate-900/60 backdrop-blur-xl border-b border-slate-800">
+    <nav class="w-full px-6 py-4 flex justify-between items-center bg-slate-900/40 backdrop-blur-xl border-b border-slate-800">
         <div class="font-space font-bold text-sm tracking-[0.3em] text-white flex items-center gap-2">
-            <i data-lucide="radio" class="w-4 h-4 text-pink-500"></i> COMMS LINK // MESH_V1
+            <i data-lucide="radio" class="w-4 h-4 text-pink-500 animate-pulse"></i>
+            COMMS LINK // COM-04
         </div>
-        <button onclick="window.location.href='index.html'" class="text-xs font-space font-bold tracking-widest text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1">
+        <a href="index.html" class="text-xs font-space font-bold tracking-widest text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1">
             <i data-lucide="arrow-left" class="w-3 h-3"></i> RETURN
-        </button>
+        </a>
     </nav>
 
-    <main class="flex-1 flex flex-col items-center justify-center p-6 max-w-lg w-full mx-auto">
+    <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-xl w-full mx-auto z-10">
         
-        <div id="setup-panel" class="w-full bg-slate-900/50 border border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur-lg">
-            <h1 class="text-lg font-space font-black text-center mb-6 tracking-widest uppercase">Frequency Auth</h1>
-            <input type="text" id="callsign-input" placeholder="ENTER CALLSIGN" class="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-center font-bold tracking-widest uppercase mb-4 focus:border-emerald-500 outline-none">
-            <button id="join-btn" onclick="window.initializeTacticalRadio()" class="w-full py-4 bg-emerald-500 text-slate-950 font-black rounded-xl hover:bg-emerald-400 transition-colors">JOIN FREQUENCY</button>
+        <div id="setup-panel" class="w-full bg-slate-900/60 backdrop-blur-md border border-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-xl font-space font-black uppercase tracking-wider text-white">Secure Frequency Authorization</h1>
+                <p class="text-xs text-slate-400 mt-1">Select an identity matrix to inject into the mesh channel.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-space font-bold tracking-[0.2em] text-emerald-400 uppercase mb-2">OPERATIVE CALLSIGN</label>
+                    <input type="text" id="callsign-input" maxlength="12" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:shadow-[0_0_15px_rgba(16,185,129,0.15)] font-space font-bold tracking-widest uppercase placeholder-slate-700" placeholder="E.G. EAGLE-ONE" autocomplete="off">
+                </div>
+                
+                <button onclick="window.initializeTacticalRadio()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-space font-black tracking-[0.15em] text-sm rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(16,185,129,0.3)] uppercase">
+                    Establish Mesh Connection
+                </button>
+            </div>
         </div>
 
-        <div id="radio-panel" class="w-full space-y-8 hidden">
-            <div id="peer-roster-grid" class="grid grid-cols-2 gap-4 w-full"></div>
-            <button id="ptt-btn" class="ptt-btn w-48 h-48 rounded-full border-4 border-slate-800 bg-slate-900 mx-auto flex flex-col items-center justify-center gap-2 shadow-2xl">
-                <i data-lucide="mic" class="w-12 h-12"></i>
-                <span class="font-space font-bold tracking-widest">HOLD TO TALK</span>
-            </button>
+        <div id="radio-panel" class="w-full space-y-6 hidden animate-in fade-in zoom-in-95 duration-300">
+            
+            <div class="w-full bg-slate-900/60 backdrop-blur-md border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="relative flex items-center justify-center">
+                        <span class="absolute w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-75"></span>
+                        <span class="relative w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]"></span>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-space font-bold tracking-widest text-slate-500 uppercase">SIGNAL FREQUENCY</div>
+                        <div class="text-sm font-space font-bold text-white tracking-wider" id="freq-id-display">MESH_NET_CH4</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] font-space font-bold tracking-widest text-slate-500 uppercase">NODES SYNCED</div>
+                    <div class="text-sm font-space font-bold text-emerald-400 tracking-widest" id="node-count-display">1 / 6</div>
+                </div>
+            </div>
+
+            <div class="w-full bg-slate-900/40 backdrop-blur-md border border-slate-800 p-4 rounded-xl">
+                <div class="text-[10px] font-space font-bold tracking-[0.2em] text-slate-500 uppercase mb-3 pb-2 border-b border-slate-800">CONNECTED MATRIX SQUADRON</div>
+                <div id="peer-roster-grid" class="grid grid-cols-2 gap-2">
+                    </div>
+            </div>
+
+            <div id="transmission-banner" class="w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase">
+                FREQUENCY RETICULE: STANDBY
+            </div>
+
+            <div class="w-full bg-slate-900/40 backdrop-blur-md border border-slate-800 p-8 rounded-2xl flex flex-col items-center justify-center relative">
+                
+                <button id="ptt-trigger-node" class="ptt-btn w-40 h-40 rounded-full bg-slate-950 border-4 border-slate-800 text-slate-400 shadow-2xl flex flex-col items-center justify-center gap-2 relative z-10 cursor-pointer outline-none select-none">
+                    <i data-lucide="mic" id="ptt-icon" class="w-10 h-10 transition-colors duration-200"></i>
+                    <span id="ptt-label" class="text-[10px] font-space font-bold tracking-[0.2em] text-slate-400 transition-colors duration-200">HOLD TO TALK</span>
+                </button>
+                
+                <div class="text-[10px] text-center text-slate-500 font-medium tracking-wide mt-4 leading-relaxed max-w-xs">
+                    Microphone stream is hard-gated. Gearing the transmission button handles audio encoding pipelines safely.
+                </div>
+            </div>
+
         </div>
     </main>
 
-    <div id="audio-renderer-sink" class="hidden"></div>
+    <div id="audio-renderer-sink" class="hidden" aria-hidden="true"></div>
+
+    <footer class="w-full text-center py-4 text-[9px] font-space font-bold tracking-[0.3em] text-slate-600 z-10">
+        VOYAGER MESH PROTOCOL V4 // ENCRYPTED END-TO-END
+    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        const app = initializeApp({
+        // Immutable Project Environment Initialization Data Config
+        const firebaseConfig = {
             apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
             authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
-            projectId: "aircross-odyssey-f6e2f"
-        });
-
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        let localStream, localPeerId = Math.random().toString(36).substring(2, 9);
-        const runtimeConnections = {};
-
-        // Automatic Cleanup: Remove user from DB on close or refresh
-        window.addEventListener('beforeunload', async () => {
-            await deleteDoc(doc(db, 'artifacts', 'aircross-odyssey-main', 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId));
-        });
-
-        window.initializeTacticalRadio = async () => {
-            const callsign = document.getElementById('callsign-input').value.toUpperCase();
-            if (!callsign) return alert("ENTER CALLSIGN");
-
-            await signInAnonymously(auth);
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            localStream.getAudioTracks().forEach(t => t.enabled = false);
-
-            document.getElementById('setup-panel').classList.add('hidden');
-            document.getElementById('radio-panel').classList.remove('hidden');
-
-            setupPTT();
-            initSignaling(callsign);
-            lucide.createIcons();
+            projectId: "aircross-odyssey-f6e2f",
+            storageBucket: "aircross-odyssey-f6e2f.firebasestorage.app",
+            messagingSenderId: "641282553954",
+            appId: "1:641282553954:web:4b3fa456d9eda8adf2393b"
         };
 
-        function setupPTT() {
-            const btn = document.getElementById('ptt-btn');
-            const toggle = (active) => {
-                localStream.getAudioTracks()[0].enabled = active;
-                active ? btn.classList.add('transmitting') : btn.classList.remove('transmitting');
-            };
-            btn.onmousedown = btn.ontouchstart = () => toggle(true);
-            btn.onmouseup = btn.ontouchend = () => toggle(false);
-        }
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const signalScope = "aircross-odyssey-main";
 
-        async function initSignaling(callsign) {
-            const nodesRef = collection(doc(db, 'artifacts', 'aircross-odyssey-main', 'public', 'data', 'radio_frequency', 'lobby'), 'nodes');
-            await setDoc(doc(nodesRef, localPeerId), { id: localPeerId, callsign, active: false });
+        // Global Architectural Signal Core Framework State Values
+        let localStream = null;
+        let localPeerId = Math.random().toString(36).substring(2, 9);
+        let localCallsign = "OPERATIVE";
+        
+        const runtimeConnections = {}; // Stores operational active RTCPeerConnection elements
+        const remoteStreams = {};       // Stores external audio feed elements
+        let onlineRosterData = [];     // Dynamic snapshots tracking other synchronized system nodes
 
-            onSnapshot(nodesRef, (snap) => {
-                const grid = document.getElementById('peer-roster-grid');
-                grid.innerHTML = '';
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    grid.innerHTML += `<div id="peer-${data.id}" class="p-4 bg-slate-900 border border-slate-800 rounded-xl font-space font-bold text-xs uppercase">${data.callsign}</div>`;
+        // WebRTC standard configuration profiles mapping STUN addresses
+        const rtcIceConfiguration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // Lifecycle Ignition Method: Injected directly to global window scope instance
+        window.initializeTacticalRadio = async () => {
+            const inputField = document.getElementById('callsign-input');
+            const sanitizedValue = inputField.value.trim().toUpperCase();
+            
+            if (!sanitizedValue) {
+                alert("AUTHORIZATION ERROR: CALLSIGN MATRIX INVALID.");
+                return;
+            }
+            
+            localCallsign = sanitizedValue;
+            
+            const connectBtn = document.querySelector('#setup-panel button');
+            const originalBtnText = connectBtn.innerHTML;
+            connectBtn.innerHTML = `CONNECTING...`;
+            connectBtn.disabled = true;
+            
+            try {
+                // EXPLICIT FIX: Authenticate anonymously before touching the database
+                await signInAnonymously(auth);
+
+                // Request client hardware capturing device pipelines explicitly isolating audio channels
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                
+                // Securely mute audio output tracks natively on runtime instantiation
+                localStream.getAudioTracks().forEach(track => { track.enabled = false; });
+                
+                // Swap Interface views natively
+                document.getElementById('setup-panel').classList.add('hidden');
+                document.getElementById('radio-panel').classList.remove('hidden');
+                
+                // Initialize PTT physical trigger listeners
+                setupPushToTalkListeners();
+                
+                // Establish synchronization hooks inside global cloud routing tree databases
+                await engageSignalingPipeline();
+                
+            } catch (err) {
+                console.error("Hardware pipeline assignment failed.", err);
+                
+                document.getElementById('radio-panel').classList.add('hidden');
+                document.getElementById('setup-panel').classList.remove('hidden');
+                connectBtn.innerHTML = originalBtnText;
+                connectBtn.disabled = false;
+
+                let errorReason = err.name || "Unknown Error";
+                let detailedMsg = "";
+
+                if (errorReason === 'NotAllowedError' || errorReason === 'PermissionDeniedError') {
+                    detailedMsg = "Permission Denied. The browser or OS is blocking microphone access. You must manually allow it in your browser settings (tap the lock/aA icon in the URL bar).";
+                } else if (errorReason === 'NotFoundError' || errorReason === 'DevicesNotFoundError') {
+                    detailedMsg = "No microphone hardware found. Ensure your microphone is connected.";
+                } else if (errorReason === 'NotReadableError' || errorReason === 'TrackStartError') {
+                    detailedMsg = "Hardware Lock: Your microphone is currently in use by another application.";
+                } else if (errorReason === 'FirebaseError') {
+                    detailedMsg = `Firebase Permission Denied. Ensure your Firestore Security Rules allow read/write to the public artifacts path. Error details: ${err.message}`;
+                } else {
+                    detailedMsg = `System Error: ${errorReason} - ${err.message}`;
+                }
+
+                alert(`CRITICAL FAULT: AUDIO LINK COMPROMISED.\n\nDIAGNOSTIC:\n${detailedMsg}`);
+            }
+        };
+
+        // ==========================================
+        // WIRELESS SIGNALING & SYNC ENGINE MATRIX
+        // ==========================================
+        async function engageSignalingPipeline() {
+            const channelDocRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby');
+            const nodeCollectionRef = collection(channelDocRef, 'nodes');
+            const selfRecordDocRef = doc(nodeCollectionRef, localPeerId);
+
+            await setDoc(selfRecordDocRef, {
+                id: localPeerId,
+                callsign: localCallsign,
+                activeTransmission: false,
+                timestamp: Date.now()
+            });
+
+            window.addEventListener('beforeunload', async () => {
+                await deleteDoc(selfRecordDocRef);
+            });
+
+            onSnapshot(nodeCollectionRef, async (snapshot) => {
+                const updatedRoster = [];
+                snapshot.forEach(docSnap => {
+                    if (docSnap.exists()) updatedRoster.push(docSnap.data());
+                });
+
+                onlineRosterData = updatedRoster;
+                updateVisualRosterDisplay();
+
+                for (const node of updatedRoster) {
+                    if (node.id !== localPeerId && !runtimeConnections[node.id]) {
+                        if (localPeerId > node.id) {
+                            await initializePeerConnection(node.id, true);
+                        }
+                    }
+                }
+            });
+
+            const dynamicSignalingInboxRef = collection(selfRecordDocRef, 'signals');
+            onSnapshot(dynamicSignalingInboxRef, async (snapshot) => {
+                snapshot.forEach(async (changeDoc) => {
+                    const signalData = changeDoc.data();
+                    const senderId = signalData.sender;
+                    
+                    if (signalData.type === 'offer') {
+                        await handleIncomingOffer(senderId, signalData.sdp);
+                    } else if (signalData.type === 'answer') {
+                        await handleIncomingAnswer(senderId, signalData.sdp);
+                    } else if (signalData.type === 'ice') {
+                        await handleIncomingIceCandidate(senderId, signalData.candidate);
+                    }
+                    
+                    await deleteDoc(doc(dynamicSignalingInboxRef, changeDoc.id));
                 });
             });
         }
 
-        // Active Speaker Highlighter
-        function monitorSpeaker(stream, peerId) {
-            const ctx = new AudioContext();
-            const analyzer = ctx.createAnalyser();
-            ctx.createMediaStreamSource(stream).connect(analyzer);
-            const pcm = new Float32Array(analyzer.fftSize);
-            function tick() {
-                analyzer.getFloatTimeDomainData(pcm);
-                let sum = 0;
-                for(let i=0; i<pcm.length; i++) sum += pcm[i] * pcm[i];
-                let amp = Math.sqrt(sum / pcm.length);
-                const el = document.getElementById(`peer-${peerId}`);
-                if(el) { amp > 0.05 ? el.classList.add('is-speaking') : el.classList.remove('is-speaking'); }
-                requestAnimationFrame(tick);
+        // ==========================================
+        // WEBRTC CORE MULTI-PEER ENGINE ARCHITECTURE
+        // ==========================================
+        async function initializePeerConnection(targetSiblingId, createOfferContext = false) {
+            if (runtimeConnections[targetSiblingId]) return;
+
+            const connectionInstance = new RTCPeerConnection(rtcIceConfiguration);
+            runtimeConnections[targetSiblingId] = connectionInstance;
+
+            localStream.getTracks().forEach(track => {
+                connectionInstance.addTrack(track, localStream);
+            });
+
+            connectionInstance.onicecandidate = async (event) => {
+                if (event.candidate) {
+                    await dispatchSignalPacket(targetSiblingId, {
+                        type: 'ice',
+                        candidate: event.candidate.toJSON()
+                    });
+                }
+            };
+
+            connectionInstance.ontrack = (event) => {
+                if (!remoteStreams[targetSiblingId]) {
+                    const compositeStream = new MediaStream();
+                    remoteStreams[targetSiblingId] = compositeStream;
+                    
+                    const audioSinkElement = document.createElement('audio');
+                    audioSinkElement.id = `sink-element-${targetSiblingId}`;
+                    audioSinkElement.autoplay = true;
+                    audioSinkElement.srcObject = compositeStream;
+                    
+                    document.getElementById('audio-renderer-sink').appendChild(audioSinkElement);
+                }
+                remoteStreams[targetSiblingId].addTrack(event.track);
+            };
+
+            connectionInstance.onconnectionstatechange = () => {
+                if (connectionInstance.connectionState === 'disconnected' || connectionInstance.connectionState === 'failed') {
+                    terminatePeerSession(targetSiblingId);
+                }
+            };
+
+            if (createOfferContext) {
+                const createdOffer = await connectionInstance.createOffer();
+                await connectionInstance.setLocalDescription(createdOffer);
+                
+                await dispatchSignalPacket(targetSiblingId, {
+                    type: 'offer',
+                    sdp: createdOffer.sdp
+                });
             }
-            tick();
         }
 
+        async function dispatchSignalPacket(receiverId, cargoData) {
+            const targetInboxRef = collection(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', receiverId, 'signals');
+            const dynamicPacketId = Math.random().toString(36).substring(2, 11);
+            
+            await setDoc(doc(targetInboxRef, dynamicPacketId), {
+                ...cargoData,
+                sender: localPeerId,
+                timestamp: Date.now()
+            });
+        }
+
+        async function handleIncomingOffer(senderId, sdpData) {
+            await initializePeerConnection(senderId, false);
+            const connection = runtimeConnections[senderId];
+            
+            await connection.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: sdpData }));
+            const matchingAnswer = await connection.createAnswer();
+            await connection.setLocalDescription(matchingAnswer);
+            
+            await dispatchSignalPacket(senderId, {
+                type: 'answer',
+                sdp: matchingAnswer.sdp
+            });
+        }
+
+        async function handleIncomingAnswer(senderId, sdpData) {
+            const connection = runtimeConnections[senderId];
+            if (connection) {
+                await connection.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: sdpData }));
+            }
+        }
+
+        async function handleIncomingIceCandidate(senderId, iceCandidateData) {
+            const connection = runtimeConnections[senderId];
+            if (connection) {
+                await connection.addIceCandidate(new RTCIceCandidate(iceCandidateData));
+            }
+        }
+
+        function terminatePeerSession(siblingId) {
+            if (runtimeConnections[siblingId]) {
+                runtimeConnections[siblingId].close();
+                delete runtimeConnections[siblingId];
+            }
+            if (remoteStreams[siblingId]) {
+                delete remoteStreams[siblingId];
+            }
+            const sinkNode = document.getElementById(`sink-element-${siblingId}`);
+            if (sinkNode) sinkNode.remove();
+            
+            updateVisualRosterDisplay();
+        }
+
+        // ==========================================
+        // INTERFACE MODULATION & RENDERING ENGINES
+        // ==========================================
+        function updateVisualRosterDisplay() {
+            const displayContainer = document.getElementById('peer-roster-grid');
+            const totalNodesCounter = document.getElementById('node-count-display');
+            if (!displayContainer) return;
+
+            totalNodesCounter.innerText = `${onlineRosterData.length} / 6`;
+
+            displayContainer.innerHTML = onlineRosterData.map(node => {
+                const isSelf = node.id === localPeerId;
+                const dynamicGlowBorderColor = node.activeTransmission 
+                    ? 'border-pink-500 bg-pink-500/10 shadow-[0_0_15px_rgba(236,72,153,0.2)]' 
+                    : 'border-slate-800 bg-slate-950/40';
+                
+                const labelColorOverride = node.activeTransmission ? 'text-pink-400' : 'text-slate-400';
+                const dynamicCallsignTag = isSelf ? `${node.callsign} (YOU)` : node.callsign;
+                
+                const transmissionSubstatusIndicator = node.activeTransmission
+                    ? `<span class="text-[9px] font-space font-black tracking-widest text-pink-500 animate-pulse flex items-center gap-1"><i data-lucide="radio" class="w-3 h-3"></i> XMTR LIVE</span>`
+                    : `<span class="text-[9px] font-space font-bold tracking-widest text-slate-600 flex items-center gap-1"><i data-lucide="mic-off" class="w-3 h-3"></i> MUTED</span>`;
+
+                return `
+                    <div class="border rounded-xl p-3 flex flex-col justify-between transition-all duration-300 ${dynamicGlowBorderColor}">
+                        <div class="text-xs font-space font-black tracking-wide truncate ${labelColorOverride} uppercase">
+                            ${dynamicCallsignTag}
+                        </div>
+                        <div class="mt-2 flex items-center justify-between">
+                            ${transmissionSubstatusIndicator}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // PUSH-TO-TALK RE-GATING PIPELINES ENGINE
+        // ==========================================
+        function setupPushToTalkListeners() {
+            const pttButtonNode = document.getElementById('ptt-trigger-node');
+            const pttLabelElement = document.getElementById('ptt-label');
+            const pttIconElement = document.getElementById('ptt-icon');
+            const globalBroadcastBanner = document.getElementById('transmission-banner');
+
+            let currentlyBroadcastingFlag = false;
+
+            const engageVoiceTransmissionPipeline = async (e) => {
+                if (e) e.preventDefault(); // Catch overlapping ghost touch events
+                if (currentlyBroadcastingFlag) return;
+                currentlyBroadcastingFlag = true;
+
+                // OPTIMISTIC UI FIX: Instantly update the local roster to show 'XMTR LIVE'
+                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
+                if (selfNode) selfNode.activeTransmission = true;
+                updateVisualRosterDisplay();
+
+                // Natively ungate local audio capture stream tracks instantly
+                if (localStream) {
+                    localStream.getAudioTracks().forEach(track => { track.enabled = true; });
+                }
+
+                // UI adjustments
+                pttButtonNode.classList.add('transmitting');
+                pttLabelElement.innerText = "TRANSMITTING";
+                pttLabelElement.className = "text-[10px] font-space font-bold tracking-[0.2em] text-pink-400";
+                pttIconElement.className = "w-10 h-10 text-pink-500 drop-shadow-[0_0_8px_#ec4899]";
+                globalBroadcastBanner.innerText = "BROADCAST ENVELOPE OPEN // ON AIR";
+                globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
+
+                // Sync status to cloud in the background
+                const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
+                await setDoc(databaseNodeRef, { activeTransmission: true }, { merge: true });
+            };
+
+            const disengageVoiceTransmissionPipeline = async (e) => {
+                if (e && e.type !== 'mouseleave') e.preventDefault();
+                if (!currentlyBroadcastingFlag) return;
+                currentlyBroadcastingFlag = false;
+
+                // OPTIMISTIC UI FIX: Instantly revert local roster back to 'MUTED'
+                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
+                if (selfNode) selfNode.activeTransmission = false;
+                updateVisualRosterDisplay();
+
+                // Instantly isolate audio stream processing
+                if (localStream) {
+                    localStream.getAudioTracks().forEach(track => { track.enabled = false; });
+                }
+
+                // Reset UI frameworks
+                pttButtonNode.classList.remove('transmitting');
+                pttLabelElement.innerText = "HOLD TO TALK";
+                pttLabelElement.className = "text-[10px] font-space font-bold tracking-[0.2em] text-slate-400";
+                pttIconElement.className = "w-10 h-10 text-slate-400";
+                globalBroadcastBanner.innerText = "FREQUENCY RETICULE: STANDBY";
+                globalBroadcastBanner.className = "w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase";
+
+                // Sync standby status to cloud in the background
+                const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
+                await setDoc(databaseNodeRef, { activeTransmission: false }, { merge: true });
+            };
+
+            // Desk mouse interaction mapping
+            pttButtonNode.addEventListener('mousedown', engageVoiceTransmissionPipeline);
+            window.addEventListener('mouseup', disengageVoiceTransmissionPipeline);
+            pttButtonNode.addEventListener('mouseleave', disengageVoiceTransmissionPipeline);
+
+            // Handheld mobile multi-touch execution handling (using passive: false to allow preventDefault)
+            pttButtonNode.addEventListener('touchstart', engageVoiceTransmissionPipeline, { passive: false });
+            window.addEventListener('touchend', disengageVoiceTransmissionPipeline);
+            window.addEventListener('touchcancel', disengageVoiceTransmissionPipeline);
+        }
+
+        // Boot lucide icons
         lucide.createIcons();
     </script>
 </body>
