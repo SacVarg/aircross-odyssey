@@ -135,7 +135,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Immutable Project Environment Initialization Data Config
         const firebaseConfig = {
@@ -234,7 +234,8 @@
         // WIRELESS SIGNALING & SYNC ENGINE MATRIX
         // ==========================================
         async function engageSignalingPipeline() {
-            const channelDocRef = doc(db, 'artifacts', signalScope, 'public', 'radio_frequency', 'lobby');
+            // FIXED: Added the 'data' segment to ensure an EVEN number of segments (6) for the doc reference
+            const channelDocRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby');
             const nodeCollectionRef = collection(channelDocRef, 'nodes');
             const selfRecordDocRef = doc(nodeCollectionRef, localPeerId);
 
@@ -272,7 +273,7 @@
             });
 
             // Signal Mailbox Dispatcher: Listen recursively for signaling packets
-            const dynamicSignalingInboxRef = collection(doc(nodeCollectionRef, localPeerId), 'signals');
+            const dynamicSignalingInboxRef = collection(selfRecordDocRef, 'signals');
             onSnapshot(dynamicSignalingInboxRef, async (snapshot) => {
                 snapshot.forEach(async (changeDoc) => {
                     const signalData = changeDoc.data();
@@ -352,7 +353,8 @@
         }
 
         async function dispatchSignalPacket(receiverId, cargoData) {
-            const targetInboxRef = collection(doc(db, 'artifacts', signalScope, 'public', 'radio_frequency', 'lobby', 'nodes', receiverId), 'signals');
+            // FIXED: Added the 'data' segment to ensure an ODD number of segments (9) for the collection reference
+            const targetInboxRef = collection(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', receiverId, 'signals');
             const dynamicPacketId = Math.random().toString(36).substring(2, 11);
             
             await setDoc(doc(targetInboxRef, dynamicPacketId), {
@@ -469,8 +471,8 @@
                 globalBroadcastBanner.innerText = "BROADCAST ENVELOPE OPEN // ON AIR";
                 globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
 
-                // Broadcast network status sync parameter flags
-                const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'radio_frequency', 'lobby', 'nodes', localPeerId);
+                // FIXED: Added the 'data' segment to the active state sync path
+                const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: true }, { merge: true });
             };
 
@@ -489,13 +491,15 @@
                 globalBroadcastBanner.innerText = "FREQUENCY RETICULE: STANDBY";
                 globalBroadcastBanner.className = "w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase";
 
-                const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'radio_frequency', 'lobby', 'nodes', localPeerId);
+                // FIXED: Added the 'data' segment to the standby state sync path
+                const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: false }, { merge: true });
             };
 
             // Desk mouse interaction mapping
             pttButtonNode.addEventListener('mousedown', engageVoiceTransmissionPipeline);
             window.addEventListener('mouseup', disengageVoiceTransmissionPipeline);
+            window.addEventListener('mouseleave', disengageVoiceTransmissionPipeline);
 
             // Handheld mobile multi-touch execution handling
             pttButtonNode.addEventListener('touchstart', (e) => {
@@ -503,6 +507,7 @@
                 engageVoiceTransmissionPipeline();
             });
             window.addEventListener('touchend', disengageVoiceTransmissionPipeline);
+            window.addEventListener('touchcancel', disengageVoiceTransmissionPipeline);
         }
 
         // Boot lucide icons
