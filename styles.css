@@ -168,8 +168,25 @@ body {
 }
 
 /* ==========================================
-   6. CYBER HUD (Video Player Accents)
+   6. 3D MODEL & TACTICAL HUD FIXES
    ========================================== */
+/* Hardware Acceleration Masking Fix for WebGL/Video rounded corners */
+.model-clip-fix {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    mask-image: -webkit-radial-gradient(white, black);
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    isolation: isolate;
+}
+
+/* Model Viewer Core Styles */
+model-viewer {
+    width: 100%;
+    height: 100%;
+    --poster-color: transparent;
+    background-color: transparent;
+}
+
 .scanline {
     position: absolute;
     inset: 0;
