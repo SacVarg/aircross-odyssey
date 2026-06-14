@@ -136,6 +136,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // IMPORT FIREBASE AUTHENTICATION
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // Immutable Project Environment Initialization Data Config
         const firebaseConfig = {
@@ -148,6 +150,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app); // INITIALIZE AUTH
         const db = getFirestore(app);
         const signalScope = "aircross-odyssey-main";
 
@@ -187,6 +190,9 @@
             connectBtn.disabled = true;
             
             try {
+                // EXPLICIT FIX: Authenticate anonymously before touching the database
+                await signInAnonymously(auth);
+
                 // Request client hardware capturing device pipelines explicitly isolating audio channels
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 
@@ -222,6 +228,8 @@
                     detailedMsg = "No microphone hardware found. Ensure your microphone is connected.";
                 } else if (errorReason === 'NotReadableError' || errorReason === 'TrackStartError') {
                     detailedMsg = "Hardware Lock: Your microphone is currently in use by another application.";
+                } else if (errorReason === 'FirebaseError') {
+                    detailedMsg = `Firebase Permission Denied. Ensure your Firestore Security Rules allow read/write to the public artifacts path. Error details: ${err.message}`;
                 } else {
                     detailedMsg = `System Error: ${errorReason} - ${err.message}`;
                 }
@@ -234,7 +242,6 @@
         // WIRELESS SIGNALING & SYNC ENGINE MATRIX
         // ==========================================
         async function engageSignalingPipeline() {
-            // FIXED: Added the 'data' segment to ensure an EVEN number of segments (6) for the doc reference
             const channelDocRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby');
             const nodeCollectionRef = collection(channelDocRef, 'nodes');
             const selfRecordDocRef = doc(nodeCollectionRef, localPeerId);
@@ -353,7 +360,6 @@
         }
 
         async function dispatchSignalPacket(receiverId, cargoData) {
-            // FIXED: Added the 'data' segment to ensure an ODD number of segments (9) for the collection reference
             const targetInboxRef = collection(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', receiverId, 'signals');
             const dynamicPacketId = Math.random().toString(36).substring(2, 11);
             
@@ -471,7 +477,6 @@
                 globalBroadcastBanner.innerText = "BROADCAST ENVELOPE OPEN // ON AIR";
                 globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
 
-                // FIXED: Added the 'data' segment to the active state sync path
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: true }, { merge: true });
             };
@@ -491,7 +496,6 @@
                 globalBroadcastBanner.innerText = "FREQUENCY RETICULE: STANDBY";
                 globalBroadcastBanner.className = "w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase";
 
-                // FIXED: Added the 'data' segment to the standby state sync path
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: false }, { merge: true });
             };
