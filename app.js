@@ -161,19 +161,40 @@ const initAuth = async () => {
 initAuth();
 
 // ==========================================
-// BANNER RENDERING (THE NEW TERMINAL FEED)
+// BULLETIN BOARD (TERMINAL FEED LOGIC)
 // ==========================================
+let bulletinScrollInterval = null;
+
+function startBulletinScroll() {
+    const wrapper = document.getElementById('bulletin-scroll-wrapper');
+    if (!wrapper) return;
+    
+    clearInterval(bulletinScrollInterval);
+    
+    // JS Auto-Scroller
+    bulletinScrollInterval = setInterval(() => {
+        wrapper.scrollTop += 0.5; // Smooth slow scroll down
+        
+        // Loop back to top if we hit the bottom
+        if (wrapper.scrollTop >= wrapper.scrollHeight - wrapper.clientHeight - 1) {
+            wrapper.scrollTop = 0;
+        }
+    }, 30);
+}
+
 function renderPublicBanners() {
     if (!isMainPage) return;
     
     const activeBanners = publicBanners.filter(b => b.visible);
     const container = document.getElementById('bulletin-board-container');
     const content = document.getElementById('bulletin-content');
+    const wrapper = document.getElementById('bulletin-scroll-wrapper');
     
-    if (!container || !content) return;
+    if (!container || !content || !wrapper) return;
     
     if (activeBanners.length === 0) { 
         container.style.display = 'none'; 
+        clearInterval(bulletinScrollInterval);
         return; 
     }
     
@@ -204,16 +225,20 @@ function renderPublicBanners() {
         `;
     }).join('');
 
-    // Duplicate the HTML inside the container to create a seamless infinite scrolling loop
+    // Duplicate content once to allow for infinite scroll illusion
     content.innerHTML = bannersHtml + bannersHtml;
     
-    // Dynamically adjust animation speed based on the number of items (approx 6 seconds per item)
-    const duration = Math.max(20, activeBanners.length * 6);
-    content.style.animationDuration = `${duration}s`;
+    // Pause scrolling when user hovers or taps so they can manually scroll
+    wrapper.addEventListener('mouseenter', () => clearInterval(bulletinScrollInterval));
+    wrapper.addEventListener('mouseleave', startBulletinScroll);
+    wrapper.addEventListener('touchstart', () => clearInterval(bulletinScrollInterval));
+    wrapper.addEventListener('touchend', startBulletinScroll);
+    
+    startBulletinScroll();
 }
 
 // ==========================================
-// DYNAMIC CREW RENDERING: CONCEPT 8 (RADAR)
+// DYNAMIC CREW RENDERING: PERIODIC TABLE
 // ==========================================
 function renderPublicCrew() {
     const container = document.getElementById('dynamic-crew-grid');
@@ -222,90 +247,63 @@ function renderPublicCrew() {
     if (publicCrew.length === 0) {
         container.innerHTML = `
             <div class="text-center col-span-full py-20 text-slate-400 font-space text-sm">
-                Awaiting Crew Roster Data...
+                <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-500"></i> Fetching records...
             </div>
         `;
         return;
     }
 
-    // Define constellation coordinate mappings (up to 8 positions for layout)
-    const positions = [
-        { top: '25%', left: '50%' }, 
-        { top: '45%', left: '30%' },
-        { top: '55%', left: '70%' }, 
-        { top: '75%', left: '45%' },
-        { top: '35%', left: '80%' }, 
-        { top: '80%', left: '75%' },
-        { top: '85%', left: '20%' }, 
-        { top: '25%', left: '20%' }
-    ];
-
-    // Generate connecting lines for the constellation effect
-    let svgLines = `<svg class="absolute inset-0 w-full h-full pointer-events-none opacity-30 z-0">`;
-    for(let i = 0; i < publicCrew.length - 1; i++) {
-        let p1 = positions[i % positions.length];
-        let p2 = positions[(i + 1) % positions.length];
+    container.innerHTML = publicCrew.map(c => {
+        // Abbreviate the name for the element symbol (e.g. ANOOP -> ANO)
+        const elementSymbol = c.name.substring(0, 3);
         
-        // Primary connection
-        svgLines += `<line x1="${p1.left}" y1="${p1.top}" x2="${p2.left}" y2="${p2.top}" stroke="#10b981" stroke-width="1" stroke-dasharray="4 4" />`;
-        
-        // Secondary connection to make it look like a web
-        if (i + 2 < publicCrew.length) {
-            let p3 = positions[(i + 2) % positions.length];
-            svgLines += `<line x1="${p1.left}" y1="${p1.top}" x2="${p3.left}" y2="${p3.top}" stroke="#06b6d4" stroke-width="0.5" stroke-dasharray="2 6" />`;
-        }
-    }
-    svgLines += `</svg>`;
-
-    // Generate Crew Nodes
-    let nodes = publicCrew.map((c, i) => {
-        const pos = positions[i % positions.length];
         return `
-            <div class="absolute group cursor-pointer flex flex-col items-center justify-center transform -translate-x-1/2 -translate-y-1/2 z-10" style="top: ${pos.top}; left: ${pos.left};">
+        <div class="relative group cursor-pointer flex flex-col" onclick="window.toggleCrewDetails('${c.id}')">
+            
+            <div class="aspect-square bg-slate-900 border-2 border-${c.color}-500/40 rounded-xl flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 hover:bg-${c.color}-500/10 hover:border-${c.color}-500 hover:shadow-[0_0_20px_rgba(var(--color-${c.color}),0.3)] shadow-lg">
                 
-                <div class="relative flex items-center justify-center">
-                    <div class="absolute w-8 h-8 rounded-full animate-ping bg-${c.color}-500 opacity-20"></div>
-                    <div class="w-3 h-3 rounded-full bg-${c.color}-400 shadow-[0_0_10px_currentColor] border border-white"></div>
+                <div class="absolute top-2 right-2 text-[10px] font-space text-${c.color}-500/70 font-black tracking-wider">
+                    ${c.crewId}
                 </div>
                 
-                <div class="mt-2 text-[10px] md:text-xs font-space font-bold tracking-[0.2em] text-slate-500 group-hover:text-${c.color}-500 transition-colors uppercase">
-                    ${c.name}
+                <div class="text-5xl sm:text-6xl font-black font-space text-${c.color}-400 drop-shadow-[0_0_15px_currentColor] group-hover:scale-110 transition-transform duration-300">
+                    ${c.name.charAt(0).toUpperCase()}
                 </div>
                 
-                <div class="absolute top-10 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none w-[200px] text-center transform scale-95 group-hover:scale-100 z-20">
-                    <div class="bg-white/90 backdrop-blur-md border border-${c.color}-300 p-3 rounded-xl shadow-lg inline-block relative">
-                        
-                        <div class="absolute -top-3 -left-3 w-3 h-3 border-t-2 border-l-2 border-${c.color}-500 rounded-tl"></div>
-                        <div class="absolute -bottom-3 -right-3 w-3 h-3 border-b-2 border-r-2 border-${c.color}-500 rounded-br"></div>
-                        
-                        <p class="text-[9px] font-bold tracking-widest text-slate-400 mb-1">ID: ${c.crewId}</p>
-                        <p class="text-xs font-black tracking-widest text-${c.color}-600 uppercase">${c.role}</p>
-                    </div>
+                <div class="absolute bottom-2 left-0 w-full text-center text-[9px] font-space font-bold tracking-[0.2em] text-slate-500 uppercase group-hover:text-${c.color}-300 transition-colors">
+                    ${elementSymbol}
                 </div>
             </div>
+            
+            <div id="crew-detail-${c.id}" class="crew-detail-tag hidden mt-3 bg-slate-900/90 backdrop-blur-md border border-${c.color}-500/50 rounded-lg p-3 text-center shadow-[0_5px_15px_rgba(0,0,0,0.3)] relative z-20">
+                
+                <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-t border-l border-${c.color}-500/50 rotate-45"></div>
+                
+                <div class="text-sm font-black text-white font-space uppercase tracking-widest relative z-10">${c.name}</div>
+                <div class="text-[10px] text-${c.color}-400 font-space tracking-[0.2em] uppercase mt-1 relative z-10 font-bold">${c.role}</div>
+            </div>
+        </div>
         `;
     }).join('');
-
-    // Render Container
-    container.innerHTML = `
-        <div class="relative w-full h-[500px] md:h-[600px] bg-slate-900/5 rounded-[3rem] border border-slate-200/50 backdrop-blur-sm overflow-hidden shadow-inner">
-            
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 z-0">
-                <div class="w-[80%] h-[80%] rounded-full border border-emerald-500/30"></div>
-                <div class="absolute w-[60%] h-[60%] rounded-full border border-emerald-500/20"></div>
-                <div class="absolute w-[40%] h-[40%] rounded-full border border-emerald-500/10"></div>
-            </div>
-            
-            <div class="absolute top-1/2 left-1/2 w-[50%] h-[2px] bg-gradient-to-r from-emerald-500/80 to-transparent origin-left animate-[spin_10s_linear_infinite] pointer-events-none z-0"></div>
-
-            ${svgLines}
-            ${nodes}
-
-        </div>
-    `;
     
     lucide.createIcons();
 }
+
+window.toggleCrewDetails = (id) => {
+    const target = document.getElementById(`crew-detail-${id}`);
+    const isCurrentlyHidden = target.classList.contains('hidden');
+    
+    // Hide all tags first
+    document.querySelectorAll('.crew-detail-tag').forEach(tag => {
+        tag.classList.add('hidden');
+    });
+    
+    // If the clicked one was hidden, show it with animation
+    if (isCurrentlyHidden) {
+        target.classList.remove('hidden');
+        target.classList.add('animate-in', 'fade-in', 'slide-in-from-top-2');
+    }
+};
 
 function updateDriverDropdown() {
     const select = document.getElementById('adminDriver');
