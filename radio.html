@@ -47,7 +47,7 @@
             background: rgba(236, 72, 153, 0.2);
         }
 
-        /* NEW: Active Speaker Highlighting */
+        /* Active Speaker Highlighting */
         .is-speaking {
             border-color: #ec4899 !important;
             background-color: rgba(236, 72, 153, 0.15) !important;
@@ -64,9 +64,9 @@
             <i data-lucide="radio" class="w-4 h-4 text-pink-500 animate-pulse"></i>
             COMMS LINK // COM-04
         </div>
-        <button onclick="window.location.href='index.html'" class="text-xs font-space font-bold tracking-widest text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer">
+        <a href="index.html" class="text-xs font-space font-bold tracking-widest text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1 relative z-50">
             <i data-lucide="arrow-left" class="w-3 h-3"></i> RETURN
-        </button>
+        </a>
     </nav>
 
     <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-xl w-full mx-auto z-10">
@@ -161,19 +161,21 @@
         const auth = getAuth(app); 
         const db = getFirestore(app);
         
-        // Ensure path matches exactly with Rules
         const signalScope = "aircross-odyssey-main";
 
         // Global Architectural Signal Core Framework State Values
         let localStream = null;
         let localPeerId = Math.random().toString(36).substring(2, 9);
         let localCallsign = "OPERATIVE";
+        let isConnected = false;
         
         const runtimeConnections = {}; 
         const remoteStreams = {};       
         let onlineRosterData = [];     
 
-        // WebRTC standard configuration profiles mapping STUN addresses
+        // Audio Context for Speaker Highlighting (Initialized globally to satisfy browser constraints)
+        let globalAudioContext;
+
         const rtcIceConfiguration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -181,12 +183,12 @@
             ]
         };
 
-        // NEW: Cleanup trigger. Deletes user document upon tab close or refresh
+        // Fallback Cleanup Trigger
         window.addEventListener('beforeunload', async () => {
-            try {
+            if (isConnected) {
                 const selfRecordDocRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await deleteDoc(selfRecordDocRef);
-            } catch (e) { console.error("Cleanup failed", e); }
+            }
         });
 
         // Lifecycle Ignition Method
@@ -207,7 +209,12 @@
             connectBtn.disabled = true;
             
             try {
-                // EXPLICIT FIX: Authenticate anonymously before touching the database
+                // Initialize Web Audio API during user gesture to prevent Safari blocking it
+                globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (globalAudioContext.state === 'suspended') {
+                    globalAudioContext.resume();
+                }
+
                 await signInAnonymously(auth);
 
                 // Request hardware capturing pipelines
@@ -216,14 +223,12 @@
                 // Securely mute audio output natively
                 localStream.getAudioTracks().forEach(track => { track.enabled = false; });
                 
-                // Swap Interface views natively
                 document.getElementById('setup-panel').classList.add('hidden');
                 document.getElementById('radio-panel').classList.remove('hidden');
                 
-                // Initialize PTT listeners
+                isConnected = true;
+
                 setupPushToTalkListeners();
-                
-                // Establish synchronization hooks inside Firebase
                 await engageSignalingPipeline();
                 
             } catch (err) {
@@ -238,13 +243,11 @@
                 let detailedMsg = "";
 
                 if (errorReason === 'NotAllowedError' || errorReason === 'PermissionDeniedError') {
-                    detailedMsg = "Permission Denied. The browser or OS is blocking microphone access. You must manually allow it in your browser settings (tap the lock/aA icon in the URL bar).";
+                    detailedMsg = "Permission Denied. Ensure your microphone is allowed.";
                 } else if (errorReason === 'NotFoundError' || errorReason === 'DevicesNotFoundError') {
-                    detailedMsg = "No microphone hardware found. Ensure your microphone is connected.";
+                    detailedMsg = "No microphone hardware found.";
                 } else if (errorReason === 'NotReadableError' || errorReason === 'TrackStartError') {
-                    detailedMsg = "Hardware Lock: Your microphone is currently in use by another application.";
-                } else if (errorReason === 'FirebaseError') {
-                    detailedMsg = `Firebase Permission Denied. Ensure your Firestore Security Rules allow read/write. Error details: ${err.message}`;
+                    detailedMsg = "Hardware Lock: Microphone in use by another app.";
                 } else {
                     detailedMsg = `System Error: ${errorReason} - ${err.message}`;
                 }
@@ -257,36 +260,45 @@
         // WIRELESS SIGNALING & SYNC ENGINE MATRIX
         // ==========================================
         async function engageSignalingPipeline() {
-            // Path includes the critical 'data' segment
             const channelDocRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby');
             const nodeCollectionRef = collection(channelDocRef, 'nodes');
             const selfRecordDocRef = doc(nodeCollectionRef, localPeerId);
 
-            // Announce presence context tracking callsign configurations
+            // Announce presence context tracking
             await setDoc(selfRecordDocRef, {
                 id: localPeerId,
                 callsign: localCallsign,
                 activeTransmission: false,
-                timestamp: Date.now()
+                lastActive: Date.now()
             });
 
-            // Universal Synchronization Stream: Listen to online nodes list fluctuations
+            // GHOST USER FIX: "Heartbeat" mechanism. Ping DB every 5 seconds.
+            setInterval(async () => {
+                if (isConnected) {
+                    await setDoc(selfRecordDocRef, { lastActive: Date.now() }, { merge: true });
+                }
+            }, 5000);
+
+            // Universal Synchronization Stream: Listen to online nodes
             onSnapshot(nodeCollectionRef, async (snapshot) => {
                 const updatedRoster = [];
+                const currentTime = Date.now();
+                
                 snapshot.forEach(docSnap => {
-                    if (docSnap.exists()) updatedRoster.push(docSnap.data());
+                    if (docSnap.exists()) {
+                        const nodeData = docSnap.data();
+                        // GHOST USER FIX: If a node hasn't pinged in 15 seconds, consider them dead.
+                        if (currentTime - (nodeData.lastActive || 0) < 15000) {
+                            updatedRoster.push(nodeData);
+                        } else {
+                            // Clean up dead node connections
+                            if (nodeData.id !== localPeerId) terminatePeerSession(nodeData.id);
+                        }
+                    }
                 });
 
                 onlineRosterData = updatedRoster;
                 updateVisualRosterDisplay();
-
-                // Check for departed peers and clean them up
-                const currentOnlineIds = onlineRosterData.map(node => node.id);
-                Object.keys(runtimeConnections).forEach(existingPeerId => {
-                    if (!currentOnlineIds.includes(existingPeerId)) {
-                        terminatePeerSession(existingPeerId);
-                    }
-                });
 
                 // Connect to newly entered sibling instances
                 for (const node of updatedRoster) {
@@ -299,7 +311,7 @@
                 }
             });
 
-            // Signal Mailbox Dispatcher: Listen recursively for incoming signaling packets
+            // Signal Mailbox Dispatcher: Listen for direct WebRTC handshakes
             const dynamicSignalingInboxRef = collection(selfRecordDocRef, 'signals');
             onSnapshot(dynamicSignalingInboxRef, async (snapshot) => {
                 snapshot.forEach(async (changeDoc) => {
@@ -314,7 +326,6 @@
                         await handleIncomingIceCandidate(senderId, signalData.candidate);
                     }
                     
-                    // Instantly drop read transactional items to retain high throughput
                     await deleteDoc(doc(dynamicSignalingInboxRef, changeDoc.id));
                 });
             });
@@ -329,7 +340,7 @@
             const connectionInstance = new RTCPeerConnection(rtcIceConfiguration);
             runtimeConnections[targetSiblingId] = connectionInstance;
 
-            // Inject local hardware media track references into connection layout
+            // Inject local hardware media track references into connection
             localStream.getTracks().forEach(track => {
                 connectionInstance.addTrack(track, localStream);
             });
@@ -344,27 +355,27 @@
                 }
             };
 
-            // Stream pipeline listener logging matched multi-peer connections fields
+            // Stream pipeline listener for incoming audio
             connectionInstance.ontrack = (event) => {
                 if (!remoteStreams[targetSiblingId]) {
                     const compositeStream = new MediaStream();
                     remoteStreams[targetSiblingId] = compositeStream;
                     
-                    // Create an offline background native audio processing element
+                    // Create offline background native audio processing element
                     const audioSinkElement = document.createElement('audio');
                     audioSinkElement.id = `sink-element-${targetSiblingId}`;
                     audioSinkElement.autoplay = true;
+                    audioSinkElement.playsInline = true; // Required for mobile
                     audioSinkElement.srcObject = compositeStream;
                     
                     document.getElementById('audio-renderer-sink').appendChild(audioSinkElement);
 
-                    // NEW: Attach Volume Monitor to this incoming remote stream to track active speaker
+                    // Attach Volume Monitor to this incoming remote stream
                     monitorVolume(compositeStream, targetSiblingId);
                 }
                 remoteStreams[targetSiblingId].addTrack(event.track);
             };
 
-            // Connection state debugging mapping logs
             connectionInstance.onconnectionstatechange = () => {
                 if (connectionInstance.connectionState === 'disconnected' || connectionInstance.connectionState === 'failed') {
                     terminatePeerSession(targetSiblingId);
@@ -436,54 +447,41 @@
         }
 
         // ==========================================
-        // NEW: AUDIO VOLUME MONITORING ENGINE (Active Speaker)
+        // AUDIO VOLUME MONITORING ENGINE (Active Speaker)
         // ==========================================
         function monitorVolume(stream, peerId) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            const audioContext = new AudioContext();
+            if (!globalAudioContext) return;
             
-            // Resume Context required by browsers
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-
-            const analyzer = audioContext.createAnalyser();
+            const analyzer = globalAudioContext.createAnalyser();
             analyzer.fftSize = 512;
             analyzer.smoothingTimeConstant = 0.4;
             
-            const source = audioContext.createMediaStreamSource(stream);
+            const source = globalAudioContext.createMediaStreamSource(stream);
             source.connect(analyzer);
 
             const pcmData = new Float32Array(analyzer.fftSize);
 
             function checkVolume() {
+                if (!runtimeConnections[peerId]) return; // Stop if peer disconnected
+
                 analyzer.getFloatTimeDomainData(pcmData);
-                
                 let sumSquares = 0.0;
                 for (let i = 0; i < pcmData.length; i++) {
                     sumSquares += pcmData[i] * pcmData[i];
                 }
                 
-                // Calculate RMS (Root Mean Square) volume level
                 let volume = Math.sqrt(sumSquares / pcmData.length);
-                
-                // Find the DOM element for this peer
                 const peerElement = document.getElementById(`peer-card-${peerId}`);
                 
                 if (peerElement) {
-                    // Threshold: If volume > 0.05, they are speaking
                     if (volume > 0.05) {
                         peerElement.classList.add('is-speaking');
                     } else {
                         peerElement.classList.remove('is-speaking');
                     }
                 }
-                
-                // Loop continuously
                 requestAnimationFrame(checkVolume);
             }
-            
-            // Start the loop
             checkVolume();
         }
 
@@ -495,13 +493,11 @@
             const totalNodesCounter = document.getElementById('node-count-display');
             if (!displayContainer) return;
 
-            // Account for total registered matrix objects synced
             totalNodesCounter.innerText = `${onlineRosterData.length} / 6`;
 
             displayContainer.innerHTML = onlineRosterData.map(node => {
                 const isSelf = node.id === localPeerId;
                 
-                // Active Transmission dictates the default styling
                 const dynamicGlowBorderColor = node.activeTransmission 
                     ? 'border-pink-500 bg-pink-500/10 shadow-[0_0_15px_rgba(236,72,153,0.2)]' 
                     : 'border-slate-800 bg-slate-950/40';
@@ -513,7 +509,6 @@
                     ? `<span class="text-[9px] font-space font-black tracking-widest text-pink-500 animate-pulse flex items-center gap-1"><i data-lucide="radio" class="w-3 h-3"></i> XMTR LIVE</span>`
                     : `<span class="text-[9px] font-space font-bold tracking-widest text-slate-600 flex items-center gap-1"><i data-lucide="mic-off" class="w-3 h-3"></i> MUTED</span>`;
 
-                // Notice: We added `id="peer-card-${node.id}"` so the monitorVolume function can find and highlight it
                 return `
                     <div id="peer-card-${node.id}" class="border rounded-xl p-3 flex flex-col justify-between transition-all duration-300 ${dynamicGlowBorderColor}">
                         <div class="text-xs font-space font-black tracking-wide truncate ${labelColorOverride} uppercase">
@@ -564,7 +559,7 @@
                 globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
 
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
-                await setDoc(databaseNodeRef, { activeTransmission: true }, { merge: true });
+                await setDoc(databaseNodeRef, { activeTransmission: true, lastActive: Date.now() }, { merge: true });
             };
 
             const disengageVoiceTransmissionPipeline = async (e) => {
@@ -591,7 +586,7 @@
                 globalBroadcastBanner.className = "w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase";
 
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
-                await setDoc(databaseNodeRef, { activeTransmission: false }, { merge: true });
+                await setDoc(databaseNodeRef, { activeTransmission: false, lastActive: Date.now() }, { merge: true });
             };
 
             // Desk mouse interaction mapping
@@ -605,7 +600,6 @@
             window.addEventListener('touchcancel', disengageVoiceTransmissionPipeline);
         }
 
-        // Boot lucide icons
         lucide.createIcons();
     </script>
 </body>
