@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700;900&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -33,27 +32,31 @@
             background-size: 30px 30px;
         }
         
+        /* HARDWARE FIX: touch-action: none prevents the browser from scrolling and misfiring the touchcancel event */
         .ptt-btn {
             user-select: none;
             -webkit-user-select: none;
-            touch-action: none;
+            touch-action: none; 
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .ptt-btn:active, .ptt-btn.transmitting {
-            transform: scale(0.96);
+            transform: scale(0.94);
             box-shadow: 0 0 50px rgba(236, 72, 153, 0.6);
             border-color: #ec4899;
             background: rgba(236, 72, 153, 0.2);
         }
 
-        /* Active Speaker Highlighting */
-        .is-speaking {
+        /* SPEAKER IDENTIFICATION: Massive visual change for whoever is transmitting */
+        .card-speaking {
             border-color: #ec4899 !important;
             background-color: rgba(236, 72, 153, 0.15) !important;
-            box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
-            transform: scale(1.02);
-            transition: all 0.1s ease-in-out;
+            box-shadow: 0 0 25px rgba(236, 72, 153, 0.4) !important;
+            transform: scale(1.03);
+            z-index: 10;
+        }
+        .card-speaking .callsign-text {
+            color: #f472b6 !important;
         }
     </style>
 </head>
@@ -64,9 +67,9 @@
             <i data-lucide="radio" class="w-4 h-4 text-pink-500 animate-pulse"></i>
             COMMS LINK // COM-04
         </div>
-        <a href="index.html" class="text-xs font-space font-bold tracking-widest text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1 relative z-50">
+        <button onclick="window.leaveRadioAndReturn()" class="text-xs font-space font-bold tracking-widest text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1 cursor-pointer outline-none">
             <i data-lucide="arrow-left" class="w-3 h-3"></i> RETURN
-        </a>
+        </button>
     </nav>
 
     <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 max-w-xl w-full mx-auto z-10">
@@ -86,7 +89,7 @@
                     <input type="text" id="callsign-input" maxlength="12" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:shadow-[0_0_15px_rgba(16,185,129,0.15)] font-space font-bold tracking-widest uppercase placeholder-slate-700" placeholder="E.G. EAGLE-ONE" autocomplete="off">
                 </div>
                 
-                <button onclick="window.initializeTacticalRadio()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-space font-black tracking-[0.15em] text-sm rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(16,185,129,0.3)] uppercase">
+                <button onclick="window.initializeTacticalRadio()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-space font-black tracking-[0.15em] text-sm rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(16,185,129,0.3)] uppercase outline-none">
                     Establish Mesh Connection
                 </button>
             </div>
@@ -113,7 +116,7 @@
 
             <div class="w-full bg-slate-900/40 backdrop-blur-md border border-slate-800 p-4 rounded-xl">
                 <div class="text-[10px] font-space font-bold tracking-[0.2em] text-slate-500 uppercase mb-3 pb-2 border-b border-slate-800">CONNECTED MATRIX SQUADRON</div>
-                <div id="peer-roster-grid" class="grid grid-cols-2 gap-2">
+                <div id="peer-roster-grid" class="grid grid-cols-2 gap-3">
                     </div>
             </div>
 
@@ -129,14 +132,14 @@
                 </button>
                 
                 <div class="text-[10px] text-center text-slate-500 font-medium tracking-wide mt-4 leading-relaxed max-w-xs">
-                    Microphone stream is hard-gated. Gearing the transmission button handles audio encoding pipelines safely.
+                    Microphone stream is hard-gated. Link opens instantly on press.
                 </div>
             </div>
 
         </div>
     </main>
 
-    <div id="audio-renderer-sink" class="hidden" aria-hidden="true"></div>
+    <div id="audio-renderer-sink" style="position: absolute; width: 0; height: 0; visibility: hidden; overflow: hidden;" aria-hidden="true"></div>
 
     <footer class="w-full text-center py-4 text-[9px] font-space font-bold tracking-[0.3em] text-slate-600 z-10">
         VOYAGER MESH PROTOCOL V4 // ENCRYPTED END-TO-END
@@ -147,7 +150,6 @@
         import { getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Immutable Project Environment Initialization Data Config
         const firebaseConfig = {
             apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
             authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
@@ -163,7 +165,7 @@
         
         const signalScope = "aircross-odyssey-main";
 
-        // Global Architectural Signal Core Framework State Values
+        // Global Architectural Variables
         let localStream = null;
         let localPeerId = Math.random().toString(36).substring(2, 9);
         let localCallsign = "OPERATIVE";
@@ -173,9 +175,6 @@
         const remoteStreams = {};       
         let onlineRosterData = [];     
 
-        // Audio Context for Speaker Highlighting (Initialized globally to satisfy browser constraints)
-        let globalAudioContext;
-
         const rtcIceConfiguration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -183,15 +182,32 @@
             ]
         };
 
-        // Fallback Cleanup Trigger
-        window.addEventListener('beforeunload', async () => {
+        // ==========================================
+        // FIXED RETURN BUTTON & CLEANUP LOGIC
+        // ==========================================
+        window.leaveRadioAndReturn = async () => {
+            if (isConnected) {
+                try {
+                    const selfRecordDocRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
+                    await deleteDoc(selfRecordDocRef);
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                    }
+                } catch (e) { console.error("Error cleaning up:", e); }
+            }
+            window.location.href = 'index.html';
+        };
+
+        window.addEventListener('beforeunload', () => {
             if (isConnected) {
                 const selfRecordDocRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
-                await deleteDoc(selfRecordDocRef);
+                deleteDoc(selfRecordDocRef);
             }
         });
 
-        // Lifecycle Ignition Method
+        // ==========================================
+        // LIFECYCLE IGNITION METHOD
+        // ==========================================
         window.initializeTacticalRadio = async () => {
             const inputField = document.getElementById('callsign-input');
             const sanitizedValue = inputField.value.trim().toUpperCase();
@@ -209,18 +225,12 @@
             connectBtn.disabled = true;
             
             try {
-                // Initialize Web Audio API during user gesture to prevent Safari blocking it
-                globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-                if (globalAudioContext.state === 'suspended') {
-                    globalAudioContext.resume();
-                }
-
                 await signInAnonymously(auth);
 
                 // Request hardware capturing pipelines
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 
-                // Securely mute audio output natively
+                // Securely mute audio output natively to start
                 localStream.getAudioTracks().forEach(track => { track.enabled = false; });
                 
                 document.getElementById('setup-panel').classList.add('hidden');
@@ -239,19 +249,7 @@
                 connectBtn.innerHTML = originalBtnText;
                 connectBtn.disabled = false;
 
-                let errorReason = err.name || "Unknown Error";
-                let detailedMsg = "";
-
-                if (errorReason === 'NotAllowedError' || errorReason === 'PermissionDeniedError') {
-                    detailedMsg = "Permission Denied. Ensure your microphone is allowed.";
-                } else if (errorReason === 'NotFoundError' || errorReason === 'DevicesNotFoundError') {
-                    detailedMsg = "No microphone hardware found.";
-                } else if (errorReason === 'NotReadableError' || errorReason === 'TrackStartError') {
-                    detailedMsg = "Hardware Lock: Microphone in use by another app.";
-                } else {
-                    detailedMsg = `System Error: ${errorReason} - ${err.message}`;
-                }
-
+                let detailedMsg = err.name === 'NotAllowedError' ? "Permission Denied. Ensure your microphone is allowed." : `System Error: ${err.message}`;
                 alert(`CRITICAL FAULT: AUDIO LINK COMPROMISED.\n\nDIAGNOSTIC:\n${detailedMsg}`);
             }
         };
@@ -279,7 +277,7 @@
                 }
             }, 5000);
 
-            // Universal Synchronization Stream: Listen to online nodes
+            // Listen to online nodes
             onSnapshot(nodeCollectionRef, async (snapshot) => {
                 const updatedRoster = [];
                 const currentTime = Date.now();
@@ -287,11 +285,10 @@
                 snapshot.forEach(docSnap => {
                     if (docSnap.exists()) {
                         const nodeData = docSnap.data();
-                        // GHOST USER FIX: If a node hasn't pinged in 15 seconds, consider them dead.
+                        // GHOST USER FIX: If a node hasn't pinged in 15 seconds, sweep them.
                         if (currentTime - (nodeData.lastActive || 0) < 15000) {
                             updatedRoster.push(nodeData);
                         } else {
-                            // Clean up dead node connections
                             if (nodeData.id !== localPeerId) terminatePeerSession(nodeData.id);
                         }
                     }
@@ -303,7 +300,6 @@
                 // Connect to newly entered sibling instances
                 for (const node of updatedRoster) {
                     if (node.id !== localPeerId && !runtimeConnections[node.id]) {
-                        // The peer with the "higher" ID creates the offer to avoid collision
                         if (localPeerId > node.id) {
                             await initializePeerConnection(node.id, true);
                         }
@@ -345,7 +341,7 @@
                 connectionInstance.addTrack(track, localStream);
             });
 
-            // Channel pipeline listeners processing candidate handshakes
+            // Process candidate handshakes
             connectionInstance.onicecandidate = async (event) => {
                 if (event.candidate) {
                     await dispatchSignalPacket(targetSiblingId, {
@@ -355,23 +351,22 @@
                 }
             };
 
-            // Stream pipeline listener for incoming audio
+            // FIX: Incoming audio renderer
             connectionInstance.ontrack = (event) => {
                 if (!remoteStreams[targetSiblingId]) {
                     const compositeStream = new MediaStream();
                     remoteStreams[targetSiblingId] = compositeStream;
                     
-                    // Create offline background native audio processing element
                     const audioSinkElement = document.createElement('audio');
                     audioSinkElement.id = `sink-element-${targetSiblingId}`;
                     audioSinkElement.autoplay = true;
-                    audioSinkElement.playsInline = true; // Required for mobile
+                    audioSinkElement.playsInline = true;
                     audioSinkElement.srcObject = compositeStream;
                     
                     document.getElementById('audio-renderer-sink').appendChild(audioSinkElement);
 
-                    // Attach Volume Monitor to this incoming remote stream
-                    monitorVolume(compositeStream, targetSiblingId);
+                    // Force play to overcome some strict browser policies
+                    audioSinkElement.play().catch(e => console.log("Audio Playback deferred until interaction", e));
                 }
                 remoteStreams[targetSiblingId].addTrack(event.track);
             };
@@ -447,46 +442,7 @@
         }
 
         // ==========================================
-        // AUDIO VOLUME MONITORING ENGINE (Active Speaker)
-        // ==========================================
-        function monitorVolume(stream, peerId) {
-            if (!globalAudioContext) return;
-            
-            const analyzer = globalAudioContext.createAnalyser();
-            analyzer.fftSize = 512;
-            analyzer.smoothingTimeConstant = 0.4;
-            
-            const source = globalAudioContext.createMediaStreamSource(stream);
-            source.connect(analyzer);
-
-            const pcmData = new Float32Array(analyzer.fftSize);
-
-            function checkVolume() {
-                if (!runtimeConnections[peerId]) return; // Stop if peer disconnected
-
-                analyzer.getFloatTimeDomainData(pcmData);
-                let sumSquares = 0.0;
-                for (let i = 0; i < pcmData.length; i++) {
-                    sumSquares += pcmData[i] * pcmData[i];
-                }
-                
-                let volume = Math.sqrt(sumSquares / pcmData.length);
-                const peerElement = document.getElementById(`peer-card-${peerId}`);
-                
-                if (peerElement) {
-                    if (volume > 0.05) {
-                        peerElement.classList.add('is-speaking');
-                    } else {
-                        peerElement.classList.remove('is-speaking');
-                    }
-                }
-                requestAnimationFrame(checkVolume);
-            }
-            checkVolume();
-        }
-
-        // ==========================================
-        // INTERFACE MODULATION & RENDERING ENGINES
+        // INTERFACE MODULATION & SPEAKER HIGHLIGHTING
         // ==========================================
         function updateVisualRosterDisplay() {
             const displayContainer = document.getElementById('peer-roster-grid');
@@ -498,11 +454,11 @@
             displayContainer.innerHTML = onlineRosterData.map(node => {
                 const isSelf = node.id === localPeerId;
                 
-                const dynamicGlowBorderColor = node.activeTransmission 
-                    ? 'border-pink-500 bg-pink-500/10 shadow-[0_0_15px_rgba(236,72,153,0.2)]' 
-                    : 'border-slate-800 bg-slate-950/40';
+                // SPEAKER ID FIX: We use Firebase 'activeTransmission' to instantly highlight the speaker's card
+                const baseClasses = "border rounded-xl p-4 flex flex-col justify-between transition-all duration-200";
+                const isSpeakingClass = node.activeTransmission ? "card-speaking" : "border-slate-800 bg-slate-950/40";
                 
-                const labelColorOverride = node.activeTransmission ? 'text-pink-400' : 'text-slate-400';
+                const labelColorOverride = node.activeTransmission ? "" : "text-slate-400";
                 const dynamicCallsignTag = isSelf ? `${node.callsign} (YOU)` : node.callsign;
                 
                 const transmissionSubstatusIndicator = node.activeTransmission
@@ -510,11 +466,11 @@
                     : `<span class="text-[9px] font-space font-bold tracking-widest text-slate-600 flex items-center gap-1"><i data-lucide="mic-off" class="w-3 h-3"></i> MUTED</span>`;
 
                 return `
-                    <div id="peer-card-${node.id}" class="border rounded-xl p-3 flex flex-col justify-between transition-all duration-300 ${dynamicGlowBorderColor}">
-                        <div class="text-xs font-space font-black tracking-wide truncate ${labelColorOverride} uppercase">
+                    <div class="${baseClasses} ${isSpeakingClass}">
+                        <div class="text-xs font-space font-black tracking-wide truncate uppercase callsign-text ${labelColorOverride}">
                             ${dynamicCallsignTag}
                         </div>
-                        <div class="mt-2 flex items-center justify-between">
+                        <div class="mt-3 flex items-center justify-between">
                             ${transmissionSubstatusIndicator}
                         </div>
                     </div>
@@ -536,14 +492,9 @@
             let currentlyBroadcastingFlag = false;
 
             const engageVoiceTransmissionPipeline = async (e) => {
-                if (e) e.preventDefault(); 
+                if (e) e.preventDefault(); // Prevents double-firing on mobile
                 if (currentlyBroadcastingFlag) return;
                 currentlyBroadcastingFlag = true;
-
-                // Optimistic UI Fix
-                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
-                if (selfNode) selfNode.activeTransmission = true;
-                updateVisualRosterDisplay();
 
                 // Natively ungate local audio capture stream tracks
                 if (localStream) {
@@ -558,19 +509,15 @@
                 globalBroadcastBanner.innerText = "BROADCAST ENVELOPE OPEN // ON AIR";
                 globalBroadcastBanner.className = "w-full bg-pink-950/20 border border-pink-500/50 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-pink-400 transition-colors uppercase shadow-[0_0_15px_rgba(236,72,153,0.15)]";
 
+                // Sync status to cloud (this instantly highlights your card on everyone else's screen)
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: true, lastActive: Date.now() }, { merge: true });
             };
 
             const disengageVoiceTransmissionPipeline = async (e) => {
-                if (e && e.type !== 'mouseleave') e.preventDefault();
+                if (e) e.preventDefault();
                 if (!currentlyBroadcastingFlag) return;
                 currentlyBroadcastingFlag = false;
-
-                // Optimistic UI Fix
-                const selfNode = onlineRosterData.find(n => n.id === localPeerId);
-                if (selfNode) selfNode.activeTransmission = false;
-                updateVisualRosterDisplay();
 
                 // Instantly isolate audio stream processing
                 if (localStream) {
@@ -585,21 +532,19 @@
                 globalBroadcastBanner.innerText = "FREQUENCY RETICULE: STANDBY";
                 globalBroadcastBanner.className = "w-full bg-slate-950/80 border border-slate-800 text-center py-2 rounded-xl text-xs font-space font-bold tracking-[0.2em] text-slate-500 transition-colors uppercase";
 
+                // Sync standby status to cloud
                 const databaseNodeRef = doc(db, 'artifacts', signalScope, 'public', 'data', 'radio_frequency', 'lobby', 'nodes', localPeerId);
                 await setDoc(databaseNodeRef, { activeTransmission: false, lastActive: Date.now() }, { merge: true });
             };
 
-            // Desk mouse interaction mapping
-            pttButtonNode.addEventListener('mousedown', engageVoiceTransmissionPipeline);
-            window.addEventListener('mouseup', disengageVoiceTransmissionPipeline);
-            pttButtonNode.addEventListener('mouseleave', disengageVoiceTransmissionPipeline);
-
-            // Handheld mobile multi-touch execution handling
-            pttButtonNode.addEventListener('touchstart', engageVoiceTransmissionPipeline, { passive: false });
-            window.addEventListener('touchend', disengageVoiceTransmissionPipeline);
-            window.addEventListener('touchcancel', disengageVoiceTransmissionPipeline);
+            // FIX: Pointer Events. Unified system that replaces all messy touch/mouse overlaps
+            pttButtonNode.addEventListener('pointerdown', engageVoiceTransmissionPipeline);
+            pttButtonNode.addEventListener('pointerup', disengageVoiceTransmissionPipeline);
+            pttButtonNode.addEventListener('pointerleave', disengageVoiceTransmissionPipeline);
+            pttButtonNode.addEventListener('pointercancel', disengageVoiceTransmissionPipeline);
         }
 
+        // Boot lucide icons
         lucide.createIcons();
     </script>
 </body>
