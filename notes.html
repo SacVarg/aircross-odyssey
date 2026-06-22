@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOYAGER | Ideas Board</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], space: ['Space Grotesk', 'sans-serif'] }, colors: { emerald: '#10b981', cyan: '#06b6d4', violet: '#8b5cf6' } } }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="theme-public min-h-screen pb-20">
+
+    <div class="blob-bg blob-1"></div><div class="blob-bg blob-2"></div><div class="blob-bg blob-3"></div>
+
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/50 backdrop-blur-xl border-b border-white/60 shadow-sm">
+        <a href="index.html" class="font-space font-bold text-xl tracking-[0.2em] text-slate-800 flex items-center gap-2 hover:text-emerald-600 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5 text-emerald-500"></i> BACK
+        </a>
+        <div class="text-xs font-space font-bold tracking-widest text-emerald-600 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
+            MISSION BOARD
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto pt-32 px-4 relative z-10">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800 cyber-title">Ideas & Waypoints</h1>
+            <p class="text-slate-500 mt-4 font-medium">Drop spontaneous stops, snack ideas, or tasks here. Anyone can add or tick off.</p>
+        </div>
+
+        <div class="glass-panel p-4 md:p-6 rounded-3xl mb-12 max-w-2xl mx-auto flex flex-col md:flex-row gap-4 items-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+            <input type="text" id="newNoteInput" class="flex-1 bg-white/60 border border-slate-200 rounded-xl p-4 text-sm font-medium outline-none focus:border-emerald-500 w-full" placeholder="e.g. Stop for Biryani in Mysore...">
+            <button onclick="window.addNote()" class="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-space font-bold tracking-widest rounded-xl hover:shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all flex justify-center items-center gap-2">
+                <i data-lucide="plus" class="w-5 h-5"></i> ADD
+            </button>
+        </div>
+
+        <div id="notesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="text-center col-span-full py-10 text-slate-400 font-space text-sm">
+                <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-500"></i> Loading mission board...
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+    <script type="module" src="app.js"></script>
+</body>
+</html>

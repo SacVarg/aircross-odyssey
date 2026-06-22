@@ -1,0 +1,501 @@
+/* ==========================================
+   1. BASE & CUSTOM SCROLLBARS
+   ========================================== */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+}
+
+/* Global Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.8);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.3);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.6);
+}
+
+/* Slim Scrollbar for internal divs (like bulletin board) */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================
+   2. BACKGROUND GRID
+   ========================================== */
+.cyber-grid-bg {
+    background-image: 
+        linear-gradient(to right, rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+}
+
+/* ==========================================
+   3. PRELOADER
+   ========================================== */
+#loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    transition: opacity 0.8s ease-out;
+}
+
+.loader-line {
+    width: 150px;
+    height: 2px;
+    background: rgba(16, 185, 129, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.loader-line::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 40%;
+    background: #10b981;
+    animation: slideLine 1.5s ease-in-out infinite;
+}
+
+@keyframes slideLine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+}
+
+/* ==========================================
+   4. AMBIENT BACKGROUND BLOBS
+   ========================================== */
+.blob-bg {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -2;
+    opacity: 0.5;
+    animation: blob-float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.blob-1 {
+    top: -10%;
+    left: -10%;
+    width: 40vw;
+    height: 40vw;
+    background: rgba(16, 185, 129, 0.3); /* Emerald */
+}
+
+.blob-2 {
+    bottom: -20%;
+    right: -10%;
+    width: 50vw;
+    height: 50vw;
+    background: rgba(6, 182, 212, 0.2); /* Cyan */
+    animation-delay: -5s;
+}
+
+.blob-3 {
+    top: 40%;
+    left: 50%;
+    width: 30vw;
+    height: 30vw;
+    background: rgba(139, 92, 246, 0.2); /* Violet */
+    animation-delay: -10s;
+}
+
+@keyframes blob-float {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(5%, 10%) scale(1.1); }
+    100% { transform: translate(-5%, 5%) scale(0.95); }
+}
+
+/* ==========================================
+   5. SKY AESTHETICS (Stars & Satellite)
+   ========================================== */
+.shooting-star {
+    position: absolute;
+    width: 150px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.8), rgba(255,255,255,0));
+    transform: rotate(-45deg);
+    opacity: 0;
+    z-index: -1;
+}
+
+.star-1 { top: 10%; right: 20%; animation: shoot 6s infinite 2s; }
+.star-2 { top: 30%; right: 40%; animation: shoot 10s infinite 5s; }
+.star-3 { top: 5%; right: 70%; animation: shoot 8s infinite 8s; }
+
+@keyframes shoot {
+    0% { transform: rotate(-45deg) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    20% { transform: rotate(-45deg) translateX(-1000px); opacity: 0; }
+    100% { transform: rotate(-45deg) translateX(-1000px); opacity: 0; }
+}
+
+.satellite-drift {
+    position: absolute;
+    top: 15%;
+    left: -10%;
+    opacity: 0.1;
+    z-index: 1;
+    animation: drift 120s linear infinite;
+}
+
+@keyframes drift {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(120vw, 20vh) rotate(360deg); }
+}
+
+/* ==========================================
+   6. 3D MODEL & TACTICAL HUD FIXES
+   ========================================== */
+/* Hardware Acceleration Masking Fix for WebGL/Video rounded corners */
+.model-clip-fix {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    mask-image: -webkit-radial-gradient(white, black);
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    isolation: isolate;
+}
+
+/* Model Viewer Core Styles */
+model-viewer {
+    width: 100%;
+    height: 100%;
+    --poster-color: transparent;
+    background-color: transparent;
+}
+
+.scanline {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.1), transparent);
+    height: 10px;
+    z-index: 25;
+    animation: scan 4s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes scan {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(1000%); }
+}
+
+/* ==========================================
+   7. MAP & ROUTE STYLES
+   ========================================== */
+.route-flow-forward {
+    stroke-dasharray: 10, 15;
+    animation: flowDash 30s linear infinite;
+}
+
+.route-flow-return {
+    stroke-dasharray: 8, 12;
+    animation: flowDash 20s linear infinite reverse;
+}
+
+@keyframes flowDash {
+    to { stroke-dashoffset: -1000; }
+}
+
+.custom-vibrant-marker {
+    background: transparent;
+    border: none;
+}
+
+/* ==========================================
+   8. ADMIN DASHBOARD STYLES
+   ========================================== */
+.theme-admin {
+    background-color: #0f172a; /* Slate 900 */
+    color: #e2e8f0;
+    min-height: 100vh;
+}
+
+.glass-admin {
+    background: rgba(30, 41, 59, 0.7); /* Slate 800 */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: #10b981;
+    background: rgba(15, 23, 42, 0.9);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.btn-admin {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.btn-admin-primary {
+    background: linear-gradient(to right, #10b981, #06b6d4);
+    color: #0f172a;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-admin-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+}
+
+.table-admin {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-admin th {
+    text-align: left;
+    padding: 1rem;
+    color: #94a3b8;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table-admin td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Custom Admin Toggles */
+.toggle-admin {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-admin input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #94a3b8;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #10b981;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+    background-color: white;
+}
+
+/* Image Drop Zone */
+.drop-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.drop-zone:hover, .drop-zone.drag-over {
+    border-color: #06b6d4;
+    background: rgba(6, 182, 212, 0.1);
+}
+
+/* ==========================================
+   9. GALLERY LIGHTBOX & ANIMATIONS
+   ========================================== */
+.gallery-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.gallery-lightbox.active {
+    display: flex;
+    opacity: 1;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+}
+
+.lightbox-image {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    transition: color 0.2s;
+}
+
+.lightbox-close:hover {
+    color: #ec4899;
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    backdrop-filter: blur(5px);
+}
+
+.lightbox-nav:hover {
+    background: rgba(16, 185, 129, 0.5);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-prev { left: -70px; }
+.lightbox-next { right: -70px; }
+
+@media (max-width: 768px) {
+    .lightbox-prev { left: 10px; }
+    .lightbox-next { right: 10px; }
+}
+
+/* Reveal Animation */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    z-index: 10000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideIn {
+    0% { transform: translate(-50%, -100%); opacity: 0; }
+    100% { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* Hyperdrive specific shake */
+.hyperdrive-shake {
+    animation: hyper-shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite;
+}
+
+@keyframes hyper-shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* Audio Player Customization */
+.custom-audio::-webkit-media-controls-panel {
+    background-color: rgba(255, 255, 255, 0.8);
+}
