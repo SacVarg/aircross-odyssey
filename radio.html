@@ -167,29 +167,46 @@
         // =======================================================
         // 1. PUSH NOTIFICATION CONTROLLERS (FCM Matrix via Vercel)
         // =======================================================
-        const PUBLIC_VAPID_KEY = "BEI4yDAnC84PRX-I0l_r8Fv2tKdr4L3cUXRgBxzSYysbeATLAVYv2el1yMxw0WyI9ofIZM4YBHoUuuiIhy1x8SQ"; 
-
+        const PUBLIC_VAPID_KEY = "YOUR_VAPID_KEY_HERE"; 
         const notifBtn = document.getElementById('btn-enable-notifs');
-        if (Notification.permission !== "granted" && 'serviceWorker' in navigator) {
-            notifBtn.classList.remove('hidden');
+
+        // Reusable function to grab and save the token securely
+        async function syncDeviceToken() {
+            try {
+                const token = await getToken(messaging, { vapidKey: PUBLIC_VAPID_KEY });
+                if (token) {
+                    await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/fcm_tokens", token), {
+                        token: token,
+                        timestamp: Date.now()
+                    });
+                    console.log("Device token synced to secure vault.");
+                }
+            } catch (error) {
+                console.error("Token generation failed:", error);
+            }
+        }
+
+        // Smart Permission Checking
+        if ('serviceWorker' in navigator) {
+            if (Notification.permission === "granted") {
+                // If they already allowed it previously, silently sync the token in the background
+                syncDeviceToken();
+            } else if (Notification.permission !== "denied") {
+                // If they haven't been asked yet, show the button
+                notifBtn.classList.remove('hidden');
+            }
         }
 
         notifBtn.addEventListener('click', async () => {
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
-                    const token = await getToken(messaging, { vapidKey: PUBLIC_VAPID_KEY });
-                    if (token) {
-                        await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/fcm_tokens", token), {
-                            token: token,
-                            timestamp: Date.now()
-                        });
-                        notifBtn.classList.add('hidden');
-                        alert("Push notification alerts active!");
-                    }
+                    await syncDeviceToken();
+                    notifBtn.classList.add('hidden');
+                    alert("Push notification alerts active!");
                 }
             } catch (error) {
-                console.error("FCM Token execution failed:", error);
+                console.error("Permission request failed:", error);
             }
         });
 
