@@ -7,24 +7,13 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { 
-                        sans: ['Inter', 'sans-serif'], 
-                        space: ['Space Grotesk', 'sans-serif'] 
-                    },
-                    colors: {
-                        brand: {
-                            cyan: '#06b6d4',
-                            violet: '#8b5cf6',
-                            emerald: '#10b981',
-                            pink: '#ec4899'
-                        }
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'], space: ['Space Grotesk', 'sans-serif'] },
+                    colors: { brand: { cyan: '#06b6d4', violet: '#8b5cf6', emerald: '#10b981', pink: '#ec4899' } }
                 }
             }
         }
@@ -42,9 +31,7 @@
             background-size: 40px 40px;
         }
         
-        .glow-orb {
-            position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.2;
-        }
+        .glow-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.2; }
         .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(6, 182, 212, 0.5); }
         .orb-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: rgba(139, 92, 246, 0.4); }
 
@@ -54,22 +41,10 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .ptt-btn {
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .ptt-btn:active {
-            transform: scale(0.94);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 0 15px rgba(6, 182, 212, 0.4);
-        }
-        .ptt-btn.transmitting {
-            background: #ef4444 !important;
-            border-color: #f87171 !important;
-            color: white !important;
-            box-shadow: 0 0 50px rgba(239, 68, 68, 0.6);
-        }
+        .ptt-btn { box-shadow: 0 0 30px rgba(6, 182, 212, 0.2); transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+        .ptt-btn:active { transform: scale(0.94); box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 0 15px rgba(6, 182, 212, 0.4); }
+        .ptt-btn.transmitting { background: #ef4444 !important; border-color: #f87171 !important; color: white !important; box-shadow: 0 0 50px rgba(239, 68, 68, 0.6); }
 
-        /* Helper Utilities */
         .hide { display: none !important; }
     </style>
 </head>
@@ -84,7 +59,6 @@
             <a href="index.html" class="font-space font-bold tracking-[0.2em] text-white flex items-center gap-2">
                 <i data-lucide="compass" class="w-5 h-5 text-cyan-400"></i> VOYAGER
             </a>
-            
             <button id="btn-enable-notifs" class="text-xs font-space font-bold tracking-widest text-violet-400 bg-violet-900/30 px-3 py-1.5 rounded-full border border-violet-500/30 hidden hover:bg-violet-900/50 transition-colors">
                 ENABLE ALERTS
             </button>
@@ -92,7 +66,6 @@
     </nav>
 
     <main class="flex-grow flex flex-col items-center justify-center pt-24 pb-12 px-4 max-w-md mx-auto w-full">
-        
         <div class="text-center mb-8 w-full">
             <h1 class="text-3xl font-space font-black tracking-widest text-white mb-2" style="text-shadow: 0 0 20px rgba(6,182,212,0.3);">
                 UHF COMM LINK
@@ -112,7 +85,6 @@
         </div>
 
         <div id="view-radio" class="w-full flex flex-col items-center hide">
-            
             <button id="btn-ptt" class="ptt-btn w-44 h-44 rounded-full bg-cyan-500 flex flex-col items-center justify-center text-slate-900 border-8 border-slate-900/80 touch-none select-none mb-8 cursor-pointer">
                 <i data-lucide="mic" class="w-12 h-12 mb-2"></i>
                 <span id="ptt-label" class="font-space font-black tracking-widest text-xs">HOLD TO TRANSMIT</span>
@@ -120,8 +92,7 @@
 
             <div class="w-full glass-panel p-5">
                 <h3 class="text-xs text-slate-400 font-space font-bold tracking-widest mb-4 text-center">ACTIVE COMS SIGNALS</h3>
-                <div id="active-users" class="flex flex-wrap justify-center gap-2">
-                    </div>
+                <div id="active-users" class="flex flex-wrap justify-center gap-2"></div>
             </div>
         </div>
     </main>
@@ -131,10 +102,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, collectionGroup, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
-        // Global Infrastructure Matrix Config
         const firebaseConfig = {
             apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
             authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
@@ -149,50 +119,50 @@
         const db = getFirestore(app);
         const messaging = getMessaging(app);
 
-        // Core Session Variables
         let localStream = null;
         let localCallsign = "";
-        const peerConnections = {}; // Track active connections: { callsign: RTCPeerConnection }
-        
-        const rtcConfig = { 
-            iceServers: [
-                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
-            ] 
-        };
+        let heartbeatInterval = null;
+        const peerConnections = {}; 
+        const rtcConfig = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
-        // Initialize Icons and Login
         lucide.createIcons();
-        signInAnonymously(auth).catch(err => console.error("Identity handshake failed:", err));
+        signInAnonymously(auth).catch(err => alert("Auth failed: " + err.message));
 
         // =======================================================
-        // 1. PUSH NOTIFICATION CONTROLLERS (FCM Matrix via Vercel)
+        // 1. LOUD DEBUGGING PUSH NOTIFICATION CONTROLLERS
         // =======================================================
-        const PUBLIC_VAPID_KEY = "YOUR_VAPID_KEY_HERE"; 
+        const PUBLIC_VAPID_KEY = "BEI4yDAnC84PRX-I0l_r8Fv2tKdr4L3cUXRgBxzSYysbeATLAVYv2el1yMxw0WyI9ofIZM4YBHoUuuiIhy1x8SQ"; // <--- PASTE VAPID KEY HERE
         const notifBtn = document.getElementById('btn-enable-notifs');
 
-        // Reusable function to grab and save the token securely
         async function syncDeviceToken() {
             try {
                 const token = await getToken(messaging, { vapidKey: PUBLIC_VAPID_KEY });
                 if (token) {
-                    await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/fcm_tokens", token), {
-                        token: token,
-                        timestamp: Date.now()
+                    auth.onAuthStateChanged(async (user) => {
+                        if (user) {
+                            try {
+                                await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/fcm_tokens", token), {
+                                    token: token,
+                                    timestamp: Date.now()
+                                });
+                                console.log("Token successfully written to database.");
+                            } catch (dbError) {
+                                alert("Database Error: " + dbError.message);
+                            }
+                        }
                     });
-                    console.log("Device token synced to secure vault.");
+                } else {
+                    alert("Browser did not return a token.");
                 }
             } catch (error) {
-                console.error("Token generation failed:", error);
+                alert("Token Generation Error: " + error.message);
             }
         }
 
-        // Smart Permission Checking
         if ('serviceWorker' in navigator) {
             if (Notification.permission === "granted") {
-                // If they already allowed it previously, silently sync the token in the background
                 syncDeviceToken();
             } else if (Notification.permission !== "denied") {
-                // If they haven't been asked yet, show the button
                 notifBtn.classList.remove('hidden');
             }
         }
@@ -204,84 +174,81 @@
                     await syncDeviceToken();
                     notifBtn.classList.add('hidden');
                     alert("Push notification alerts active!");
+                } else {
+                    alert("Permission was denied by the user.");
                 }
             } catch (error) {
-                console.error("Permission request failed:", error);
+                alert("Permission Request Error: " + error.message);
             }
         });
 
-        onMessage(messaging, (payload) => {
-            console.log('Foreground push package intercepted: ', payload);
-        });
+        onMessage(messaging, (payload) => console.log('Foreground push package intercepted: ', payload));
 
         // =======================================================
-        // 2. CONNECTION GATE HANDLING & TRANSMISSION INITIATION
+        // 2. CONNECTION GATE & HEARTBEAT ENGINE
         // =======================================================
         document.getElementById('btn-join').addEventListener('click', async () => {
             localCallsign = document.getElementById('callsign-input').value.trim().toUpperCase();
-            if (!localCallsign) return alert("Please enter a callsign to initialize audio link.");
+            if (!localCallsign) return alert("Please enter a callsign.");
 
-            // Transition UI elements safely
             document.getElementById('view-gate').classList.add('hide');
             document.getElementById('view-radio').classList.remove('hide');
-            
-            const statusText = document.getElementById('status-text');
-            statusText.textContent = `ONLINE // CALLSIGN: ${localCallsign}`;
-            statusText.className = "text-cyan-400 trampled text-xs font-space font-bold tracking-widest";
+            document.getElementById('status-text').textContent = `ONLINE // CALLSIGN: ${localCallsign}`;
+            document.getElementById('status-text').className = "text-cyan-400 text-xs font-space font-bold tracking-widest";
 
-            // Fire Push Notification request to your secure Vercel API
             try {
                 await fetch('/api/notify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ caller: localCallsign })
                 });
-            } catch (e) { 
-                console.error("Vercel notification relay dropped:", e); 
-            }
+            } catch (e) { console.error("Vercel notification relay dropped:", e); }
 
-            // Request Audio hardware capture immediately
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                // Mute microphone tracks by default until PTT button is triggered manually
                 localStream.getTracks().forEach(track => track.enabled = false);
             } catch (err) {
-                alert("Microphone hardware access is required to run the radio frequencies.");
-                console.error(err);
-                return;
+                alert("Microphone hardware access is required."); return;
             }
 
-            // Register identity inside the central communication collection
+            // Register initial presence
             await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/radio_frequency", localCallsign), {
-                active: true,
-                timestamp: Date.now()
+                active: true, timestamp: Date.now()
             });
 
-            // Spin up the core WebRTC signaling system
+            // HEARTBEAT: Ping the database every 5 seconds so we don't become a ghost
+            heartbeatInterval = setInterval(() => {
+                if (localCallsign) {
+                    setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/radio_frequency", localCallsign), {
+                        active: true, timestamp: Date.now()
+                    }, { merge: true });
+                }
+            }, 5000);
+
             initializeMeshSignaling();
         });
 
         // =======================================================
-        // 3. WEBRTC MESH SIGNALING AND STREAM ROUTING ENGINE
+        // 3. WEBRTC MESH SIGNALING (WITH AUTO-PURGE FILTER)
         // =======================================================
         function initializeMeshSignaling() {
             const freqCollection = collection(db, "artifacts/aircross-odyssey-main/public/data/radio_frequency");
 
-            // Listener A: Sync Active User UI and initialize connection offers to peers
             onSnapshot(freqCollection, (snapshot) => {
                 const rosterDiv = document.getElementById('active-users');
                 rosterDiv.innerHTML = "";
 
                 snapshot.forEach(async (userDoc) => {
                     const peerCallsign = userDoc.id;
+                    const lastPulse = userDoc.data().timestamp;
                     
-                    // Render active user indicator
+                    // AUTO-PURGE: Ignore users who haven't sent a heartbeat in 15 seconds
+                    if (Date.now() - lastPulse > 15000) return; 
+                    
                     if (peerCallsign === localCallsign) {
                         rosterDiv.innerHTML += `<span class="bg-cyan-500/20 text-cyan-400 text-xs font-space font-bold px-3 py-1.5 rounded-full border border-cyan-400/50">${peerCallsign} (YOU)</span>`;
                     } else {
                         rosterDiv.innerHTML += `<span class="bg-slate-800 text-slate-300 text-xs font-space font-bold px-3 py-1.5 rounded-full border border-slate-700">${peerCallsign}</span>`;
-                        
-                        // Mesh Network Protocol: If the peer joined after us, construct a secure RTCPeerConnection loop
                         if (!peerConnections[peerCallsign] && localCallsign.localeCompare(peerCallsign) < 0) {
                             await initiatePeerConnection(peerCallsign);
                         }
@@ -289,85 +256,64 @@
                 });
             });
 
-            // Listener B: Intercept inbound Offers targeting this callsign
             onSnapshot(collection(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${localCallsign}/offers`), (snapshot) => {
                 snapshot.forEach(async (change) => {
-                    const offerData = change.data();
-                    if (offerData.processed) return;
-
-                    await handleIncomingOffer(change.id, offerData.offer);
-                    await deleteDoc(change.ref); // Clean signaling channel instantly
+                    if (change.data().processed) return;
+                    await handleIncomingOffer(change.id, change.data().offer);
+                    await deleteDoc(change.ref);
                 });
             });
 
-            // Listener C: Intercept inbound Answers targeting this callsign
             onSnapshot(collection(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${localCallsign}/answers`), (snapshot) => {
                 snapshot.forEach(async (change) => {
-                    const answerData = change.data();
                     if (peerConnections[change.id]) {
-                        await peerConnections[change.id].setRemoteDescription(new RTCSessionDescription(answerData.answer));
+                        await peerConnections[change.id].setRemoteDescription(new RTCSessionDescription(change.data().answer));
                     }
                     await deleteDoc(change.ref);
                 });
             });
 
-            // Listener D: Intercept incoming remote ICE Network Candidates
             onSnapshot(collection(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${localCallsign}/candidates`), (snapshot) => {
                 snapshot.forEach(async (change) => {
-                    const candidateData = change.data();
                     if (peerConnections[change.id]) {
-                        try {
-                            await peerConnections[change.id].addIceCandidate(new RTCIceCandidate(candidateData.candidate));
-                        } catch (e) { console.error("ICE insertion failure:", e); }
+                        try { await peerConnections[change.id].addIceCandidate(new RTCIceCandidate(change.data().candidate)); } catch (e) {}
                     }
                     await deleteDoc(change.ref);
                 });
             });
         }
 
-        // --- Create Connection Pipeline (Caller Node) ---
         async function initiatePeerConnection(peerCallsign) {
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[peerCallsign] = pc;
-
-            // Pipe local audio mic track into the connection matrix
             localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-            // Forward generated ICE network keys securely to the peer's collection vault
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
                     setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${peerCallsign}/candidates`, localCallsign), {
-                        candidate: event.candidate.toJSON(),
-                        timestamp: Date.now()
+                        candidate: event.candidate.toJSON(), timestamp: Date.now()
                     });
                 }
             };
 
-            // Capture remote stream assignment and bind to dedicated audio element
             pc.ontrack = (event) => bindRemoteAudioStream(peerCallsign, event.streams[0]);
 
-            // Construct SDP Negotiation Agreement
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
-
             await setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${peerCallsign}/offers`, localCallsign), {
-                offer: { type: offer.type, sdp: offer.sdp },
-                timestamp: Date.now()
+                offer: { type: offer.type, sdp: offer.sdp }, timestamp: Date.now()
             });
         }
 
-        // --- Process Inbound Handshake Pipeline (Receiver Node) ---
         async function handleIncomingOffer(senderCallsign, remoteOffer) {
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[senderCallsign] = pc;
-
             localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
                     setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${senderCallsign}/candidates`, localCallsign), {
-                        candidate: event.candidate.toJSON(),
-                        timestamp: Date.now()
+                        candidate: event.candidate.toJSON(), timestamp: Date.now()
                     });
                 }
             };
@@ -377,18 +323,14 @@
             await pc.setRemoteDescription(new RTCSessionDescription(remoteOffer));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-
             await setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${senderCallsign}/answers`, localCallsign), {
-                answer: { type: answer.type, sdp: answer.sdp },
-                timestamp: Date.now()
+                answer: { type: answer.type, sdp: answer.sdp }, timestamp: Date.now()
             });
         }
 
-        // --- Bind Audio Streams to DOM Pools ---
         function bindRemoteAudioStream(callsign, stream) {
             const pool = document.getElementById('remote-audio-pool');
             let audioEl = document.getElementById(`audio-${callsign}`);
-            
             if (!audioEl) {
                 audioEl = document.createElement('audio');
                 audioEl.id = `audio-${callsign}`;
@@ -399,14 +341,13 @@
         }
 
         // =======================================================
-        // 4. PUSH-TO-TALK ENGINE (PTT LOGIC INTERFACE)
+        // 4. PTT LOGIC & MOBILE SAFARI CLEANUP
         // =======================================================
         const pttBtn = document.getElementById('btn-ptt');
         const pttLabel = document.getElementById('ptt-label');
 
         const engageTransmission = () => {
             if (!localStream) return;
-            // Activate mic data pathways across the entire mesh network instantly
             localStream.getTracks().forEach(track => track.enabled = true);
             pttBtn.classList.add('transmitting');
             pttLabel.textContent = "TRANSMITTING LIVE...";
@@ -414,33 +355,27 @@
 
         const severTransmission = () => {
             if (!localStream) return;
-            // Sever mic data packets back to silent monitoring mode
             localStream.getTracks().forEach(track => track.enabled = false);
             pttBtn.classList.remove('transmitting');
             pttLabel.textContent = "HOLD TO TRANSMIT";
         };
 
-        // Desktop Pointer Interface Listeners
         pttBtn.addEventListener('mousedown', engageTransmission);
         pttBtn.addEventListener('mouseup', severTransmission);
         pttBtn.addEventListener('mouseleave', severTransmission);
+        pttBtn.addEventListener('touchstart', (e) => { e.preventDefault(); engageTransmission(); });
+        pttBtn.addEventListener('touchend', (e) => { e.preventDefault(); severTransmission(); });
 
-        // Mobile Capacitive Touch Screen Optimization Listeners
-        pttBtn.addEventListener('touchstart', (e) => { 
-            e.preventDefault(); 
-            engageTransmission(); 
-        });
-        pttBtn.addEventListener('touchend', (e) => { 
-            e.preventDefault(); 
-            severTransmission(); 
-        });
-
-        // Clean up session if browser window is killed or routed away
-        window.addEventListener('beforeunload', () => {
+        // Better Mobile Cleanup Hooks
+        const cleanupAndExit = () => {
             if (localCallsign) {
+                clearInterval(heartbeatInterval);
                 deleteDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/radio_frequency", localCallsign));
             }
-        });
+        };
+        window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') cleanupAndExit(); });
+        window.addEventListener('pagehide', cleanupAndExit);
+        window.addEventListener('beforeunload', cleanupAndExit);
     </script>
 </body>
 </html>
