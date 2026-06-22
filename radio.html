@@ -131,12 +131,20 @@
         // =======================================================
         // 1. LOUD DEBUGGING PUSH NOTIFICATION CONTROLLERS
         // =======================================================
-        const PUBLIC_VAPID_KEY = "BEI4yDAnC84PRX-I0l_r8Fv2tKdr4L3cUXRgBxzSYysbeATLAVYv2el1yMxw0WyI9ofIZM4YBHoUuuiIhy1x8SQ"; // <--- PASTE VAPID KEY HERE
+        const PUBLIC_VAPID_KEY = "YOUR_VAPID_KEY_HERE"; // <--- PASTE VAPID KEY HERE
         const notifBtn = document.getElementById('btn-enable-notifs');
 
         async function syncDeviceToken() {
             try {
-                const token = await getToken(messaging, { vapidKey: PUBLIC_VAPID_KEY });
+                // FIX: Explicitly register the background service worker FIRST
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                
+                // FIX: Pass the registration into the getToken function so it knows where it is
+                const token = await getToken(messaging, { 
+                    vapidKey: PUBLIC_VAPID_KEY,
+                    serviceWorkerRegistration: registration
+                });
+
                 if (token) {
                     auth.onAuthStateChanged(async (user) => {
                         if (user) {
@@ -183,7 +191,6 @@
         });
 
         onMessage(messaging, (payload) => console.log('Foreground push package intercepted: ', payload));
-
         // =======================================================
         // 2. CONNECTION GATE & HEARTBEAT ENGINE
         // =======================================================
