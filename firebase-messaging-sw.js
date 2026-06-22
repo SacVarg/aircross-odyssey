@@ -13,12 +13,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
+// Firebase automatically handles background notifications if the payload contains a "notification" object.
+// We just leave this listener active to keep the service worker alive.
 messaging.onBackgroundMessage((payload) => {
-    console.log('[firebase-messaging-sw.js] Received background message ', payload);
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: '/icon.png'
-    };
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    console.log('[Service Worker] Background payload received.', payload);
 });
