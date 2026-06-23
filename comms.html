@@ -13,17 +13,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        :root {
-            --theme-hex: #38bdf8;
-            --theme-rgb: 56, 189, 248;
-        }
-
-        body { 
-            background-color: #0f172a; 
-            color: #ffffff; 
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-        }
+        :root { --theme-hex: #38bdf8; --theme-rgb: 56, 189, 248; }
+        body { background-color: #0f172a; color: #ffffff; font-family: 'Inter', sans-serif; min-height: 100vh; }
 
         .immersive-bg {
             position: fixed; inset: 0; z-index: -10;
@@ -46,10 +37,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .msg-bubble { max-width: 85%; padding: 12px 16px; border-radius: 1.25rem; font-size: 0.9rem; }
-        .msg-received { background: rgba(255,255,255,0.08); border-bottom-left-radius: 0; }
-        .msg-sent { background: var(--theme-hex); color: #000; border-bottom-right-radius: 0; margin-left: auto; }
-
         .comms-scrollbar::-webkit-scrollbar { width: 4px; }
         .comms-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
@@ -59,44 +46,42 @@
     <div class="immersive-bg" id="global-bg-layer"></div>
     <div class="bg-overlay"></div>
 
+    <!-- Navigation -->
     <nav class="fixed top-0 w-full z-50 px-6 py-4 flex items-center bg-slate-900/50 backdrop-blur-md border-b border-white/10">
         <a href="index.html" class="flex items-center gap-3 text-white hover:opacity-70 transition-opacity">
             <i data-lucide="arrow-left" class="w-5 h-5"></i>
-            <span class="font-space font-bold tracking-widest text-sm uppercase">Messenger</span>
+            <span class="font-space font-bold tracking-widest text-sm uppercase">Back</span>
         </a>
     </nav>
 
+    <!-- Chat Interface -->
     <div class="max-w-3xl mx-auto pt-24 px-4 relative z-10">
         <div class="glass-panel rounded-[2rem] h-[75vh] flex flex-col shadow-2xl overflow-hidden border border-white/10">
+            <!-- Header -->
             <div class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-                <span class="font-space font-bold text-[10px] tracking-widest uppercase text-white/50">Secure Channel</span>
+                <span class="font-space font-bold text-[10px] tracking-widest uppercase text-white/50">Messages</span>
                 <span class="flex items-center gap-2 theme-text text-[9px] font-bold uppercase tracking-widest">
                     <span class="w-2 h-2 rounded-full theme-bg animate-pulse"></span> Active
                 </span>
             </div>
             
+            <!-- Messages Area -->
             <div id="commsContainer" class="flex-1 overflow-y-auto p-4 comms-scrollbar space-y-4">
-                <div class="text-center py-10 text-white/30 font-space text-sm">
-                    <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 theme-text"></i> Syncing encrypted logs...
-                </div>
+                <div class="text-center py-10 text-white/30 font-space text-sm">Syncing logs...</div>
             </div>
 
+            <!-- Input Area -->
             <div class="p-4 bg-white/5 border-t border-white/10">
-                <div id="audioPreview" class="hidden mb-3 bg-black/40 border border-white/10 rounded-xl p-3 flex items-center justify-between">
-                    <span class="text-[10px] font-space text-white/60 uppercase">Recording...</span>
-                    <span id="recordingDuration" class="text-[10px] theme-text font-bold">0s</span>
-                </div>
-
                 <div class="flex gap-3 items-end">
                     <div class="w-24">
                         <label class="text-[9px] font-bold text-white/50 tracking-widest mb-1 block uppercase">Name</label>
                         <select id="commAuthor" class="w-full bg-black/40 border border-white/20 rounded-xl p-3 text-xs font-space font-bold text-white outline-none focus:border-white/50">
-                            <option value="Loading...">Name...</option>
+                            <option value="Loading...">Syncing...</option>
                         </select>
                     </div>
                     <div class="flex-1 flex gap-2">
                         <textarea id="commMessage" rows="1" class="flex-1 bg-black/40 border border-white/20 rounded-xl p-3 text-sm text-white outline-none focus:border-white/50 resize-none" placeholder="Type a message..."></textarea>
-                        <button id="recordBtn" onclick="window.toggleRecord()" class="w-12 h-12 shrink-0 bg-black/40 border border-white/20 rounded-xl text-white/50 hover:text-white transition-colors" title="Record">
+                        <button id="recordBtn" onclick="window.toggleRecord()" class="w-12 h-12 shrink-0 bg-black/40 border border-white/20 rounded-xl text-white/50 hover:text-white transition-colors" title="Record Voice">
                             <i data-lucide="mic" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -109,10 +94,29 @@
     </div>
 
     <script type="module" src="app.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+    <!-- Dynamic Theme Init -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        const app = initializeApp({
+            apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
+            authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
+            projectId: "aircross-odyssey-f6e2f",
+            storageBucket: "aircross-odyssey-f6e2f.firebasestorage.app",
+            messagingSenderId: "641282553954",
+            appId: "1:641282553954:web:4b3fa456d9eda8adf2393b"
         });
+        const db = getFirestore(app);
+        async function applyTheme() {
+            const snap = await getDoc(doc(db, 'artifacts/aircross-odyssey-main/public/data/trip_meta/latest'));
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data.themeColor) document.documentElement.style.setProperty('--theme-hex', data.themeColor);
+                if (data.bgImage) document.getElementById('global-bg-layer').style.backgroundImage = `url('${data.bgImage}')`;
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+        applyTheme();
     </script>
 </body>
 </html>
