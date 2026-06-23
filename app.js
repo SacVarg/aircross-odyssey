@@ -66,6 +66,7 @@ window.missionDepartureDate = "2026-07-11T10:30:00Z";
 
 // FOUC & Loader Synchronization Variables
 let metadataLoaded = false;
+let initialLoadComplete = false;
 
 // Easter Egg
 let hyperdriveMode = false; 
@@ -314,17 +315,17 @@ function setupFirestoreListeners() {
     }
 }
 
-// Call Listener Initialization
-setupFirestoreListeners();
-
 // ==========================================
-// AUTHENTICATION LOGIC
+// AUTHENTICATION LOGIC (WITH RACE CONDITION FIX)
 // ==========================================
 onAuthStateChanged(auth, (user) => {
-    if (user && !user.isAnonymous) {
-        isAuthenticated = true;
+    if (user) {
+        // Once the user session (anonymous or admin) is ready, it is safe to read Firestore!
+        isAuthenticated = !user.isAnonymous;
         
-        if (isMainPage) {
+        setupFirestoreListeners();
+
+        if (isMainPage && isAuthenticated) {
             renderAdminBanners(); 
             renderAdminGallery(); 
             renderAdminComms(); 
@@ -357,9 +358,9 @@ initAuth();
 // SYNCHRONIZED FOUC LOADER LOGIC
 // ==========================================
 function checkAndHideLoader() {
-    if (metadataLoaded) {
+    if (metadataLoaded && initialLoadComplete) {
         const loader = document.getElementById('loader');
-        if (loader) {
+        if (loader && loader.style.display !== 'none') {
             loader.style.opacity = '0';
             setTimeout(() => {
                 loader.style.display = 'none';
@@ -368,27 +369,25 @@ function checkAndHideLoader() {
     }
 }
 
-// Max timeout fallback: if Firebase is slow, hide loader after 1.5s max to prevent brutal load times
+// Fallback: if Firebase is slow, hide loader after 3.5s to prevent freezing
 setTimeout(() => {
     metadataLoaded = true;
     checkAndHideLoader();
-}, 1500);
+}, 3500);
 
 // ==========================================
 // INDEPENDENT COUNTDOWN TIMER LOGIC
 // ==========================================
-// Extracted out of map initialization so it runs instantly on page load
 function initCountdownTimer() {
     if (document.getElementById('cd-days')) {
         setInterval(() => {
-            // It reads from the global variable updated by Firebase snapshot
             const targetDate = new Date(window.missionDepartureDate).getTime();
             if(isNaN(targetDate)) return;
             
             const now = new Date().getTime(); 
             const dist = targetDate - now;
             
-            if (dist < 0) return; // Optional: Handle past dates by setting to 0
+            if (dist < 0) return; 
             
             const d = document.getElementById('cd-days');
             if (d) {
@@ -400,7 +399,7 @@ function initCountdownTimer() {
         }, 1000);
     }
 }
-initCountdownTimer(); // Start the clock immediately
+initCountdownTimer();
 
 // ==========================================
 // MOBILE MENU LOGIC (SIDE DRAWER)
@@ -1513,7 +1512,6 @@ window.updateTripMetadata = async () => {
 
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'trip_meta', 'latest'), payload, { merge: true });
         
-        // Reset the BG file input to blank visually
         document.getElementById('adminMetaBgInput').value = '';
         
         showToast('Global Settings Updated', 'success');
@@ -1810,14 +1808,6 @@ function activateHyperdrive() {
         showToast('ORBIT STABILIZED', 'success'); 
     }, 4000); 
 }
-
-window.closeMapHud = () => { 
-    const hud = document.getElementById('map-hud'); 
-    if (hud) { 
-        hud.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto'); 
-        hud.classList.add('opacity-0', 'scale-95', 'pointer-events-none'); 
-    } 
-};
 
 // ==========================================
 // DYNAMIC LEAFLET MAP ENGINE
