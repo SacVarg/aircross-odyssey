@@ -48,6 +48,7 @@ let audioChunks = [];
 let audioBase64 = null; 
 let recordingTimer = null;
 let tempCrewPhoto = null;
+let editingCrewId = null; // Used to track if we are updating an existing roster member
 
 // Routing Context Checks
 const isMainPage = !!document.getElementById('public-view');
@@ -113,9 +114,24 @@ function setupFirestoreListeners() {
                 if (document.getElementById('meta-hero-title')) {
                     document.getElementById('meta-hero-title').innerText = data.heroTitle || 'AIRCROSS ODYSSEY';
                 }
+                
+                // Format and display the new datetime-local string beautifully
                 if (document.getElementById('meta-hero-date')) {
-                    document.getElementById('meta-hero-date').innerText = data.departureDate || '11 July 2026';
+                    const dStr = data.departureDate;
+                    if (dStr) {
+                        const dateObj = new Date(dStr);
+                        // Make sure it doesn't say Invalid Date if formatting is weird
+                        if (!isNaN(dateObj.getTime())) {
+                            const formatted = dateObj.toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                            document.getElementById('meta-hero-date').innerText = formatted.toUpperCase();
+                        } else {
+                            document.getElementById('meta-hero-date').innerText = '11 JULY 2026, 10:30 AM';
+                        }
+                    } else {
+                        document.getElementById('meta-hero-date').innerText = '11 JULY 2026, 10:30 AM';
+                    }
                 }
+
                 if (document.getElementById('meta-hero-desc')) {
                     document.getElementById('meta-hero-desc').innerText = data.heroDesc || '6 friends, 1 magnificent Citroën Aircross, and hundreds of kilometers mapped beautifully into one experience.';
                 }
@@ -125,6 +141,18 @@ function setupFirestoreListeners() {
                 if (document.getElementById('meta-machine-platform')) {
                     document.getElementById('meta-machine-platform').innerText = data.chariotPlatform || 'AX-7 PLATFORM';
                 }
+                
+                // Set Dynamic Section Titles
+                if (document.getElementById('meta-countdown-title')) {
+                    document.getElementById('meta-countdown-title').innerText = data.countdownTitle || 'T-Minus Launch';
+                }
+                if (document.getElementById('meta-map-title')) {
+                    document.getElementById('meta-map-title').innerText = data.mapTitle || 'Trajectory Map';
+                }
+                if (document.getElementById('meta-roster-title')) {
+                    document.getElementById('meta-roster-title').innerText = data.rosterTitle || 'Squadron Roster';
+                }
+
                 if (document.getElementById('meta-footer-title')) {
                     document.getElementById('meta-footer-title').innerText = data.projectName || 'VOYAGER';
                 }
@@ -139,10 +167,15 @@ function setupFirestoreListeners() {
                 if (document.getElementById('adminMetaProj')) {
                     document.getElementById('adminMetaProj').value = data.projectName || '';
                     document.getElementById('adminMetaTitle').value = data.heroTitle || '';
-                    document.getElementById('adminMetaDate').value = data.departureDate || '';
+                    document.getElementById('adminMetaDate').value = data.departureDate || ''; // Now accepts datetime-local format automatically
                     document.getElementById('adminMetaDesc').value = data.heroDesc || '';
                     document.getElementById('adminMetaChariot').value = data.chariotName || '';
                     document.getElementById('adminMetaPlatform').value = data.chariotPlatform || '';
+                    
+                    document.getElementById('adminMetaCountdownTitle').value = data.countdownTitle || '';
+                    document.getElementById('adminMetaMapTitle').value = data.mapTitle || '';
+                    document.getElementById('adminMetaRosterTitle').value = data.rosterTitle || '';
+                    
                     document.getElementById('adminMetaTagline').value = data.footerTagline || '';
                     renderAdminRouteTags();
                 }
@@ -189,16 +222,9 @@ function setupFirestoreListeners() {
         onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'telemetry', 'latest'), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                
-                if (document.getElementById('tel-driver')) {
-                    document.getElementById('tel-driver').innerText = data.driver || 'AWAITING';
-                }
-                if (document.getElementById('tel-distance')) {
-                    document.getElementById('tel-distance').innerText = (data.distance || 0) + ' KM';
-                }
-                if (document.getElementById('tel-vibe')) {
-                    document.getElementById('tel-vibe').innerText = data.vibe || 'UNKNOWN';
-                }
+                if (document.getElementById('tel-driver')) document.getElementById('tel-driver').innerText = data.driver || 'AWAITING';
+                if (document.getElementById('tel-distance')) document.getElementById('tel-distance').innerText = (data.distance || 0) + ' KM';
+                if (document.getElementById('tel-vibe')) document.getElementById('tel-vibe').innerText = data.vibe || 'UNKNOWN';
                 
                 if (document.getElementById('adminDist')) {
                     document.getElementById('adminDriver').value = data.driver || 'AWAITING';
@@ -412,16 +438,13 @@ function renderPublicCrew() {
     }
 
     container.innerHTML = publicCrew.map(c => {
-        // Determine status formatting
         const isConfirmed = c.status !== 'Pending';
         const filterClass = isConfirmed ? '' : 'style="filter: grayscale(100%); opacity: 0.6;"';
         
-        // Render either green tick or amber question mark
         const badgeHtml = isConfirmed 
             ? `<div class="crew-status-badge status-confirmed"><i data-lucide="check" class="w-3 h-3 text-white"></i></div>`
             : `<div class="crew-status-badge status-pending"><i data-lucide="help-circle" class="w-3 h-3 text-white"></i></div>`;
         
-        // Render photo or placeholder
         let avatarHtml = '';
         if (c.photo) {
             avatarHtml = `<img src="${c.photo}" alt="${c.name}" class="crew-avatar-img" ${filterClass}>`;
@@ -571,7 +594,7 @@ window.handleCrewPhotoSelect = async (e) => {
             };
         });
         
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> ADDED`; 
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> HAS PHOTO`; 
         btn.classList.add('border-emerald-500', 'text-emerald-400');
         lucide.createIcons();
     } catch(err) { 
@@ -581,7 +604,59 @@ window.handleCrewPhotoSelect = async (e) => {
     }
 };
 
-window.addCrewMember = async () => {
+// --- NEW CREW EDIT FUNCTIONALITY ---
+window.editCrewMember = (id) => {
+    if (!isAuthenticated) return;
+    const c = publicCrew.find(x => x.id === id); 
+    if (!c) return;
+
+    document.getElementById('crewName').value = c.name || '';
+    document.getElementById('crewRole').value = c.role || '';
+    document.getElementById('crewId').value = c.crewId || '';
+    document.getElementById('crewStatus').value = c.status || 'Confirmed';
+    document.getElementById('crewColor').value = c.color || 'emerald';
+    document.getElementById('crewDesc').value = c.description || '';
+    
+    tempCrewPhoto = c.photo || null;
+
+    const photoBtn = document.getElementById('crewPhotoBtn');
+    if (tempCrewPhoto) {
+        photoBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> HAS PHOTO`;
+        photoBtn.classList.add('border-emerald-500', 'text-emerald-400');
+    } else {
+        photoBtn.innerHTML = `PHOTO`;
+        photoBtn.classList.remove('border-emerald-500', 'text-emerald-400');
+    }
+
+    editingCrewId = id;
+    
+    document.getElementById('btnSaveCrew').innerText = 'UPDATE ROSTER';
+    document.getElementById('btnCancelEditCrew').classList.remove('hidden');
+    lucide.createIcons();
+};
+
+window.cancelEditCrew = () => {
+    document.getElementById('crewName').value = '';
+    document.getElementById('crewRole').value = '';
+    document.getElementById('crewId').value = '';
+    document.getElementById('crewStatus').value = 'Confirmed';
+    document.getElementById('crewColor').value = 'emerald';
+    document.getElementById('crewDesc').value = '';
+    
+    tempCrewPhoto = null;
+    editingCrewId = null;
+
+    const photoBtn = document.getElementById('crewPhotoBtn');
+    photoBtn.innerHTML = `PHOTO`;
+    photoBtn.classList.remove('border-emerald-500', 'text-emerald-400');
+
+    document.getElementById('btnSaveCrew').innerText = 'ADD TO ROSTER';
+    document.getElementById('btnCancelEditCrew').classList.add('hidden');
+    lucide.createIcons();
+};
+
+// Replaces previous addCrewMember logic to handle both add and edit
+window.saveCrewMember = async () => {
     if (!isAuthenticated) return showToast('Not authenticated', 'error');
     
     const name = document.getElementById('crewName').value.trim(); 
@@ -593,27 +668,18 @@ window.addCrewMember = async () => {
     
     if (!name || !role || !crewId) return showToast('Fill Name, Role, and ID', 'error');
     
-    const id = Date.now().toString();
+    const id = editingCrewId ? editingCrewId : Date.now().toString();
+    
     try {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'crew', id), { 
             id, name, role, crewId, status, color, 
             description: desc || null, 
             photo: tempCrewPhoto || null 
-        });
+        }, { merge: true });
         
-        document.getElementById('crewName').value = ''; 
-        document.getElementById('crewRole').value = ''; 
-        document.getElementById('crewId').value = ''; 
-        document.getElementById('crewStatus').value = 'Confirmed'; 
-        document.getElementById('crewDesc').value = ''; 
-        tempCrewPhoto = null;
-        
-        const photoBtn = document.getElementById('crewPhotoBtn'); 
-        photoBtn.innerHTML = `PHOTO`; 
-        photoBtn.classList.remove('border-emerald-500', 'text-emerald-400');
-        
-        showToast('Operative Added', 'success'); 
-        lucide.createIcons();
+        const isUpdate = !!editingCrewId;
+        window.cancelEditCrew(); // this resets form fields and button states
+        showToast(isUpdate ? 'Operative Updated' : 'Operative Added', 'success'); 
     } catch (e) { 
         showToast('Sync failed', 'error'); 
     }
@@ -625,6 +691,12 @@ window.deleteCrewMember = async (id) => {
     
     try { 
         await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'crew', id.toString())); 
+        
+        // If we were editing this user, cancel the edit mode
+        if (editingCrewId === id) {
+            window.cancelEditCrew();
+        }
+        
         showToast('Operative Removed', 'success'); 
     } catch (e) { 
         showToast('Failed to delete', 'error'); 
@@ -654,8 +726,11 @@ function renderAdminCrew() {
                 <td class="py-3 text-white font-bold text-xs uppercase">${c.name}</td>
                 <td class="py-3 text-white/50 text-[10px] uppercase">${c.role}</td>
                 <td class="py-3 text-[10px]">${statusIcon}</td>
-                <td class="py-3">
-                    <button class="text-red-400 hover:text-red-300 transition-colors" onclick="window.deleteCrewMember('${c.id}')">
+                <td class="py-3 flex gap-3 items-center">
+                    <button class="text-sky-400 hover:text-sky-300 transition-colors mt-2" onclick="window.editCrewMember('${c.id}')" title="Edit">
+                        <i data-lucide="edit-2" class="w-4 h-4"></i>
+                    </button>
+                    <button class="text-red-400 hover:text-red-300 transition-colors mt-2" onclick="window.deleteCrewMember('${c.id}')" title="Delete">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                 </td>
@@ -899,7 +974,7 @@ async function fetchDynamicWeather() {
     }
 
     try {
-        // Now fetching data for ALL route points instead of slicing to 3
+        // Fetch data for ALL route points 
         const displayPoints = currentRoutePoints; 
         const lats = displayPoints.map(p => p.lat).join(',');
         const lngs = displayPoints.map(p => p.lng).join(',');
@@ -928,7 +1003,6 @@ async function fetchDynamicWeather() {
         });
         
         if (wBox) {
-            // Apply a max height and scrollbar if there are many cities
             wBox.innerHTML = html;
             wBox.classList.add('max-h-[150px]', 'overflow-y-auto', 'custom-scrollbar', 'pr-2');
         }
@@ -1255,11 +1329,17 @@ window.updateTripMetadata = async () => {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'trip_meta', 'latest'), {
             projectName: document.getElementById('adminMetaProj').value.trim(),
             heroTitle: document.getElementById('adminMetaTitle').value.trim(),
-            departureDate: document.getElementById('adminMetaDate').value.trim(),
+            departureDate: document.getElementById('adminMetaDate').value.trim(), // Now saving the datetime-local format
             heroDesc: document.getElementById('adminMetaDesc').value.trim(),
             chariotName: document.getElementById('adminMetaChariot').value.trim(),
             chariotPlatform: document.getElementById('adminMetaPlatform').value.trim(),
             footerTagline: document.getElementById('adminMetaTagline').value.trim(),
+            
+            // Dynamic Section Titles
+            countdownTitle: document.getElementById('adminMetaCountdownTitle').value.trim(),
+            mapTitle: document.getElementById('adminMetaMapTitle').value.trim(),
+            rosterTitle: document.getElementById('adminMetaRosterTitle').value.trim(),
+            
             routePoints: currentRoutePoints, 
             timestamp: Date.now()
         }, { merge: true });
@@ -1668,7 +1748,7 @@ function initMapAndGraphics() {
 
     if (document.getElementById('cd-days')) {
         setInterval(() => {
-            const dStr = document.getElementById('adminMetaDate') ? document.getElementById('adminMetaDate').value : "2026-07-11T00:30:00Z";
+            const dStr = document.getElementById('adminMetaDate') ? document.getElementById('adminMetaDate').value : "2026-07-11T10:30";
             const targetDate = new Date(dStr).getTime();
             if(isNaN(targetDate)) return;
             
