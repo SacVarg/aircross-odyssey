@@ -229,7 +229,8 @@ function setupFirestoreListeners() {
                         }
                     });
                     routeContainer.innerHTML = routeHtml;
-                    lucide.createIcons();
+                    
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
 
                 // Call dynamic weather and update map if already initialized
@@ -316,11 +317,11 @@ function setupFirestoreListeners() {
 }
 
 // ==========================================
-// AUTHENTICATION LOGIC (WITH RACE CONDITION FIX)
+// AUTHENTICATION LOGIC
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Once the user session (anonymous or admin) is ready, it is safe to read Firestore!
+        // Safe to read Firestore now
         isAuthenticated = !user.isAnonymous;
         
         setupFirestoreListeners();
@@ -357,23 +358,30 @@ initAuth();
 // ==========================================
 // SYNCHRONIZED FOUC LOADER LOGIC
 // ==========================================
-function checkAndHideLoader() {
-    if (metadataLoaded && initialLoadComplete) {
-        const loader = document.getElementById('loader');
-        if (loader && loader.style.display !== 'none') {
-            loader.style.opacity = '0';
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 500);
-        }
+function removeLoader() {
+    const loader = document.getElementById('loader');
+    if (loader && loader.style.display !== 'none') {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+            loader.style.display = 'none';
+        }, 500);
     }
 }
 
-// Fallback: if Firebase is slow, hide loader after 3.5s to prevent freezing
+function checkAndHideLoader() {
+    if (metadataLoaded && initialLoadComplete) {
+        removeLoader();
+    }
+}
+
+// Absolute Failsafe: Hide loader after max 2.5s to prevent infinite freezing
 setTimeout(() => {
-    metadataLoaded = true;
-    checkAndHideLoader();
-}, 3500);
+    removeLoader();
+    if (isMainPage && !initialLoadComplete) {
+        handleRoute();
+    }
+}, 2500);
+
 
 // ==========================================
 // INDEPENDENT COUNTDOWN TIMER LOGIC
@@ -571,7 +579,7 @@ function renderPublicCrew() {
         `;
     }).join('');
     
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 window.openCrewDossier = (id) => {
@@ -607,7 +615,7 @@ window.openCrewDossier = (id) => {
         </div>
     `;
     
-    lucide.createIcons(); 
+    if (typeof lucide !== 'undefined') lucide.createIcons(); 
     modal.classList.remove('hidden'); 
     modal.classList.add('flex');
     
@@ -670,7 +678,7 @@ window.handleCrewPhotoSelect = async (e) => {
     
     const btn = document.getElementById('crewPhotoBtn'); 
     btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin text-white"></i>`; 
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     
     try {
         tempCrewPhoto = await new Promise((resolve) => {
@@ -703,11 +711,11 @@ window.handleCrewPhotoSelect = async (e) => {
         
         btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> HAS PHOTO`; 
         btn.classList.add('border-emerald-500', 'text-emerald-400');
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     } catch(err) { 
         btn.innerHTML = `PHOTO`; 
         showToast('Photo processing failed', 'error'); 
-        lucide.createIcons(); 
+        if (typeof lucide !== 'undefined') lucide.createIcons(); 
     }
 };
 
@@ -738,7 +746,7 @@ window.editCrewMember = (id) => {
     
     document.getElementById('btnSaveCrew').innerText = 'UPDATE ROSTER';
     document.getElementById('btnCancelEditCrew').classList.remove('hidden');
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 };
 
 window.cancelEditCrew = () => {
@@ -758,7 +766,7 @@ window.cancelEditCrew = () => {
 
     document.getElementById('btnSaveCrew').innerText = 'ADD TO ROSTER';
     document.getElementById('btnCancelEditCrew').classList.add('hidden');
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 };
 
 window.saveCrewMember = async () => {
@@ -851,7 +859,7 @@ function renderAdminCrew() {
         `;
     }).join('');
     
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ==========================================
@@ -909,7 +917,7 @@ window.toggleRecord = async () => {
         btn.classList.remove('animate-pulse', 'bg-red-500', 'text-white', 'border-red-600'); 
         btn.classList.add('bg-white/10', 'text-white/50'); 
         clearTimeout(recordingTimer); 
-        lucide.createIcons(); 
+        if (typeof lucide !== 'undefined') lucide.createIcons(); 
         return;
     }
     
@@ -945,7 +953,7 @@ window.toggleRecord = async () => {
         btn.innerHTML = `<i data-lucide="square" class="w-4 h-4"></i>`; 
         btn.classList.remove('bg-white/10', 'text-white/50'); 
         btn.classList.add('animate-pulse', 'bg-red-500', 'text-white', 'border-red-600'); 
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         
         recordingTimer = setTimeout(() => { 
             if (mediaRecorder.state === 'recording') { 
@@ -990,7 +998,7 @@ function renderPublicComms() {
         `;
     }).join('');
     
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ==========================================
@@ -1076,7 +1084,7 @@ function renderNotes() {
         `;
     }).join('');
     
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ==========================================
@@ -1215,7 +1223,7 @@ function renderDedicatedGallery() {
             </div>
         `).join('');
     }
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 window.downloadImage = (dataUrl, filename) => { 
@@ -1389,12 +1397,12 @@ window.authenticateAdmin = async () => {
         await signInWithEmailAndPassword(auth, email, pwd);
         document.getElementById('loginScreen').classList.add('hidden'); 
         document.getElementById('dashboard').classList.remove('hidden'); 
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     } catch (error) { 
         showToast('Access Denied. Invalid credentials.', 'error'); 
     } finally { 
         btn.innerHTML = originalText; 
-        lucide.createIcons(); 
+        if (typeof lucide !== 'undefined') lucide.createIcons(); 
     }
 };
 
@@ -1474,7 +1482,7 @@ function renderAdminRouteTags() {
             <button onclick="window.removeRoutePoint(${i})" class="text-white/50 hover:text-red-400 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
         </div>
     `).join('');
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 window.removeRoutePoint = (index) => {
@@ -1512,6 +1520,7 @@ window.updateTripMetadata = async () => {
 
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'trip_meta', 'latest'), payload, { merge: true });
         
+        // Reset the BG file input to blank visually
         document.getElementById('adminMetaBgInput').value = '';
         
         showToast('Global Settings Updated', 'success');
@@ -1609,7 +1618,7 @@ function renderAdminBanners() {
                 </td>
             </tr>
         `; 
-        lucide.createIcons(); 
+        if (typeof lucide !== 'undefined') lucide.createIcons(); 
         return; 
     }
     
@@ -1630,7 +1639,7 @@ function renderAdminBanners() {
         </tr>
     `).join('');
     
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function renderAdminGallery() {
@@ -1646,7 +1655,7 @@ function renderAdminGallery() {
                 </td>
             </tr>
         `; 
-        lucide.createIcons(); 
+        if (typeof lucide !== 'undefined') lucide.createIcons(); 
         return; 
     }
     
@@ -1669,7 +1678,7 @@ function renderAdminGallery() {
         </tr>
     `).join('');
     
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function renderAdminComms() {
@@ -1684,7 +1693,7 @@ function renderAdminComms() {
                 </td>
             </tr>
         `; 
-        lucide.createIcons(); 
+        if (typeof lucide !== 'undefined') lucide.createIcons(); 
         return; 
     }
     
@@ -1706,7 +1715,7 @@ function renderAdminComms() {
         </tr>`; 
     }).join('');
     
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ==========================================
@@ -1741,7 +1750,7 @@ function showToast(msg, type) {
     t.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-4 h-4"></i> <span>${msg}</span>`;
     
     container.appendChild(t); 
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     
     setTimeout(() => { 
         t.style.opacity = '0'; 
@@ -1768,14 +1777,18 @@ function handleRoute() {
 
 window.addEventListener('hashchange', handleRoute);
 
-window.addEventListener('load', () => {
-    // Ensures that the UI loads if Firebase hasn't already fired
-    if (!metadataLoaded) {
-        checkAndHideLoader();
-    }
+function onPageLoad() {
+    initialLoadComplete = true;
+    checkAndHideLoader();
     if (isMainPage) handleRoute(); 
-    lucide.createIcons();
-});
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+if (document.readyState === 'complete') {
+    onPageLoad();
+} else {
+    window.addEventListener('load', onPageLoad);
+}
 
 window.triggerHyperdrive = () => { 
     logoClicks++; 
@@ -1809,11 +1822,19 @@ function activateHyperdrive() {
     }, 4000); 
 }
 
+window.closeMapHud = () => { 
+    const hud = document.getElementById('map-hud'); 
+    if (hud) { 
+        hud.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto'); 
+        hud.classList.add('opacity-0', 'scale-95', 'pointer-events-none'); 
+    } 
+};
+
 // ==========================================
 // DYNAMIC LEAFLET MAP ENGINE
 // ==========================================
 function updatePublicMap(routeArray) {
-    if (!realMapInstance || !routeArray || routeArray.length === 0) return;
+    if (!realMapInstance || !mapMarkersLayer || !routeArray || routeArray.length === 0) return;
 
     // Clear existing markers and lines
     mapMarkersLayer.clearLayers();
@@ -1888,7 +1909,7 @@ function updatePublicMap(routeArray) {
                     <i data-lucide="crosshair" class="w-3 h-3"></i> LAT: ${loc.coords[0].toFixed(4)} LNG: ${loc.coords[1].toFixed(4)}
                 </div>
             `;
-            lucide.createIcons(); 
+            if (typeof lucide !== 'undefined') lucide.createIcons(); 
             hud.classList.remove('opacity-0', 'scale-95', 'pointer-events-none'); 
             hud.classList.add('opacity-100', 'scale-100', 'pointer-events-auto'); 
             realMapInstance.setView(loc.coords, 8, { animate: true });
