@@ -90,12 +90,24 @@
         }
 
         /* Scrollbars */
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar { 
+            display: none; 
+        }
+        .hide-scrollbar { 
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
+        }
         
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { 
+            width: 4px; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-track { 
+            background: rgba(0,0,0,0.1); 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb { 
+            background: rgba(255,255,255,0.2); 
+            border-radius: 4px; 
+        }
 
         /* Admin Forms */
         .form-input, .form-select, .form-textarea, .login-input {
@@ -115,7 +127,9 @@
             border-color: #38bdf8;
         }
 
-        model-viewer { background-color: transparent; }
+        model-viewer { 
+            background-color: transparent; 
+        }
 
         /* =========================================================
            VERTICAL TIMELINE (LEFT SIDE NAVIGATION)
@@ -186,64 +200,93 @@
         }
 
         /* =========================================================
-           STRICT CREW ROSTER OVERRIDES
+           STRICT CREW ROSTER OVERRIDES (WITH STATUS BADGES)
            ========================================================= */
         #dynamic-crew-grid > div {
-            background: rgba(255, 255, 255, 0.05) !important; 
-            backdrop-filter: blur(12px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important; 
-            border-radius: 1.5rem !important;
-            padding: 1.5rem !important; 
-            display: flex !important; 
-            flex-direction: column !important;
-            align-items: center !important; 
-            text-align: center !important; 
-            transition: transform 0.2s !important;
-            position: relative !important; 
-            overflow: hidden !important;
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            border-radius: 1.5rem;
+            padding: 1.5rem; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            text-align: center; 
+            transition: transform 0.2s;
+            position: relative; 
+            overflow: hidden;
+            cursor: pointer;
         }
 
         #dynamic-crew-grid > div:hover { 
-            transform: translateY(-5px) !important; 
-            background: rgba(255, 255, 255, 0.1) !important; 
+            transform: translateY(-5px); 
+            background: rgba(255, 255, 255, 0.1); 
         }
 
-        #dynamic-crew-grid > div * { 
-            position: relative !important; 
-            inset: auto !important; 
-            max-width: 100% !important; 
+        .crew-avatar-wrapper {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem auto;
         }
 
-        #dynamic-crew-grid img {
-            display: block !important; 
-            width: 80px !important; 
-            height: 80px !important; 
-            min-width: 80px !important;
-            min-height: 80px !important; 
-            border-radius: 50% !important; 
-            object-fit: cover !important;
-            border: 3px solid rgba(255, 255, 255, 0.3) !important; 
-            margin: 0 auto 1rem auto !important;
-            background: rgba(0,0,0,0.2) !important; 
-            z-index: 10 !important; 
-            opacity: 1 !important;
+        .crew-avatar-img, .crew-avatar-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0,0,0,0.2);
+            z-index: 10;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s ease;
         }
 
-        #dynamic-crew-grid h3, #dynamic-crew-grid .name, #dynamic-crew-grid strong {
-            font-family: 'Space Grotesk', sans-serif !important; 
-            font-size: 1.125rem !important;
-            font-weight: 700 !important; 
-            color: white !important; 
-            margin: 0 0 0.25rem 0 !important;
+        .crew-status-badge {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
         }
 
-        #dynamic-crew-grid p, #dynamic-crew-grid .role, #dynamic-crew-grid span {
-            font-family: 'Inter', sans-serif !important; 
-            font-size: 0.75rem !important; 
-            color: rgba(255, 255, 255, 0.6) !important;
-            text-transform: uppercase !important; 
-            letter-spacing: 0.1em !important; 
-            margin: 0 !important;
+        .status-confirmed {
+            background-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+        }
+
+        .status-pending {
+            background-color: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+        }
+
+        #dynamic-crew-grid h3 {
+            font-family: 'Space Grotesk', sans-serif; 
+            font-size: 1.125rem;
+            font-weight: 700; 
+            color: white; 
+            margin: 0 0 0.25rem 0;
+        }
+
+        #dynamic-crew-grid p {
+            font-family: 'Inter', sans-serif; 
+            font-size: 0.75rem; 
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase; 
+            letter-spacing: 0.1em; 
+            margin: 0;
         }
     </style>
 </head>
@@ -251,9 +294,11 @@
 
     <div id="public-view" class="transition-all duration-300 min-h-screen relative">
         
+        <!-- Background Layers -->
         <div class="immersive-bg"></div>
         <div class="bg-overlay"></div>
 
+        <!-- Initial Loader (Waits for Firebase) -->
         <div id="loader" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-500">
             <div class="text-white font-space font-semibold tracking-[0.3em] text-sm mb-4">
                 INITIALIZING <span id="meta-loader-name"></span>
@@ -263,6 +308,7 @@
             </div>
         </div>
 
+        <!-- Desktop Vertical Timeline Navigation -->
         <div class="vertical-timeline hidden xl:flex">
             <div class="time-dot active" data-target="mission">1</div>
             <div class="time-line"></div>
@@ -275,6 +321,7 @@
             <div class="time-dot" data-target="crew">5</div>
         </div>
 
+        <!-- Main Navigation Bar -->
         <nav class="fixed top-0 w-full z-[80] px-6 lg:px-12 py-4 md:py-6 flex justify-between items-center bg-slate-900/50 backdrop-blur-md border-b border-white/10">
             <div class="font-space font-bold text-xl tracking-widest text-white flex items-center gap-2 cursor-pointer select-none" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
                 <i data-lucide="compass" class="w-6 h-6 text-sky-400"></i> <span id="meta-nav-name"></span>
@@ -297,6 +344,7 @@
             </div>
         </nav>
 
+        <!-- Mobile Menu Full Screen Overlay -->
         <div id="mobile-menu" class="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-2xl flex flex-col items-center justify-center gap-6 transform translate-x-full transition-transform duration-300 lg:hidden overflow-y-auto py-10">
             <button class="absolute top-6 right-6 p-4 text-white/50 hover:text-white transition-colors" onclick="document.getElementById('mobile-menu').classList.add('translate-x-full'); document.getElementById('mobile-menu').classList.remove('translate-x-0');">
                 <i data-lucide="x" class="w-8 h-8"></i>
@@ -320,6 +368,9 @@
             </a>
         </div>
 
+        <!-- ========================================== -->
+        <!-- 1. HERO SECTION                            -->
+        <!-- ========================================== -->
         <section id="mission" class="relative pt-28 md:pt-36 pb-16 px-4 md:px-8 w-full max-w-7xl mx-auto flex flex-col items-center z-10 section-reveal">
             
             <div id="bulletin-board-container" class="w-full max-w-2xl mb-12 glass-panel rounded-2xl border-t-2 border-t-sky-400 p-5 bulletin-container">
@@ -348,7 +399,8 @@
                 </p>
 
                 <div id="meta-hero-route" class="mt-8 flex flex-col md:flex-row flex-wrap justify-center items-center gap-3 text-[10px] md:text-xs font-space font-bold tracking-widest text-white/50 uppercase">
-                    </div>
+                    <!-- Javascript populates this via Firebase -->
+                </div>
             </div>
 
             <div class="w-full pl-12 xl:pl-0">
@@ -396,6 +448,9 @@
             </div>
         </section>
 
+        <!-- ========================================== -->
+        <!-- 2. COUNTDOWN SECTION                       -->
+        <!-- ========================================== -->
         <section id="countdown-section" class="py-16 relative px-4 md:px-8 xl:px-24 z-10 border-t border-white/10 glass-panel section-reveal">
             <div class="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-10">
                 <div class="text-center lg:text-left w-full lg:w-1/3 pl-0 xl:pl-12">
@@ -426,6 +481,9 @@
             </div>
         </section>
 
+        <!-- ========================================== -->
+        <!-- 3. MACHINE SECTION                         -->
+        <!-- ========================================== -->
         <section id="machine" class="py-20 md:py-32 px-4 md:px-8 xl:px-24 relative z-10 section-reveal">
             <div class="max-w-7xl mx-auto pl-0 xl:pl-12">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-6">
@@ -454,7 +512,8 @@
                     <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between z-20">
                         <div class="flex justify-between items-start w-full">
                             <div class="text-white bg-black/50 backdrop-blur-md px-4 py-2 rounded-full font-space text-[10px] tracking-widest font-bold border border-white/20 hidden sm:flex items-center">
-                                <span class="w-2 h-2 bg-sky-400 rounded-full animate-pulse mr-2"></span> AX-7 PLATFORM
+                                <span class="w-2 h-2 bg-sky-400 rounded-full animate-pulse mr-2"></span> 
+                                <span id="meta-machine-platform"></span>
                             </div>
                         </div>
                         
@@ -475,6 +534,9 @@
             </div>
         </section>
 
+        <!-- ========================================== -->
+        <!-- 4. ROUTE SECTION                           -->
+        <!-- ========================================== -->
         <section id="route" class="py-20 md:py-32 px-4 md:px-8 xl:px-24 relative z-10 section-reveal">
             <div class="max-w-7xl mx-auto pl-0 xl:pl-12">
                 <div class="mb-8 md:mb-12">
@@ -487,11 +549,11 @@
                     
                     <div class="absolute top-6 right-6 w-[80%] sm:max-w-xs bg-black/80 backdrop-blur-xl border border-white/20 p-4 rounded-2xl z-20 opacity-0 pointer-events-none" id="map-hud"></div>
                     
-                    <div class="absolute bottom-6 left-6 right-6 md:right-auto bg-black/70 backdrop-blur-xl border border-white/20 p-5 rounded-2xl z-20 pointer-events-none md:w-64">
+                    <div class="absolute bottom-6 left-6 right-6 md:right-auto bg-black/70 backdrop-blur-xl border border-white/20 p-5 rounded-2xl z-20 pointer-events-none md:w-auto min-w-[250px]">
                         <div class="text-[10px] font-space font-bold text-white/50 tracking-widest mb-3 border-b border-white/20 pb-2 flex items-center gap-2 uppercase">
                             <i data-lucide="cloud-lightning" class="w-4 h-4 text-white"></i> Scanners
                         </div>
-                        <div class="space-y-2" id="weather-hud">
+                        <div class="space-y-3" id="weather-hud">
                             <div class="text-xs text-white/70 font-space animate-pulse">Initializing...</div>
                         </div>
                     </div>
@@ -499,6 +561,9 @@
             </div>
         </section>
 
+        <!-- ========================================== -->
+        <!-- 5. CREW SECTION                            -->
+        <!-- ========================================== -->
         <section id="crew" class="py-20 md:py-32 px-4 md:px-8 xl:px-24 relative z-10 border-t border-white/10 glass-panel mt-12 section-reveal">
             <div class="max-w-6xl mx-auto text-center pl-0 xl:pl-12">
                 <h3 class="text-white/50 font-space font-semibold tracking-widest text-xs mb-2 uppercase">Personnel</h3>
@@ -512,11 +577,13 @@
             </div>
         </section>
 
+        <!-- Crew Dossier Modal -->
         <div id="crewDossierModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4">
             <div class="absolute inset-0 bg-[#0f172a]/95 backdrop-blur-md" onclick="window.closeCrewDossier()"></div>
             <div id="crewDossierContent" class="relative z-10 w-full max-w-md transform scale-95 opacity-0 transition-all duration-300"></div>
         </div>
 
+        <!-- Footer -->
         <footer class="pt-20 pb-10 px-4 md:px-8 border-t border-white/10 text-center relative z-10">
             <div class="max-w-4xl mx-auto">
                 <h2 class="text-2xl font-bold font-space tracking-widest mb-6 text-white uppercase opacity-90" id="meta-footer-title">
@@ -535,8 +602,12 @@
 
     </div>
 
+    <!-- ========================================== -->
+    <!-- ADMIN VIEW                                 -->
+    <!-- ========================================== -->
     <div id="admin-view" class="theme-admin hidden min-h-screen relative z-50 bg-[#0f172a]">
         
+        <!-- Login Screen -->
         <div id="loginScreen" class="animate-in flex flex-col items-center justify-center min-h-screen w-full">
             <div class="text-center w-full max-w-sm px-4">
                 <h1 class="text-white text-4xl font-space font-bold mb-2 tracking-widest">VOYAGER</h1>
@@ -570,6 +641,7 @@
             </div>
         </div>
 
+        <!-- Dashboard -->
         <div id="dashboard" class="max-w-7xl mx-auto px-4 md:px-8 pb-12 pt-8 hidden relative z-10">
             
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-white/10 pb-6 gap-4">
@@ -589,6 +661,7 @@
                 </div>
             </div>
 
+            <!-- Global Trip Metadata Editor -->
             <div class="glass-panel p-6 rounded-2xl animate-in mb-8 border border-white/10 border-t-2 border-t-purple-400">
                 <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
                     <i data-lucide="settings" class="w-4 h-4 text-purple-400"></i> Global Trip Settings
@@ -596,7 +669,7 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Project Name (Nav)</label>
+                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Project Name (Nav/Footer)</label>
                         <input type="text" id="adminMetaProj" class="form-input" placeholder="VOYAGER">
                     </div>
                     <div>
@@ -611,6 +684,10 @@
                         <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Chariot Name</label>
                         <input type="text" id="adminMetaChariot" class="form-input" placeholder="Citroën Aircross">
                     </div>
+                    <div class="md:col-span-2">
+                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Chariot Platform / Spec</label>
+                        <input type="text" id="adminMetaPlatform" class="form-input" placeholder="AX-7 PLATFORM">
+                    </div>
                 </div>
                 
                 <div class="mb-4">
@@ -618,6 +695,7 @@
                     <textarea id="adminMetaDesc" class="form-textarea" placeholder="6 friends, 1 magnificent Citroën..."></textarea>
                 </div>
 
+                <!-- AUTOCOMPLETE ROUTE INPUT -->
                 <div class="mb-4 relative z-20">
                     <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Route Waypoints (Auto-coordinates)</label>
                     <div class="flex flex-col gap-2">
@@ -640,6 +718,7 @@
                 </button>
             </div>
 
+            <!-- Admin Telemetry -->
             <div class="glass-panel p-6 rounded-2xl animate-in mb-8 border border-white/10">
                 <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
                     <i data-lucide="gauge" class="w-4 h-4 text-sky-400"></i> Telemetry
@@ -668,13 +747,14 @@
                 </button>
             </div>
 
+            <!-- Admin Roster -->
             <div class="glass-panel p-6 rounded-2xl animate-in mb-8 border border-white/10">
                 <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
                     <i data-lucide="users" class="w-4 h-4 text-sky-400"></i> Roster
                 </h2>
                 
                 <div class="mb-6 bg-black/40 p-4 rounded-xl border border-white/10">
-                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3 items-end">
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-3 mb-3 items-end">
                         <div class="md:col-span-1">
                             <input type="file" id="crewPhotoInput" class="hidden" accept="image/*" onchange="window.handleCrewPhotoSelect(event)">
                             <button id="crewPhotoBtn" onclick="document.getElementById('crewPhotoInput').click()" class="w-full py-2 bg-white/10 text-white border border-white/20 rounded-lg text-[10px] font-bold tracking-widest hover:bg-white/20 h-[42px]">
@@ -689,6 +769,12 @@
                         </div>
                         <div class="md:col-span-1">
                             <input type="text" id="crewId" class="form-input py-2" placeholder="ID">
+                        </div>
+                        <div class="md:col-span-1">
+                            <select id="crewStatus" class="form-select py-2">
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Pending">Pending</option>
+                            </select>
                         </div>
                         <div class="md:col-span-1">
                             <select id="crewColor" class="form-select py-2">
@@ -714,7 +800,7 @@
                                 <th class="p-3">IMG</th>
                                 <th class="p-3">NAME</th>
                                 <th class="p-3">ROLE</th>
-                                <th class="p-3">ID</th>
+                                <th class="p-3">STATUS</th>
                                 <th class="p-3">ACT</th>
                             </tr>
                         </thead>
@@ -727,6 +813,7 @@
                 </div>
             </div>
 
+            <!-- Admin Banners & Gallery -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 
                 <div class="glass-panel p-6 rounded-2xl animate-in border border-white/10">
@@ -791,6 +878,7 @@
                 </div>
             </div>
             
+            <!-- Admin Comms -->
             <div class="glass-panel p-6 rounded-2xl animate-in border border-white/10">
                 <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
                     <i data-lucide="message-square" class="w-4 h-4 text-sky-400"></i> Comms Moderation
@@ -819,11 +907,10 @@
     </div>
 
     <div id="toastContainer" class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
-    
-    <div class="hidden bg-slate-800/50 truncate max-w-xs text-slate-300 text-cyan-400 text-emerald-400 text-pink-400 text-orange-400 text-violet-400 text-yellow-400 text-slate-500 text-red-400 text-xs font-bold border-b border-slate-800 hover:bg-slate-800/50 transition-colors py-3 w-14 h-14 rounded-lg object-cover shadow-md line-through opacity-60 bg-emerald-50 border-emerald-200 glass-panel border-white/80 text-slate-700 hover:text-emerald-400 bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border-slate-200/50 pb-2 bg-white/50 px-2 py-0.5 rounded leading-relaxed font-medium mt-3 custom-audio pointer-events-none pointer-events-auto bg-gradient-to-t from-emerald-900/80 via-emerald-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5 bg-white/20 backdrop-blur-md rounded-full border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.4)] hover:bg-white/40 text-white w-5 h-5 animate-pulse bg-emerald-900/30 ml-2 px-1 text-center py-10 text-slate-400 font-space text-sm col-span-full opacity-100 scale-100 scale-95 hover:scale-125 hover:scale-110 cursor-pointer hover:bg-slate-200 hover:text-slate-600 bg-slate-100 pr-6 pb-3 text-[9px] text-[10px] py-1 border-t-2 border-l-2 border-b-2 border-r-2 rounded-tl rounded-br w-[200px] animate-[spin_10s_linear_infinite] origin-top-left border-emerald-500 border-cyan-500 border-pink-500 border-orange-500 border-violet-500 border-yellow-500 text-emerald-600 text-cyan-600 text-pink-600 text-orange-600 text-violet-600 text-yellow-600 border-emerald-300 border-cyan-300 border-pink-300 border-orange-300 border-violet-300 border-yellow-300 bg-emerald-400 bg-cyan-400 bg-pink-400 bg-orange-400 bg-violet-400 bg-yellow-400 bg-emerald-500 bg-cyan-500 bg-pink-500 bg-orange-500 bg-violet-500 bg-yellow-500 border-cyan-500/50 bg-cyan-900/10 border-slate-700/50 bg-slate-800/20 hover:bg-slate-700/30 pt-0.5 shadow-[0_0_8px_#22d3ee] sm:items-start sm:flex-row sm:w-36 mb-3 rounded-xl border-l-2 gap-2 sm:gap-6 border-emerald-500/40 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.3)] text-emerald-500/70 border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.3)] text-cyan-500/70 border-pink-500/40 bg-pink-500/10 shadow-[0_0_20px_rgba(236,72,153,0.3)] text-pink-500/70 border-orange-500/40 bg-orange-500/10 shadow-[0_0_20px_rgba(249,115,22,0.3)] text-orange-500/70 border-violet-500/40 bg-violet-500/10 shadow-[0_0_20px_rgba(139,92,246,0.3)] text-violet-500/70 border-yellow-500/40 bg-yellow-500/10 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-yellow-500/70 drop-shadow-[0_0_15px_currentColor] text-3xl sm:text-4xl animate-in fade-in slide-in-from-top-2 bg-slate-900/95 backdrop-blur-xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-20 z-10 group-hover:text-emerald-300 group-hover:text-cyan-300 group-hover:text-pink-300 group-hover:text-orange-300 group-hover:text-violet-300 group-hover:text-yellow-300 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 aspect-square overflow-y-auto max-w-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 fixed w-24 h-24 rounded-2xl w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300 absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent inline-block px-2 py-1 bg-slate-800 border border-slate-700 rounded text-2xl font-black text-white uppercase tracking-widest truncate mt-6 pt-4 border-t border-slate-700/50 bg-slate-800/30"></div>
 
     <script type="module" src="app.js"></script>
 
+    <!-- Scroll Spy and Barrel Roll Animation Logic -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const dots = document.querySelectorAll('.time-dot');
