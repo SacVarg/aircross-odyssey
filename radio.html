@@ -3,95 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOYAGER | Tactical Radio</title>
+    <title>VOYAGER | Walkie Talkie</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'], space: ['Space Grotesk', 'sans-serif'] },
-                    colors: { brand: { cyan: '#06b6d4', violet: '#8b5cf6', emerald: '#10b981', pink: '#ec4899' } }
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        space: ['Space Grotesk', 'sans-serif'],
+                    }
                 }
             }
         }
     </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
+        :root {
+            /* These will be overridden by the Firebase listener in app.js */
+            --theme-hex: #38bdf8;
+            --theme-rgb: 56, 189, 248;
+        }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         
-        .cyber-grid {
-            position: fixed; inset: 0; z-index: -2;
-            background-image: 
-                linear-gradient(to right, rgba(6, 182, 212, 0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
+        body { 
+            background-color: #0f172a; 
+            color: #ffffff; 
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .immersive-bg {
+            position: fixed; inset: 0; z-index: -10;
+            background-size: cover; background-position: center; background-attachment: fixed;
+            background-color: #0f172a;
+            transition: background-image 0.5s ease-in-out;
         }
         
-        .glow-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.2; }
-        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(6, 182, 212, 0.5); }
-        .orb-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: rgba(139, 92, 246, 0.4); }
+        .bg-overlay {
+            position: fixed; inset: 0; z-index: -9;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.95) 100%);
+        }
+
+        .theme-text { color: var(--theme-hex) !important; }
+        .theme-bg { background-color: var(--theme-hex) !important; }
+        .theme-border { border-color: var(--theme-hex) !important; }
 
         .glass-panel {
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.25rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .ptt-btn { box-shadow: 0 0 30px rgba(6, 182, 212, 0.2); transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
-        .ptt-btn:active { transform: scale(0.94); box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 0 15px rgba(6, 182, 212, 0.4); }
+        .ptt-btn { 
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 30px rgba(var(--theme-rgb), 0.2);
+        }
+        .ptt-btn:active { transform: scale(0.94); }
         .ptt-btn.transmitting { background: #ef4444 !important; border-color: #f87171 !important; color: white !important; box-shadow: 0 0 50px rgba(239, 68, 68, 0.6); }
 
         .hide { display: none !important; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col">
 
-    <div class="cyber-grid"></div>
-    <div class="glow-orb orb-1"></div>
-    <div class="glow-orb orb-2"></div>
+    <div class="immersive-bg" id="global-bg-layer"></div>
+    <div class="bg-overlay"></div>
 
-    <nav class="fixed top-0 w-full z-40 bg-slate-900/50 backdrop-blur-xl border-b border-slate-700/50 px-4 py-4">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <a href="index.html" class="font-space font-bold tracking-[0.2em] text-white flex items-center gap-2">
-                <i data-lucide="compass" class="w-5 h-5 text-cyan-400"></i> VOYAGER
-            </a>
-            <button id="btn-enable-notifs" class="text-xs font-space font-bold tracking-widest text-violet-400 bg-violet-900/30 px-3 py-1.5 rounded-full border border-violet-500/30 hidden hover:bg-violet-900/50 transition-colors">
-                ENABLE ALERTS
-            </button>
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-slate-900/50 backdrop-blur-md border-b border-white/10">
+        <a href="index.html" class="font-space font-bold text-xl tracking-[0.2em] text-white flex items-center gap-2 hover:text-white/70 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5 theme-text"></i> RETURN
+        </a>
+        <div class="text-[10px] font-space font-bold tracking-widest theme-text bg-white/5 px-4 py-2 rounded-full border border-white/10 uppercase">
+            Walkie Talkie
         </div>
     </nav>
 
     <main class="flex-grow flex flex-col items-center justify-center pt-24 pb-12 px-4 max-w-md mx-auto w-full">
         <div class="text-center mb-8 w-full">
-            <h1 class="text-3xl font-space font-black tracking-widest text-white mb-2" style="text-shadow: 0 0 20px rgba(6,182,212,0.3);">
-                UHF COMM LINK
+            <h1 class="text-3xl font-space font-black tracking-widest text-white mb-2 uppercase">
+                Walkie Talkie
             </h1>
-            <p id="status-text" class="text-slate-400 text-xs font-space font-bold tracking-widest">SYSTEM DISCONNECTED</p>
+            <p id="status-text" class="text-white/50 text-xs font-space font-bold tracking-widest uppercase">
+                SYSTEM DISCONNECTED
+            </p>
         </div>
 
-        <div id="view-gate" class="glass-panel w-full p-6 flex flex-col items-center">
+        <div id="view-gate" class="glass-panel w-full p-6 flex flex-col items-center rounded-3xl">
             <div class="w-full mb-6">
-                <label class="text-xs text-slate-400 font-space font-bold tracking-widest mb-2 block">CREW CALLSIGN</label>
-                <input type="text" id="callsign-input" placeholder="e.g. EAGLE ONE" class="w-full bg-slate-900/80 border border-slate-700 text-center text-white font-space font-bold tracking-widest py-3 rounded-xl outline-none focus:border-cyan-400 transition-colors placeholder:text-slate-600 uppercase">
+                <label class="text-[10px] text-white/50 font-space font-bold tracking-widest mb-2 block uppercase">Name</label>
+                <input type="text" id="callsign-input" placeholder="e.g. MISSION PILOT" class="w-full bg-black/40 border border-white/10 text-center text-white font-space font-bold tracking-widest py-3 rounded-xl outline-none focus:border-white/30 transition-colors placeholder:text-white/20 uppercase">
             </div>
             
-            <button id="btn-join" class="w-full py-4 bg-cyan-500 text-slate-900 font-space font-black tracking-widest rounded-xl hover:bg-cyan-400 transition-colors shadow-lg">
-                CONNECT TO FREQUENCY
+            <button id="btn-join" class="w-full py-4 theme-bg text-black font-space font-black tracking-widest rounded-xl hover:opacity-90 transition-opacity shadow-lg">
+                JOIN
             </button>
         </div>
 
         <div id="view-radio" class="w-full flex flex-col items-center hide">
-            <button id="btn-ptt" class="ptt-btn w-44 h-44 rounded-full bg-cyan-500 flex flex-col items-center justify-center text-slate-900 border-8 border-slate-900/80 touch-none select-none mb-8 cursor-pointer">
+            <button id="btn-ptt" class="ptt-btn w-44 h-44 rounded-full theme-bg flex flex-col items-center justify-center text-black border-8 border-white/10 touch-none select-none mb-8 cursor-pointer">
                 <i data-lucide="mic" class="w-12 h-12 mb-2"></i>
-                <span id="ptt-label" class="font-space font-black tracking-widest text-xs">HOLD TO TRANSMIT</span>
+                <span id="ptt-label" class="font-space font-black tracking-widest text-[10px] uppercase">Hold to transmit</span>
             </button>
 
-            <div class="w-full glass-panel p-5">
-                <h3 class="text-xs text-slate-400 font-space font-bold tracking-widest mb-4 text-center">ACTIVE COMS SIGNALS</h3>
+            <div class="w-full glass-panel p-5 rounded-2xl">
+                <h3 class="text-[10px] text-white/50 font-space font-bold tracking-widest mb-4 text-center uppercase">Active Signals</h3>
                 <div id="active-users" class="flex flex-wrap justify-center gap-2"></div>
             </div>
         </div>
@@ -100,10 +125,9 @@
     <div id="remote-audio-pool" class="hidden"></div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
@@ -117,7 +141,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const messaging = getMessaging(app);
+        const appId = "aircross-odyssey-main";
 
         let localStream = null;
         let localCallsign = "";
@@ -125,109 +149,46 @@
         const peerConnections = {}; 
         const rtcConfig = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
-        lucide.createIcons();
-        signInAnonymously(auth).catch(err => alert("Auth failed: " + err.message));
-
-        // =======================================================
-        // 1. LOUD DEBUGGING PUSH NOTIFICATION CONTROLLERS
-        // =======================================================
-        const PUBLIC_VAPID_KEY = "BEI4yDAnC84PRX-I0l_r8Fv2tKdr4L3cUXRgBxzSYysbeATLAVYv2el1yMxw0WyI9ofIZM4YBHoUuuiIhy1x8SQ"; // <--- PASTE VAPID KEY HERE
-        const notifBtn = document.getElementById('btn-enable-notifs');
-
-        async function syncDeviceToken() {
-            try {
-                // Explicitly register the background service worker FIRST
-                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                
-                // CRITICAL FIX: Pause and wait for it to become completely ACTIVE
-                await navigator.serviceWorker.ready;
-                
-                // Now that it is active, grab the token
-                const token = await getToken(messaging, { 
-                    vapidKey: PUBLIC_VAPID_KEY,
-                    serviceWorkerRegistration: registration
-                });
-
-                if (token) {
-                    auth.onAuthStateChanged(async (user) => {
-                        if (user) {
-                            try {
-                                await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/fcm_tokens", token), {
-                                    token: token,
-                                    timestamp: Date.now()
-                                });
-                                console.log("Token successfully written to database.");
-                            } catch (dbError) {
-                                alert("Database Error: " + dbError.message);
-                            }
-                        }
-                    });
-                } else {
-                    alert("Browser did not return a token.");
-                }
-            } catch (error) {
-                alert("Token Generation Error: " + error.message);
-            }
+        // Helper: Convert hex to RGB for the theme engine
+        function hexToRgb(hex) {
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : "56, 189, 248";
         }
 
-        if ('serviceWorker' in navigator) {
-            if (Notification.permission === "granted") {
-                syncDeviceToken();
-            } else if (Notification.permission !== "denied") {
-                notifBtn.classList.remove('hidden');
-            }
-        }
-
-        notifBtn.addEventListener('click', async () => {
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    await syncDeviceToken();
-                    notifBtn.classList.add('hidden');
-                    alert("Push notification alerts active!");
-                } else {
-                    alert("Permission was denied by the user.");
-                }
-            } catch (error) {
-                alert("Permission Request Error: " + error.message);
+        // Apply theme from Firebase
+        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'trip_meta', 'latest'), (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const root = document.documentElement;
+                const activeColor = data.themeColor || '#38bdf8';
+                root.style.setProperty('--theme-hex', activeColor);
+                root.style.setProperty('--theme-rgb', hexToRgb(activeColor));
+                
+                const bgLayer = document.getElementById('global-bg-layer');
+                if (bgLayer && data.bgImage) bgLayer.style.backgroundImage = `url('${data.bgImage}')`;
             }
         });
 
-        onMessage(messaging, (payload) => console.log('Foreground push package intercepted: ', payload));
+        lucide.createIcons();
+        signInAnonymously(auth).catch(err => console.error("Auth failed: " + err.message));
 
-        // =======================================================
-        // 2. CONNECTION GATE & HEARTBEAT ENGINE
-        // =======================================================
         document.getElementById('btn-join').addEventListener('click', async () => {
             localCallsign = document.getElementById('callsign-input').value.trim().toUpperCase();
-            if (!localCallsign) return alert("Please enter a callsign.");
+            if (!localCallsign) return alert("Please enter a name.");
 
             document.getElementById('view-gate').classList.add('hide');
             document.getElementById('view-radio').classList.remove('hide');
-            document.getElementById('status-text').textContent = `ONLINE // CALLSIGN: ${localCallsign}`;
-            document.getElementById('status-text').className = "text-cyan-400 text-xs font-space font-bold tracking-widest";
-
-            try {
-                await fetch('/api/notify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ caller: localCallsign })
-                });
-            } catch (e) { console.error("Vercel notification relay dropped:", e); }
+            document.getElementById('status-text').textContent = `ONLINE // NAME: ${localCallsign}`;
 
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 localStream.getTracks().forEach(track => track.enabled = false);
-            } catch (err) {
-                alert("Microphone hardware access is required."); return;
-            }
+            } catch (err) { alert("Microphone access is required."); return; }
 
-            // Register initial presence
             await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/radio_frequency", localCallsign), {
                 active: true, timestamp: Date.now()
             });
 
-            // HEARTBEAT: Ping the database every 5 seconds so we don't become a ghost
             heartbeatInterval = setInterval(() => {
                 if (localCallsign) {
                     setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/radio_frequency", localCallsign), {
@@ -239,27 +200,20 @@
             initializeMeshSignaling();
         });
 
-        // =======================================================
-        // 3. WEBRTC MESH SIGNALING (WITH AUTO-PURGE FILTER)
-        // =======================================================
         function initializeMeshSignaling() {
             const freqCollection = collection(db, "artifacts/aircross-odyssey-main/public/data/radio_frequency");
-
             onSnapshot(freqCollection, (snapshot) => {
                 const rosterDiv = document.getElementById('active-users');
                 rosterDiv.innerHTML = "";
-
                 snapshot.forEach(async (userDoc) => {
                     const peerCallsign = userDoc.id;
                     const lastPulse = userDoc.data().timestamp;
-                    
-                    // AUTO-PURGE: Ignore users who haven't sent a heartbeat in 15 seconds
                     if (Date.now() - lastPulse > 15000) return; 
                     
                     if (peerCallsign === localCallsign) {
-                        rosterDiv.innerHTML += `<span class="bg-cyan-500/20 text-cyan-400 text-xs font-space font-bold px-3 py-1.5 rounded-full border border-cyan-400/50">${peerCallsign} (YOU)</span>`;
+                        rosterDiv.innerHTML += `<span class="bg-white/10 text-white text-[10px] font-space font-bold px-3 py-1.5 rounded-full border border-white/20">${peerCallsign} (YOU)</span>`;
                     } else {
-                        rosterDiv.innerHTML += `<span class="bg-slate-800 text-slate-300 text-xs font-space font-bold px-3 py-1.5 rounded-full border border-slate-700">${peerCallsign}</span>`;
+                        rosterDiv.innerHTML += `<span class="bg-slate-800 text-slate-300 text-[10px] font-space font-bold px-3 py-1.5 rounded-full border border-slate-700">${peerCallsign}</span>`;
                         if (!peerConnections[peerCallsign] && localCallsign.localeCompare(peerCallsign) < 0) {
                             await initiatePeerConnection(peerCallsign);
                         }
@@ -277,9 +231,7 @@
 
             onSnapshot(collection(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${localCallsign}/answers`), (snapshot) => {
                 snapshot.forEach(async (change) => {
-                    if (peerConnections[change.id]) {
-                        await peerConnections[change.id].setRemoteDescription(new RTCSessionDescription(change.data().answer));
-                    }
+                    if (peerConnections[change.id]) await peerConnections[change.id].setRemoteDescription(new RTCSessionDescription(change.data().answer));
                     await deleteDoc(change.ref);
                 });
             });
@@ -298,95 +250,45 @@
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[peerCallsign] = pc;
             localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
             pc.onicecandidate = (event) => {
-                if (event.candidate) {
-                    setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${peerCallsign}/candidates`, localCallsign), {
-                        candidate: event.candidate.toJSON(), timestamp: Date.now()
-                    });
-                }
+                if (event.candidate) setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${peerCallsign}/candidates`, localCallsign), { candidate: event.candidate.toJSON(), timestamp: Date.now() });
             };
-
             pc.ontrack = (event) => bindRemoteAudioStream(peerCallsign, event.streams[0]);
-
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
-            await setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${peerCallsign}/offers`, localCallsign), {
-                offer: { type: offer.type, sdp: offer.sdp }, timestamp: Date.now()
-            });
+            await setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${peerCallsign}/offers`, localCallsign), { offer: { type: offer.type, sdp: offer.sdp }, timestamp: Date.now() });
         }
 
         async function handleIncomingOffer(senderCallsign, remoteOffer) {
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[senderCallsign] = pc;
             localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
             pc.onicecandidate = (event) => {
-                if (event.candidate) {
-                    setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${senderCallsign}/candidates`, localCallsign), {
-                        candidate: event.candidate.toJSON(), timestamp: Date.now()
-                    });
-                }
+                if (event.candidate) setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${senderCallsign}/candidates`, localCallsign), { candidate: event.candidate.toJSON(), timestamp: Date.now() });
             };
-
             pc.ontrack = (event) => bindRemoteAudioStream(senderCallsign, event.streams[0]);
-
             await pc.setRemoteDescription(new RTCSessionDescription(remoteOffer));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            await setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${senderCallsign}/answers`, localCallsign), {
-                answer: { type: answer.type, sdp: answer.sdp }, timestamp: Date.now()
-            });
+            await setDoc(doc(db, `artifacts/aircross-odyssey-main/public/data/radio_frequency/${senderCallsign}/answers`, localCallsign), { answer: { type: answer.type, sdp: answer.sdp }, timestamp: Date.now() });
         }
 
         function bindRemoteAudioStream(callsign, stream) {
             const pool = document.getElementById('remote-audio-pool');
             let audioEl = document.getElementById(`audio-${callsign}`);
             if (!audioEl) {
-                audioEl = document.createElement('audio');
-                audioEl.id = `audio-${callsign}`;
-                audioEl.autoplay = true;
-                pool.appendChild(audioEl);
+                audioEl = document.createElement('audio'); audioEl.id = `audio-${callsign}`; audioEl.autoplay = true; pool.appendChild(audioEl);
             }
             audioEl.srcObject = stream;
         }
 
-        // =======================================================
-        // 4. PTT LOGIC & MOBILE SAFARI CLEANUP
-        // =======================================================
         const pttBtn = document.getElementById('btn-ptt');
         const pttLabel = document.getElementById('ptt-label');
+        const engageTransmission = () => { if (!localStream) return; localStream.getTracks().forEach(track => track.enabled = true); pttBtn.classList.add('transmitting'); pttLabel.textContent = "TRANSMITTING..."; };
+        const severTransmission = () => { if (!localStream) return; localStream.getTracks().forEach(track => track.enabled = false); pttBtn.classList.remove('transmitting'); pttLabel.textContent = "HOLD TO TRANSMIT"; };
 
-        const engageTransmission = () => {
-            if (!localStream) return;
-            localStream.getTracks().forEach(track => track.enabled = true);
-            pttBtn.classList.add('transmitting');
-            pttLabel.textContent = "TRANSMITTING LIVE...";
-        };
-
-        const severTransmission = () => {
-            if (!localStream) return;
-            localStream.getTracks().forEach(track => track.enabled = false);
-            pttBtn.classList.remove('transmitting');
-            pttLabel.textContent = "HOLD TO TRANSMIT";
-        };
-
-        pttBtn.addEventListener('mousedown', engageTransmission);
-        pttBtn.addEventListener('mouseup', severTransmission);
-        pttBtn.addEventListener('mouseleave', severTransmission);
-        pttBtn.addEventListener('touchstart', (e) => { e.preventDefault(); engageTransmission(); });
-        pttBtn.addEventListener('touchend', (e) => { e.preventDefault(); severTransmission(); });
-
-        // Better Mobile Cleanup Hooks
-        const cleanupAndExit = () => {
-            if (localCallsign) {
-                clearInterval(heartbeatInterval);
-                deleteDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/radio_frequency", localCallsign));
-            }
-        };
-        window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') cleanupAndExit(); });
-        window.addEventListener('pagehide', cleanupAndExit);
-        window.addEventListener('beforeunload', cleanupAndExit);
+        pttBtn.addEventListener('mousedown', engageTransmission); pttBtn.addEventListener('mouseup', severTransmission); pttBtn.addEventListener('mouseleave', severTransmission);
+        pttBtn.addEventListener('touchstart', (e) => { e.preventDefault(); engageTransmission(); }); pttBtn.addEventListener('touchend', (e) => { e.preventDefault(); severTransmission(); });
     </script>
 </body>
 </html>
