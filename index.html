@@ -90,24 +90,12 @@
         }
 
         /* Scrollbars */
-        .hide-scrollbar::-webkit-scrollbar { 
-            display: none; 
-        }
-        .hide-scrollbar { 
-            -ms-overflow-style: none; 
-            scrollbar-width: none; 
-        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .custom-scrollbar::-webkit-scrollbar { 
-            width: 4px; 
-        }
-        .custom-scrollbar::-webkit-scrollbar-track { 
-            background: rgba(0,0,0,0.1); 
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb { 
-            background: rgba(255,255,255,0.2); 
-            border-radius: 4px; 
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
 
         /* Admin Forms */
         .form-input, .form-select, .form-textarea, .login-input {
@@ -127,9 +115,7 @@
             border-color: #38bdf8;
         }
 
-        model-viewer { 
-            background-color: transparent; 
-        }
+        model-viewer { background-color: transparent; }
 
         /* =========================================================
            VERTICAL TIMELINE (LEFT SIDE NAVIGATION)
@@ -203,24 +189,24 @@
            STRICT CREW ROSTER OVERRIDES (WITH STATUS BADGES)
            ========================================================= */
         #dynamic-crew-grid > div {
-            background: rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15); 
-            border-radius: 1.5rem;
-            padding: 1.5rem; 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            text-align: center; 
-            transition: transform 0.2s;
-            position: relative; 
-            overflow: hidden;
-            cursor: pointer;
+            background: rgba(255, 255, 255, 0.05) !important; 
+            backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important; 
+            border-radius: 1.5rem !important;
+            padding: 1.5rem !important; 
+            display: flex !important; 
+            flex-direction: column !important;
+            align-items: center !important; 
+            text-align: center !important; 
+            transition: transform 0.2s !important;
+            position: relative !important; 
+            overflow: hidden !important;
+            cursor: pointer !important;
         }
 
         #dynamic-crew-grid > div:hover { 
-            transform: translateY(-5px); 
-            background: rgba(255, 255, 255, 0.1); 
+            transform: translateY(-5px) !important; 
+            background: rgba(255, 255, 255, 0.1) !important; 
         }
 
         .crew-avatar-wrapper {
@@ -294,11 +280,9 @@
 
     <div id="public-view" class="transition-all duration-300 min-h-screen relative">
         
-        <!-- Background Layers -->
         <div class="immersive-bg"></div>
         <div class="bg-overlay"></div>
 
-        <!-- Initial Loader (Waits for Firebase) -->
         <div id="loader" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-500">
             <div class="text-white font-space font-semibold tracking-[0.3em] text-sm mb-4">
                 INITIALIZING <span id="meta-loader-name"></span>
@@ -308,7 +292,6 @@
             </div>
         </div>
 
-        <!-- Desktop Vertical Timeline Navigation -->
         <div class="vertical-timeline hidden xl:flex">
             <div class="time-dot active" data-target="mission">1</div>
             <div class="time-line"></div>
@@ -321,7 +304,6 @@
             <div class="time-dot" data-target="crew">5</div>
         </div>
 
-        <!-- Main Navigation Bar -->
         <nav class="fixed top-0 w-full z-[80] px-6 lg:px-12 py-4 md:py-6 flex justify-between items-center bg-slate-900/50 backdrop-blur-md border-b border-white/10">
             <div class="font-space font-bold text-xl tracking-widest text-white flex items-center gap-2 cursor-pointer select-none" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
                 <i data-lucide="compass" class="w-6 h-6 text-sky-400"></i> <span id="meta-nav-name"></span>
@@ -344,7 +326,6 @@
             </div>
         </nav>
 
-        <!-- Mobile Menu Full Screen Overlay -->
         <div id="mobile-menu" class="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-2xl flex flex-col items-center justify-center gap-6 transform translate-x-full transition-transform duration-300 lg:hidden overflow-y-auto py-10">
             <button class="absolute top-6 right-6 p-4 text-white/50 hover:text-white transition-colors" onclick="document.getElementById('mobile-menu').classList.add('translate-x-full'); document.getElementById('mobile-menu').classList.remove('translate-x-0');">
                 <i data-lucide="x" class="w-8 h-8"></i>
@@ -368,9 +349,6 @@
             </a>
         </div>
 
-        <!-- ========================================== -->
-        <!-- 1. HERO SECTION                            -->
-        <!-- ========================================== -->
         <section id="mission" class="relative pt-28 md:pt-36 pb-16 px-4 md:px-8 w-full max-w-7xl mx-auto flex flex-col items-center z-10 section-reveal">
             
             <div id="bulletin-board-container" class="w-full max-w-2xl mb-12 glass-panel rounded-2xl border-t-2 border-t-sky-400 p-5 bulletin-container">
@@ -399,8 +377,7 @@
                 </p>
 
                 <div id="meta-hero-route" class="mt-8 flex flex-col md:flex-row flex-wrap justify-center items-center gap-3 text-[10px] md:text-xs font-space font-bold tracking-widest text-white/50 uppercase">
-                    <!-- Javascript populates this via Firebase -->
-                </div>
+                    </div>
             </div>
 
             <div class="w-full pl-12 xl:pl-0">
@@ -448,16 +425,13 @@
             </div>
         </section>
 
-        <!-- ========================================== -->
-        <!-- 2. COUNTDOWN SECTION                       -->
-        <!-- ========================================== -->
         <section id="countdown-section" class="py-16 relative px-4 md:px-8 xl:px-24 z-10 border-t border-white/10 glass-panel section-reveal">
             <div class="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-10">
                 <div class="text-center lg:text-left w-full lg:w-1/3 pl-0 xl:pl-12">
                     <h3 class="text-sky-400 font-space font-semibold tracking-widest text-xs mb-2 uppercase flex items-center justify-center lg:justify-start gap-2">
                         <i data-lucide="clock" class="w-4 h-4"></i> Adventure Clock
                     </h3>
-                    <h2 class="text-3xl md:text-4xl font-bold font-space text-white">T-Minus Launch</h2>
+                    <h2 class="text-3xl md:text-4xl font-bold font-space text-white uppercase" id="meta-countdown-title"></h2>
                 </div>
                 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full lg:w-2/3">
@@ -481,9 +455,6 @@
             </div>
         </section>
 
-        <!-- ========================================== -->
-        <!-- 3. MACHINE SECTION                         -->
-        <!-- ========================================== -->
         <section id="machine" class="py-20 md:py-32 px-4 md:px-8 xl:px-24 relative z-10 section-reveal">
             <div class="max-w-7xl mx-auto pl-0 xl:pl-12">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-6">
@@ -511,7 +482,7 @@
                     
                     <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between z-20">
                         <div class="flex justify-between items-start w-full">
-                            <div class="text-white bg-black/50 backdrop-blur-md px-4 py-2 rounded-full font-space text-[10px] tracking-widest font-bold border border-white/20 hidden sm:flex items-center">
+                            <div class="text-white bg-black/50 backdrop-blur-md px-4 py-2 rounded-full font-space text-[10px] tracking-widest font-bold border border-white/20 flex items-center">
                                 <span class="w-2 h-2 bg-sky-400 rounded-full animate-pulse mr-2"></span> 
                                 <span id="meta-machine-platform"></span>
                             </div>
@@ -534,14 +505,11 @@
             </div>
         </section>
 
-        <!-- ========================================== -->
-        <!-- 4. ROUTE SECTION                           -->
-        <!-- ========================================== -->
         <section id="route" class="py-20 md:py-32 px-4 md:px-8 xl:px-24 relative z-10 section-reveal">
             <div class="max-w-7xl mx-auto pl-0 xl:pl-12">
                 <div class="mb-8 md:mb-12">
                     <h3 class="text-white/50 font-space font-semibold tracking-widest text-xs mb-2 uppercase">Geolocation</h3>
-                    <h2 class="text-4xl md:text-5xl font-bold font-space text-white">Trajectory Map</h2>
+                    <h2 class="text-4xl md:text-5xl font-bold font-space text-white uppercase" id="meta-map-title"></h2>
                 </div>
                 
                 <div class="relative w-full h-[500px] md:h-[600px] rounded-[2rem] overflow-hidden glass-panel border border-white/10 p-2 shadow-2xl">
@@ -561,13 +529,10 @@
             </div>
         </section>
 
-        <!-- ========================================== -->
-        <!-- 5. CREW SECTION                            -->
-        <!-- ========================================== -->
         <section id="crew" class="py-20 md:py-32 px-4 md:px-8 xl:px-24 relative z-10 border-t border-white/10 glass-panel mt-12 section-reveal">
             <div class="max-w-6xl mx-auto text-center pl-0 xl:pl-12">
                 <h3 class="text-white/50 font-space font-semibold tracking-widest text-xs mb-2 uppercase">Personnel</h3>
-                <h2 class="text-4xl md:text-5xl font-bold font-space text-white mb-12">Squadron Roster</h2>
+                <h2 class="text-4xl md:text-5xl font-bold font-space text-white mb-12 uppercase" id="meta-roster-title"></h2>
 
                 <div id="dynamic-crew-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 justify-center w-full">
                     <div class="text-center col-span-full py-20 text-white/50 font-space text-sm">
@@ -577,13 +542,11 @@
             </div>
         </section>
 
-        <!-- Crew Dossier Modal -->
         <div id="crewDossierModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4">
             <div class="absolute inset-0 bg-[#0f172a]/95 backdrop-blur-md" onclick="window.closeCrewDossier()"></div>
             <div id="crewDossierContent" class="relative z-10 w-full max-w-md transform scale-95 opacity-0 transition-all duration-300"></div>
         </div>
 
-        <!-- Footer -->
         <footer class="pt-20 pb-10 px-4 md:px-8 border-t border-white/10 text-center relative z-10">
             <div class="max-w-4xl mx-auto">
                 <h2 class="text-2xl font-bold font-space tracking-widest mb-6 text-white uppercase opacity-90" id="meta-footer-title">
@@ -602,12 +565,8 @@
 
     </div>
 
-    <!-- ========================================== -->
-    <!-- ADMIN VIEW                                 -->
-    <!-- ========================================== -->
     <div id="admin-view" class="theme-admin hidden min-h-screen relative z-50 bg-[#0f172a]">
         
-        <!-- Login Screen -->
         <div id="loginScreen" class="animate-in flex flex-col items-center justify-center min-h-screen w-full">
             <div class="text-center w-full max-w-sm px-4">
                 <h1 class="text-white text-4xl font-space font-bold mb-2 tracking-widest">VOYAGER</h1>
@@ -641,7 +600,6 @@
             </div>
         </div>
 
-        <!-- Dashboard -->
         <div id="dashboard" class="max-w-7xl mx-auto px-4 md:px-8 pb-12 pt-8 hidden relative z-10">
             
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-white/10 pb-6 gap-4">
@@ -661,7 +619,6 @@
                 </div>
             </div>
 
-            <!-- Global Trip Metadata Editor -->
             <div class="glass-panel p-6 rounded-2xl animate-in mb-8 border border-white/10 border-t-2 border-t-purple-400">
                 <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
                     <i data-lucide="settings" class="w-4 h-4 text-purple-400"></i> Global Trip Settings
@@ -677,8 +634,8 @@
                         <input type="text" id="adminMetaTitle" class="form-input" placeholder="AIRCROSS ODYSSEY">
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Departure Date</label>
-                        <input type="text" id="adminMetaDate" class="form-input" placeholder="11 July 2026">
+                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Departure Date & Time</label>
+                        <input type="datetime-local" id="adminMetaDate" class="form-input" style="color-scheme: dark;">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Chariot Name</label>
@@ -690,12 +647,29 @@
                     </div>
                 </div>
                 
+                <div class="mb-4 border-t border-white/10 pt-4">
+                    <h3 class="text-[10px] font-bold text-sky-400 mb-3 tracking-widest uppercase">Dynamic Section Titles</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Countdown Title</label>
+                            <input type="text" id="adminMetaCountdownTitle" class="form-input" placeholder="T-Minus Launch">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Map Title</label>
+                            <input type="text" id="adminMetaMapTitle" class="form-input" placeholder="Trajectory Map">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Roster Title</label>
+                            <input type="text" id="adminMetaRosterTitle" class="form-input" placeholder="Squadron Roster">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mb-4">
                     <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Hero Description</label>
                     <textarea id="adminMetaDesc" class="form-textarea" placeholder="6 friends, 1 magnificent Citroën..."></textarea>
                 </div>
 
-                <!-- AUTOCOMPLETE ROUTE INPUT -->
                 <div class="mb-4 relative z-20">
                     <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Route Waypoints (Auto-coordinates)</label>
                     <div class="flex flex-col gap-2">
@@ -718,7 +692,6 @@
                 </button>
             </div>
 
-            <!-- Admin Telemetry -->
             <div class="glass-panel p-6 rounded-2xl animate-in mb-8 border border-white/10">
                 <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
                     <i data-lucide="gauge" class="w-4 h-4 text-sky-400"></i> Telemetry
@@ -747,7 +720,6 @@
                 </button>
             </div>
 
-            <!-- Admin Roster -->
             <div class="glass-panel p-6 rounded-2xl animate-in mb-8 border border-white/10">
                 <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
                     <i data-lucide="users" class="w-4 h-4 text-sky-400"></i> Roster
@@ -788,9 +760,15 @@
                         </div>
                     </div>
                     <textarea id="crewDesc" class="form-textarea mb-3 py-2" placeholder="Bio"></textarea>
-                    <button class="w-full py-2 bg-white text-black rounded-lg text-[10px] font-bold tracking-widest hover:bg-gray-200" onclick="window.addCrewMember()">
-                        ADD TO ROSTER
-                    </button>
+                    
+                    <div class="flex gap-2">
+                        <button id="btnSaveCrew" class="w-full py-2 bg-white text-black rounded-lg text-[10px] font-bold tracking-widest hover:bg-gray-200" onclick="window.saveCrewMember()">
+                            ADD TO ROSTER
+                        </button>
+                        <button id="btnCancelEditCrew" class="hidden px-6 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-[10px] font-bold tracking-widest hover:bg-red-500/30 transition-colors" onclick="window.cancelEditCrew()">
+                            CANCEL
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar bg-black/40 rounded-xl border border-white/10">
@@ -813,7 +791,6 @@
                 </div>
             </div>
 
-            <!-- Admin Banners & Gallery -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 
                 <div class="glass-panel p-6 rounded-2xl animate-in border border-white/10">
@@ -878,12 +855,10 @@
                 </div>
             </div>
             
-            <!-- Admin Comms -->
             <div class="glass-panel p-6 rounded-2xl animate-in border border-white/10">
                 <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
                     <i data-lucide="message-square" class="w-4 h-4 text-sky-400"></i> Comms Moderation
                 </h2>
-                
                 <div class="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar bg-black/40 rounded-xl border border-white/10">
                     <table class="table-admin text-xs text-white/70 w-full">
                         <thead class="bg-black/60 sticky top-0 border-b border-white/10 text-left">
@@ -902,7 +877,6 @@
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -910,7 +884,6 @@
 
     <script type="module" src="app.js"></script>
 
-    <!-- Scroll Spy and Barrel Roll Animation Logic -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const dots = document.querySelectorAll('.time-dot');
