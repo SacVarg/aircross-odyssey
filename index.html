@@ -2,7 +2,7 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VOYAGER | Mission Control</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,8 +25,8 @@
                     colors: {
                         brand: {
                             blue: '#1e40af',
-                            glass: 'rgba(255, 255, 255, 0.1)',
-                            glassBorder: 'rgba(255, 255, 255, 0.2)'
+                            glass: 'rgba(255, 255, 255, 0.05)',
+                            glassBorder: 'rgba(255, 255, 255, 0.1)'
                         }
                     }
                 }
@@ -47,117 +47,166 @@
             overflow-x: hidden;
         }
 
-        /* Fixed Immersive Background like the reference */
+        /* Immersive Background */
         .immersive-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -10;
+            position: fixed; inset: 0; z-index: -10;
             background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-size: cover; background-position: center; background-attachment: fixed;
         }
         
-        /* Dark gradient overlay to make white text pop */
         .bg-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: -9;
-            background: linear-gradient(to right, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.4) 50%, rgba(15, 23, 42, 0.1) 100%),
-                        linear-gradient(to bottom, rgba(15, 23, 42, 0.3) 0%, rgba(15, 23, 42, 0.8) 100%);
+            position: fixed; inset: 0; z-index: -9;
+            background: linear-gradient(to right, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(15, 23, 42, 0.2) 100%),
+                        linear-gradient(to bottom, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.9) 100%);
         }
 
-        /* Glassmorphism utilities */
+        /* Glassmorphism */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease, background 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .glass-card:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
         }
 
-        /* Carousel Hide Scrollbar */
+        /* Hide Scrollbar */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Scrollbar for Bulletin */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
 
         /* Form Elements for Admin */
         .form-input, .form-select, .form-textarea, .login-input {
             width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white;
             border-radius: 0.75rem; padding: 0.75rem 1rem; outline: none; transition: all 0.2s; font-size: 0.875rem;
         }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
+        .form-input:focus, .form-select:focus, .form-textarea:focus, .login-input:focus {
             background: rgba(0,0,0,0.5); border-color: #38bdf8;
         }
 
         model-viewer { background-color: transparent; }
-        #loader {
-            position: fixed; inset: 0; z-index: 9999; background: #0f172a; display: flex; flex-col items-center justify-center; transition: opacity 0.5s ease;
-        }
+        #loader { position: fixed; inset: 0; z-index: 9999; background: #0f172a; display: flex; flex-col items-center justify-center; transition: opacity 0.5s ease; }
 
-        /* Vertical Navigation Line (Reference Match) */
+        /* Vertical Navigation Line */
         .vertical-nav {
-            position: fixed; left: 2rem; top: 50%; transform: translateY(-50%);
+            position: fixed; left: 1.5rem; top: 50%; transform: translateY(-50%);
             display: flex; flex-direction: column; align-items: center; gap: 1rem; z-index: 50;
         }
         .v-line { width: 1px; height: 40px; background: rgba(255,255,255,0.2); }
         .v-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.2s; }
-        .v-dot.active { background: #ffffff; box-shadow: 0 0 10px rgba(255,255,255,0.8); transform: scale(1.5); }
-        .v-text { position: fixed; left: -1rem; bottom: 4rem; transform: rotate(-90deg); font-family: 'Space Grotesk'; letter-spacing: 0.3em; font-size: 0.75rem; opacity: 0.5; font-weight: 600; }
+        .v-dot.active { background: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.8); transform: scale(1.5); }
+        .v-text { position: fixed; left: -1.5rem; bottom: 4rem; transform: rotate(-90deg); font-family: 'Space Grotesk'; letter-spacing: 0.3em; font-size: 0.75rem; opacity: 0.5; font-weight: 600; }
+
+        /* CREW ROSTER AESTHETIC OVERRIDES (Catches app.js dynamically injected cards) */
+        #dynamic-crew-grid > div {
+            background: rgba(255, 255, 255, 0.03) !important;
+            backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 1.5rem !important;
+            padding: 1.5rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        #dynamic-crew-grid > div:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+            transform: translateY(-5px) !important;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4) !important;
+        }
+        /* Make sure images in crew grid stay circular and aesthetic */
+        #dynamic-crew-grid img {
+            border: 2px solid rgba(255,255,255,0.1);
+            padding: 4px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+        }
     </style>
 </head>
 <body id="app-body">
 
     <div id="public-view" class="transition-all duration-300 min-h-screen relative">
         
-        <!-- Background Layer -->
         <div class="immersive-bg"></div>
         <div class="bg-overlay"></div>
 
-        <!-- Initial Loader -->
         <div id="loader" class="flex flex-col items-center justify-center">
-            <div class="text-white font-space font-semibold tracking-[0.3em] text-sm mb-4">INITIALIZING VOYAGER</div>
-            <div class="w-48 h-[2px] bg-white/20 overflow-hidden"><div class="h-full bg-white w-1/3 animate-[pulse_1s_ease-in-out_infinite]"></div></div>
+            <div class="text-white font-space font-semibold tracking-[0.3em] text-xs md:text-sm mb-4 text-center px-4">INITIALIZING VOYAGER</div>
+            <div class="w-48 h-[2px] bg-white/10 overflow-hidden"><div class="h-full bg-white w-1/3 animate-[pulse_1s_ease-in-out_infinite]"></div></div>
         </div>
 
-        <!-- Minimal Navigation Bar -->
-        <nav class="fixed top-0 w-full z-[60] px-8 py-6 flex justify-between items-center transition-all duration-300">
-            <div class="font-space font-bold text-xl tracking-widest text-white flex items-center gap-2 cursor-pointer select-none" onclick="window.triggerHyperdrive()">
-                <i data-lucide="compass" class="w-6 h-6 text-white"></i> VOYAGER
+        <!-- Navigation Bar -->
+        <nav class="fixed top-0 w-full z-[80] px-6 lg:px-12 py-6 flex justify-between items-center transition-all duration-300">
+            <div class="font-space font-bold text-lg md:text-xl tracking-widest text-white flex items-center gap-2 cursor-pointer select-none" onclick="window.triggerHyperdrive()">
+                <i data-lucide="compass" class="w-5 h-5 md:w-6 md:h-6 text-sky-400"></i> VOYAGER
             </div>
             
-            <div class="hidden lg:flex gap-10 text-[11px] font-space font-semibold tracking-[0.15em] text-white/70 items-center uppercase">
+            <div class="hidden lg:flex gap-8 text-[11px] font-space font-semibold tracking-[0.15em] text-white/60 items-center uppercase">
                 <a href="#mission" class="hover:text-white transition-colors">Mission</a>
                 <a href="#machine" class="hover:text-white transition-colors">Machine</a>
                 <a href="#route" class="hover:text-white transition-colors">Route</a>
                 <a href="#crew" class="hover:text-white transition-colors">Crew</a>
             </div>
             
-            <div class="flex items-center gap-6">
-                <div class="hidden md:flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                        <i data-lucide="user" class="w-4 h-4 text-white"></i>
+            <div class="flex items-center gap-4 md:gap-6">
+                <div class="hidden sm:flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
+                        <i data-lucide="user" class="w-3 h-3 text-white"></i>
                     </div>
-                    <span class="text-xs font-space font-medium">Hello, Crew</span>
+                    <span class="text-[11px] font-space tracking-widest text-white/80 uppercase">Crew</span>
                 </div>
-                <a href="#admin" class="hidden sm:flex px-5 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white text-[10px] font-space font-semibold tracking-widest rounded-full transition-all items-center gap-2">
+                <a href="#admin" class="hidden sm:flex px-6 py-2.5 bg-white/5 hover:bg-white/15 backdrop-blur-md border border-white/10 text-white text-[10px] font-space font-bold tracking-widest rounded-full transition-all items-center gap-2">
                     ADMIN
                 </a>
-                <button class="lg:hidden text-white"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                <!-- Mobile Menu Toggle Button -->
+                <button class="lg:hidden text-white p-2" onclick="document.getElementById('mobile-menu').classList.remove('translate-x-full'); document.getElementById('mobile-menu').classList.add('translate-x-0');">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
             </div>
         </nav>
 
-        <!-- Vertical Left Navigation (Like Reference) -->
-        <div class="vertical-nav hidden md:flex">
+        <!-- Mobile Menu Full Screen Overlay -->
+        <div id="mobile-menu" class="fixed inset-0 z-[100] bg-[#0f172a]/95 backdrop-blur-2xl flex flex-col items-center justify-center gap-8 transform translate-x-full transition-transform duration-300 lg:hidden">
+            <button class="absolute top-6 right-6 p-4 text-white/50 hover:text-white transition-colors" onclick="document.getElementById('mobile-menu').classList.add('translate-x-full'); document.getElementById('mobile-menu').classList.remove('translate-x-0');">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+            
+            <a href="#mission" onclick="document.getElementById('mobile-menu').classList.add('translate-x-full');" class="text-2xl font-space font-semibold tracking-widest text-white">MISSION</a>
+            <a href="#machine" onclick="document.getElementById('mobile-menu').classList.add('translate-x-full');" class="text-2xl font-space font-semibold tracking-widest text-white">MACHINE</a>
+            <a href="#route" onclick="document.getElementById('mobile-menu').classList.add('translate-x-full');" class="text-2xl font-space font-semibold tracking-widest text-white">ROUTE</a>
+            <a href="#crew" onclick="document.getElementById('mobile-menu').classList.add('translate-x-full');" class="text-2xl font-space font-semibold tracking-widest text-white">CREW</a>
+            
+            <div class="w-12 h-[1px] bg-white/20 my-2"></div>
+            
+            <a href="radio.html" class="text-xl font-space font-medium tracking-widest text-sky-400 flex items-center gap-3"><i data-lucide="radio" class="w-5 h-5"></i> RADIO</a>
+            <a href="gallery.html" class="text-xl font-space font-medium tracking-widest text-white/70">GALLERY</a>
+            <a href="expenses.html" class="text-xl font-space font-medium tracking-widest text-white/70">EXPENSES</a>
+            
+            <a href="#admin" onclick="document.getElementById('mobile-menu').classList.add('translate-x-full');" class="mt-8 px-8 py-4 bg-white/10 border border-white/20 text-white text-xs font-space font-bold tracking-widest rounded-full flex items-center gap-2">
+                <i data-lucide="shield" class="w-4 h-4"></i> ADMIN PORTAL
+            </a>
+        </div>
+
+        <!-- Vertical Left Navigation -->
+        <div class="vertical-nav hidden lg:flex">
             <div class="v-dot active"></div>
             <div class="v-line"></div>
             <div class="v-dot"></div>
@@ -166,104 +215,105 @@
             <div class="v-text">AIRCROSS</div>
         </div>
 
-        <!-- Bulletin Board (Preserved Logic) -->
-        <div id="bulletin-board-container" class="fixed top-24 right-8 w-80 z-50 hidden glass-panel rounded-2xl border-t-2 border-t-blue-400 p-4 bulletin-container">
-            <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-                    <span class="text-[10px] font-space font-bold tracking-[0.1em] text-white">MISSION TERMINAL</span>
+        <!-- HERO SECTION (SPLIT LAYOUT) -->
+        <section id="mission" class="relative min-h-screen flex items-center pt-28 pb-12 overflow-hidden px-6 lg:px-24">
+            
+            <!-- Bulletin Board (Now embedded IN the hero, scrolls naturally!) -->
+            <div id="bulletin-board-container" class="relative w-full mb-10 lg:mb-0 lg:absolute lg:top-32 lg:right-12 lg:w-80 z-50 hidden glass-panel rounded-2xl border-t border-t-sky-400 p-5 bulletin-container">
+                <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse shadow-[0_0_10px_#38bdf8]"></span>
+                        <span class="text-[10px] font-space font-bold tracking-widest text-white">LIVE BULLETIN</span>
+                    </div>
+                </div>
+                <div id="bulletin-scroll-wrapper" class="relative max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                    <div id="bulletin-content" class="flex flex-col pb-2 text-white/80 text-xs md:text-sm leading-relaxed space-y-3"></div>
                 </div>
             </div>
-            <div id="bulletin-scroll-wrapper" class="relative h-[200px] overflow-y-auto custom-scrollbar pr-2">
-                <div id="bulletin-content" class="flex flex-col pb-4 text-white/80 text-sm"></div>
-            </div>
-        </div>
 
-        <!-- HERO SECTION (SPLIT LAYOUT) -->
-        <section id="mission" class="relative min-h-screen flex items-center pt-20 overflow-hidden px-6 md:px-20 lg:px-32">
-            <div class="w-full flex flex-col lg:flex-row items-center justify-between gap-12 z-10">
+            <!-- Main Content Container -->
+            <div class="w-full flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-8 z-10 mt-8 lg:mt-0">
                 
-                <!-- Left Content -->
+                <!-- Left Content: Mission Briefing -->
                 <div class="w-full lg:w-5/12 flex flex-col items-start text-left">
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="h-[1px] w-12 bg-white/50"></div>
-                        <span class="text-xs font-space font-semibold tracking-[0.3em] uppercase text-white/70">Departure: 11 July 2026</span>
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="h-[1px] w-8 md:w-12 bg-sky-400"></div>
+                        <span class="text-[10px] md:text-xs font-space font-bold tracking-[0.3em] uppercase text-sky-400">Est. Departure: July 2026</span>
                     </div>
                     
-                    <h1 class="text-6xl md:text-8xl lg:text-[100px] font-black font-space mb-4 tracking-tighter leading-[0.9] text-white" id="main-title">
+                    <h1 class="text-5xl md:text-7xl lg:text-[90px] font-black font-space mb-6 tracking-tighter leading-[0.9] text-white" id="main-title">
                         AIRCROSS<br>ODYSSEY
                     </h1>
                     
-                    <p class="text-white/70 text-sm md:text-base font-medium leading-relaxed mb-10 max-w-md">
-                        As the largest and most ambitious road trip of the year, we are mapping hundreds of kilometers across India. 6 friends, 1 magnificent 7-seater Citroën, and a journey melted beautifully into one experience.
+                    <p class="text-white/60 text-sm md:text-base font-medium leading-relaxed mb-10 max-w-md">
+                        The ultimate expedition. 6 crew members, 1 magnificent 7-seater Citroën, and a journey spanning hundreds of kilometers mapped beautifully into one experience.
                     </p>
 
-                    <a href="#machine" class="group flex items-center gap-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 px-8 py-4 rounded-full transition-all cursor-pointer">
-                        <span class="font-space font-semibold tracking-widest text-sm text-white">Explore Dashboard</span>
-                        <i data-lucide="arrow-right" class="w-4 h-4 text-white group-hover:translate-x-1 transition-transform"></i>
+                    <a href="#machine" class="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 px-6 py-4 md:px-8 md:py-4 rounded-full transition-all cursor-pointer">
+                        <span class="font-space font-semibold tracking-widest text-[10px] md:text-xs text-white uppercase">Initialize Sequence</span>
+                        <i data-lucide="arrow-down" class="w-4 h-4 text-sky-400 group-hover:translate-y-1 transition-transform"></i>
                     </a>
                 </div>
 
-                <!-- Right Content: The App Modules Carousel (Reference Match) -->
-                <div class="w-full lg:w-7/12 flex flex-col">
-                    <div class="flex justify-end gap-2 mb-4 pr-4">
-                        <button class="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center text-white/70 hover:text-white hover:border-white transition-all"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                        <button class="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center text-white/70 hover:text-white hover:border-white transition-all"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                <!-- Right Content: Interactive Icon Cards -->
+                <div class="w-full lg:w-7/12 flex flex-col pt-4 lg:pt-32">
+                    <div class="flex justify-between items-end mb-4 px-2">
+                        <span class="text-[10px] font-space font-semibold tracking-widest text-white/40 uppercase">System Modules</span>
+                        <div class="flex gap-2">
+                            <button class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/50 transition-all"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <button class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/50 transition-all"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        </div>
                     </div>
                     
-                    <div class="flex gap-6 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-8 pl-4 lg:pl-0">
+                    <!-- Horizontal Scrollable Cards Container -->
+                    <div class="flex gap-4 md:gap-6 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-8">
                         
-                        <!-- Module Card: Radio -->
-                        <a href="radio.html" class="min-w-[260px] md:min-w-[280px] h-[380px] rounded-[2rem] overflow-hidden relative snap-center group block">
-                            <img src="https://images.unsplash.com/photo-1520110120835-c96534a4c984?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Radio" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <!-- Card 1: Radio -->
+                        <a href="radio.html" class="min-w-[240px] md:min-w-[280px] h-[320px] md:h-[360px] rounded-[2rem] relative snap-center group block glass-card flex flex-col justify-between p-6 md:p-8 overflow-hidden">
+                            <!-- Faint Background Icon -->
+                            <i data-lucide="radio" class="absolute -right-6 -bottom-6 w-48 h-48 text-white/[0.03] transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-700"></i>
+                            <div class="absolute inset-0 bg-gradient-to-br from-sky-400/5 to-transparent"></div>
                             
-                            <div class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                                <i data-lucide="radio" class="w-5 h-5 text-white"></i>
+                            <div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-sky-400/10 border border-sky-400/20 flex items-center justify-center relative z-10">
+                                <i data-lucide="radio" class="w-5 h-5 md:w-6 md:h-6 text-sky-400"></i>
                             </div>
                             
-                            <div class="absolute bottom-0 left-0 w-full p-6">
-                                <div class="flex items-center gap-1 mb-2 text-white/70">
-                                    <i data-lucide="star" class="w-3 h-3 fill-current"></i><i data-lucide="star" class="w-3 h-3 fill-current"></i><i data-lucide="star" class="w-3 h-3 fill-current"></i>
-                                </div>
-                                <h3 class="text-2xl font-bold font-space text-white mb-1">Comms Link</h3>
-                                <p class="text-xs text-white/60 line-clamp-2">Live WebRTC Voice & Push Notifications</p>
-                            </div>
-                        </a>
-
-                        <!-- Module Card: Expenses -->
-                        <a href="expenses.html" class="min-w-[260px] md:min-w-[280px] h-[380px] rounded-[2rem] overflow-hidden relative snap-center group block">
-                            <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Finance" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                            
-                            <div class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                                <i data-lucide="receipt" class="w-5 h-5 text-white"></i>
-                            </div>
-                            
-                            <div class="absolute bottom-0 left-0 w-full p-6">
-                                <div class="flex items-center gap-1 mb-2 text-white/70">
-                                    <i data-lucide="star" class="w-3 h-3 fill-current"></i><i data-lucide="star" class="w-3 h-3 fill-current"></i><i data-lucide="star" class="w-3 h-3 fill-current"></i>
-                                </div>
-                                <h3 class="text-2xl font-bold font-space text-white mb-1">Financial Logs</h3>
-                                <p class="text-xs text-white/60 line-clamp-2">Shared expenses & settlements</p>
+                            <div class="relative z-10 mt-auto">
+                                <div class="w-8 h-[2px] bg-sky-400/50 mb-4 group-hover:w-12 transition-all"></div>
+                                <h3 class="text-xl md:text-2xl font-bold font-space text-white mb-2 tracking-wide">Comms</h3>
+                                <p class="text-[10px] md:text-xs text-white/50 leading-relaxed font-medium">UHF Voice Link & Alerts</p>
                             </div>
                         </a>
 
-                        <!-- Module Card: Gallery -->
-                        <a href="gallery.html" class="min-w-[260px] md:min-w-[280px] h-[380px] rounded-[2rem] overflow-hidden relative snap-center group block">
-                            <img src="https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Gallery" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <!-- Card 2: Expenses -->
+                        <a href="expenses.html" class="min-w-[240px] md:min-w-[280px] h-[320px] md:h-[360px] rounded-[2rem] relative snap-center group block glass-card flex flex-col justify-between p-6 md:p-8 overflow-hidden">
+                            <i data-lucide="wallet" class="absolute -right-6 -bottom-6 w-48 h-48 text-white/[0.03] transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-700"></i>
+                            <div class="absolute inset-0 bg-gradient-to-br from-emerald-400/5 to-transparent"></div>
                             
-                            <div class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                                <i data-lucide="image" class="w-5 h-5 text-white"></i>
+                            <div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center relative z-10">
+                                <i data-lucide="receipt" class="w-5 h-5 md:w-6 md:h-6 text-emerald-400"></i>
                             </div>
                             
-                            <div class="absolute bottom-0 left-0 w-full p-6">
-                                <div class="flex items-center gap-1 mb-2 text-white/70">
-                                    <i data-lucide="star" class="w-3 h-3 fill-current"></i><i data-lucide="star" class="w-3 h-3 fill-current"></i>
-                                </div>
-                                <h3 class="text-2xl font-bold font-space text-white mb-1">Media Gallery</h3>
-                                <p class="text-xs text-white/60 line-clamp-2">Shared photographic memories.</p>
+                            <div class="relative z-10 mt-auto">
+                                <div class="w-8 h-[2px] bg-emerald-400/50 mb-4 group-hover:w-12 transition-all"></div>
+                                <h3 class="text-xl md:text-2xl font-bold font-space text-white mb-2 tracking-wide">Finance</h3>
+                                <p class="text-[10px] md:text-xs text-white/50 leading-relaxed font-medium">Trip Ledger & Settlements</p>
+                            </div>
+                        </a>
+
+                        <!-- Card 3: Gallery -->
+                        <a href="gallery.html" class="min-w-[240px] md:min-w-[280px] h-[320px] md:h-[360px] rounded-[2rem] relative snap-center group block glass-card flex flex-col justify-between p-6 md:p-8 overflow-hidden">
+                            <i data-lucide="image" class="absolute -right-6 -bottom-6 w-48 h-48 text-white/[0.03] transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-700"></i>
+                            <div class="absolute inset-0 bg-gradient-to-br from-purple-400/5 to-transparent"></div>
+                            
+                            <div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-purple-400/10 border border-purple-400/20 flex items-center justify-center relative z-10">
+                                <i data-lucide="camera" class="w-5 h-5 md:w-6 md:h-6 text-purple-400"></i>
+                            </div>
+                            
+                            <div class="relative z-10 mt-auto">
+                                <div class="w-8 h-[2px] bg-purple-400/50 mb-4 group-hover:w-12 transition-all"></div>
+                                <h3 class="text-xl md:text-2xl font-bold font-space text-white mb-2 tracking-wide">Gallery</h3>
+                                <p class="text-[10px] md:text-xs text-white/50 leading-relaxed font-medium">Shared Visual Records</p>
                             </div>
                         </a>
 
@@ -272,69 +322,71 @@
             </div>
         </section>
 
-        <!-- Preserved Countdown -->
-        <section id="countdown-section" class="py-20 relative px-6 z-10 border-t border-white/10 glass-panel mt-10">
-            <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
-                <div class="text-left md:w-1/3">
-                    <h3 class="text-white/60 font-space font-semibold tracking-widest text-xs mb-2 uppercase">Adventure Clock</h3>
-                    <h2 class="text-3xl font-bold font-space text-white">T-Minus Launch</h2>
+        <!-- Countdown -->
+        <section id="countdown-section" class="py-16 md:py-20 relative px-6 z-10 border-t border-white/5 glass-panel">
+            <div class="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-10">
+                <div class="text-center lg:text-left w-full lg:w-1/3">
+                    <h3 class="text-sky-400 font-space font-semibold tracking-widest text-[10px] md:text-xs mb-2 uppercase flex items-center justify-center lg:justify-start gap-2">
+                        <i data-lucide="clock" class="w-3 h-3"></i> Adventure Clock
+                    </h3>
+                    <h2 class="text-3xl md:text-4xl font-bold font-space text-white">T-Minus Launch</h2>
                 </div>
                 
-                <div class="flex gap-4 md:gap-8 w-full md:w-2/3 justify-between">
-                    <div class="flex flex-col items-center">
-                        <span id="cd-days" class="text-4xl md:text-6xl font-light font-space text-white tracking-tighter">00</span>
-                        <span class="text-white/50 font-space text-[10px] uppercase tracking-widest mt-1">Days</span>
+                <div class="flex flex-wrap lg:flex-nowrap gap-4 md:gap-8 w-full lg:w-2/3 justify-center lg:justify-end">
+                    <div class="flex flex-col items-center glass-card px-6 py-4 rounded-2xl min-w-[80px] md:min-w-[100px]">
+                        <span id="cd-days" class="text-3xl md:text-5xl font-light font-space text-white tracking-tighter">00</span>
+                        <span class="text-white/40 font-space text-[9px] md:text-[10px] uppercase tracking-widest mt-1">Days</span>
                     </div>
-                    <div class="flex flex-col items-center">
-                        <span id="cd-hours" class="text-4xl md:text-6xl font-light font-space text-white tracking-tighter">00</span>
-                        <span class="text-white/50 font-space text-[10px] uppercase tracking-widest mt-1">Hours</span>
+                    <div class="flex flex-col items-center glass-card px-6 py-4 rounded-2xl min-w-[80px] md:min-w-[100px]">
+                        <span id="cd-hours" class="text-3xl md:text-5xl font-light font-space text-white tracking-tighter">00</span>
+                        <span class="text-white/40 font-space text-[9px] md:text-[10px] uppercase tracking-widest mt-1">Hrs</span>
                     </div>
-                    <div class="flex flex-col items-center">
-                        <span id="cd-minutes" class="text-4xl md:text-6xl font-light font-space text-white tracking-tighter">00</span>
-                        <span class="text-white/50 font-space text-[10px] uppercase tracking-widest mt-1">Minutes</span>
+                    <div class="flex flex-col items-center glass-card px-6 py-4 rounded-2xl min-w-[80px] md:min-w-[100px]">
+                        <span id="cd-minutes" class="text-3xl md:text-5xl font-light font-space text-white tracking-tighter">00</span>
+                        <span class="text-white/40 font-space text-[9px] md:text-[10px] uppercase tracking-widest mt-1">Min</span>
                     </div>
-                    <div class="flex flex-col items-center">
-                        <span id="cd-seconds" class="text-4xl md:text-6xl font-light font-space text-white tracking-tighter">00</span>
-                        <span class="text-white/50 font-space text-[10px] uppercase tracking-widest mt-1">Seconds</span>
+                    <div class="flex flex-col items-center glass-card px-6 py-4 rounded-2xl min-w-[80px] md:min-w-[100px]">
+                        <span id="cd-seconds" class="text-3xl md:text-5xl font-light font-space text-white tracking-tighter text-sky-400">00</span>
+                        <span class="text-white/40 font-space text-[9px] md:text-[10px] uppercase tracking-widest mt-1">Sec</span>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Machine Section -->
-        <section id="machine" class="py-24 px-6 md:px-20 relative z-10">
+        <section id="machine" class="py-20 md:py-32 px-6 md:px-12 lg:px-24 relative z-10">
             <div class="max-w-7xl mx-auto">
-                <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-6">
                     <div>
-                        <h2 class="text-4xl md:text-5xl font-bold font-space text-white">The Chariot</h2>
+                        <h3 class="text-white/40 font-space font-semibold tracking-widest text-[10px] mb-2 uppercase">The Chariot</h3>
+                        <h2 class="text-3xl md:text-5xl font-bold font-space text-white">Citroën Aircross</h2>
                     </div>
-                    <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-space font-semibold tracking-widest text-white border border-white/20">
+                    <div class="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-space font-semibold tracking-widest text-white border border-white/10">
                         <i data-lucide="activity" class="w-3 h-3 text-emerald-400 animate-pulse"></i> LIVE TELEMETRY
                     </div>
                 </div>
 
-                <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2rem] overflow-hidden border border-white/10 glass-panel group model-clip-fix shadow-2xl">
-                    
+                <div id="video-360-container" class="relative w-full aspect-square md:aspect-video rounded-[2rem] md:rounded-[3rem] overflow-hidden glass-panel group model-clip-fix border border-white/10 shadow-2xl">
                     <model-viewer 
                         src="./assets/aircross.glb" alt="Citroën Aircross 3D Model" auto-rotate rotation-per-second="30deg" camera-controls disable-zoom shadow-intensity="1" environment-image="neutral" exposure="0.8" class="w-full h-full cursor-grab outline-none relative z-0">
                     </model-viewer>
                     
-                    <div class="absolute inset-0 pointer-events-none p-8 flex flex-col justify-between z-20">
+                    <div class="absolute inset-0 pointer-events-none p-6 md:p-10 flex flex-col justify-between z-20">
                         <div class="flex justify-between items-start w-full">
-                            <div class="text-white bg-black/40 backdrop-blur-md px-4 py-2 rounded-full font-space text-[10px] tracking-widest font-semibold border border-white/10 hidden sm:flex items-center">
-                                <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse mr-2"></span> SYSTEM ONLINE
+                            <div class="text-white bg-black/40 backdrop-blur-md px-4 py-2 rounded-full font-space text-[9px] md:text-[10px] tracking-widest font-semibold border border-white/10 hidden sm:flex items-center">
+                                <span class="w-2 h-2 bg-sky-400 rounded-full animate-pulse mr-2 shadow-[0_0_8px_#38bdf8]"></span> AX-7 PLATFORM
                             </div>
                         </div>
                         
                         <div class="flex justify-end items-end w-full">
-                            <div class="bg-black/50 backdrop-blur-xl border border-white/10 p-6 rounded-2xl pointer-events-auto min-w-[260px] shadow-2xl">
-                                <div class="text-[10px] font-space font-bold text-white/50 tracking-widest mb-4 border-b border-white/10 pb-2 uppercase flex items-center gap-2">
-                                    <i data-lucide="gauge" class="w-4 h-4 text-white"></i> Telemetry Data
+                            <div class="bg-black/40 backdrop-blur-xl border border-white/10 p-5 md:p-6 rounded-2xl pointer-events-auto min-w-[220px] md:min-w-[280px]">
+                                <div class="text-[9px] md:text-[10px] font-space font-bold text-white/40 tracking-widest mb-4 border-b border-white/10 pb-2 uppercase flex items-center gap-2">
+                                    <i data-lucide="gauge" class="w-3 h-3 text-white"></i> Sensor Data
                                 </div>
-                                <ul class="space-y-4 text-sm font-space font-medium text-white">
-                                    <li class="flex justify-between items-center"><span class="text-white/50 text-xs tracking-widest">PILOT</span> <span id="tel-driver">AWAITING</span></li>
-                                    <li class="flex justify-between items-center"><span class="text-white/50 text-xs tracking-widest">DISTANCE</span> <span id="tel-distance">0 KM</span></li>
-                                    <li class="flex justify-between items-center"><span class="text-white/50 text-xs tracking-widest">CABIN VIBE</span> <span id="tel-vibe">UNKNOWN</span></li>
+                                <ul class="space-y-3 text-xs md:text-sm font-space font-medium text-white">
+                                    <li class="flex justify-between items-center"><span class="text-white/40 text-[10px] tracking-widest">PILOT</span> <span id="tel-driver">AWAITING</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-white/40 text-[10px] tracking-widest">DISTANCE</span> <span id="tel-distance">0 KM</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-white/40 text-[10px] tracking-widest">CABIN VIBE</span> <span id="tel-vibe">UNKNOWN</span></li>
                                 </ul>
                             </div>
                         </div>
@@ -344,252 +396,160 @@
         </section>
 
         <!-- Route Section -->
-        <section id="route" class="py-24 px-6 md:px-20 relative z-10">
+        <section id="route" class="py-20 md:py-32 px-6 md:px-12 lg:px-24 relative z-10">
             <div class="max-w-7xl mx-auto">
-                <div class="mb-10">
-                    <h2 class="text-4xl md:text-5xl font-bold font-space text-white">Route Trajectory</h2>
+                <div class="mb-8 md:mb-12">
+                    <h3 class="text-white/40 font-space font-semibold tracking-widest text-[10px] mb-2 uppercase">Geolocation</h3>
+                    <h2 class="text-3xl md:text-5xl font-bold font-space text-white">Trajectory Map</h2>
                 </div>
                 
-                <div class="relative w-full h-[600px] md:h-[700px] rounded-[2rem] overflow-hidden glass-panel border border-white/10 p-2 shadow-2xl">
-                    <div id="real-map" class="w-full h-full rounded-[1.5rem] z-0 relative grayscale opacity-90 mix-blend-luminosity"></div>
+                <div class="relative w-full h-[400px] md:h-[600px] rounded-[2rem] md:rounded-[3rem] overflow-hidden glass-panel border border-white/10 p-2 shadow-2xl">
+                    <div id="real-map" class="w-full h-full rounded-[1.5rem] md:rounded-[2.5rem] z-0 relative grayscale opacity-80 mix-blend-luminosity"></div>
                     
-                    <div class="absolute top-8 right-8 w-[85%] sm:max-w-xs bg-black/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl z-20 opacity-0 pointer-events-none" id="map-hud"></div>
+                    <div class="absolute top-8 right-8 w-[85%] sm:max-w-xs bg-black/70 backdrop-blur-xl border border-white/10 p-4 rounded-2xl z-20 opacity-0 pointer-events-none" id="map-hud"></div>
                     
-                    <div class="absolute bottom-8 left-8 bg-black/80 backdrop-blur-xl border border-white/10 p-5 rounded-2xl z-20 pointer-events-none w-64">
-                        <div class="text-[10px] font-space font-bold text-white/50 tracking-widest mb-3 border-b border-white/10 pb-2 flex items-center gap-2 uppercase">
-                            <i data-lucide="cloud-lightning" class="w-4 h-4 text-white"></i> Scanners
+                    <div class="absolute bottom-6 left-6 right-6 md:right-auto bg-black/60 backdrop-blur-xl border border-white/10 p-4 md:p-5 rounded-2xl z-20 pointer-events-none md:w-64">
+                        <div class="text-[9px] md:text-[10px] font-space font-bold text-white/40 tracking-widest mb-3 border-b border-white/10 pb-2 flex items-center gap-2 uppercase">
+                            <i data-lucide="cloud-lightning" class="w-3 h-3 text-white"></i> Scanners
                         </div>
-                        <div class="space-y-3" id="weather-hud">
-                            <div class="text-xs text-white/70 font-space animate-pulse">Initializing...</div>
+                        <div class="space-y-2" id="weather-hud">
+                            <div class="text-[10px] md:text-xs text-white/60 font-space animate-pulse">Initializing...</div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Crew Section -->
-        <section id="crew" class="py-24 px-6 md:px-20 relative z-10">
-            <div class="max-w-5xl mx-auto text-center">
-                <h2 class="text-4xl md:text-5xl font-bold font-space text-white mb-16">Squadron Roster</h2>
+        <!-- Crew Section (Automatically beautifully styled via custom CSS above) -->
+        <section id="crew" class="py-20 md:py-32 px-6 relative z-10 border-t border-white/5 bg-white/[0.02]">
+            <div class="max-w-6xl mx-auto text-center">
+                <h3 class="text-white/40 font-space font-semibold tracking-widest text-[10px] mb-2 uppercase">Personnel</h3>
+                <h2 class="text-3xl md:text-5xl font-bold font-space text-white mb-12 md:mb-16">Squadron Roster</h2>
 
                 <div id="dynamic-crew-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 justify-center">
-                    <div class="text-center col-span-full py-20 text-white/50 font-space text-sm">
-                        <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-white"></i> Fetching records...
+                    <div class="text-center col-span-full py-20 text-white/40 font-space text-sm">
+                        <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-white/60"></i> Fetching records...
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Crew Dossier Modal -->
-        <div id="crewDossierModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
-            <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="window.closeCrewDossier()"></div>
+        <div id="crewDossierModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4">
+            <div class="absolute inset-0 bg-[#0f172a]/90 backdrop-blur-sm" onclick="window.closeCrewDossier()"></div>
             <div id="crewDossierContent" class="relative z-10 w-full max-w-md transform scale-95 opacity-0 transition-all duration-300"></div>
         </div>
 
         <!-- Footer -->
-        <footer class="pt-24 pb-12 px-6 border-t border-white/10 text-center relative z-10">
+        <footer class="pt-20 pb-10 px-6 border-t border-white/5 text-center relative z-10">
             <div class="max-w-4xl mx-auto">
-                <h2 class="text-2xl font-bold font-space tracking-widest mb-6 text-white uppercase">VOYAGER ODYSSEY</h2>
-                <div class="flex flex-wrap justify-center gap-4 text-[10px] md:text-xs font-semibold text-white/50 font-space tracking-widest mb-12 uppercase">
+                <h2 class="text-xl md:text-2xl font-bold font-space tracking-widest mb-6 text-white uppercase opacity-80">VOYAGER ODYSSEY</h2>
+                <div class="flex flex-wrap justify-center gap-3 md:gap-4 text-[9px] md:text-[10px] font-semibold text-white/40 font-space tracking-[0.2em] mb-10 uppercase">
                     <span>ANOOP</span> // <span>BINTO</span> // <span>AALWYN</span> // <span>VIGNESH</span> // <span>SACHIN</span> // <span>ABRAHAM</span>
                 </div>
+                <div class="text-[10px] font-space text-white/30 tracking-widest">SYSTEM SECURED // 2026</div>
             </div>
         </footer>
 
     </div>
 
-    <!-- Admin View -->
-    <div id="admin-view" class="theme-admin hidden min-h-screen bg-[#0f172a]">
+    <!-- Admin View (Kept Functional, Cleaned Dark Theme) -->
+    <div id="admin-view" class="theme-admin hidden min-h-screen relative z-50 bg-[#0f172a]">
         
         <div id="loginScreen" class="animate-in flex flex-col items-center justify-center min-h-screen w-full">
             <div class="text-center w-full max-w-sm px-4">
                 <h1 class="text-white text-4xl font-space font-bold mb-2 tracking-widest">VOYAGER</h1>
-                <p class="text-blue-400 text-sm font-space font-medium mb-8 tracking-widest uppercase">Mission Control</p>
+                <p class="text-sky-400 text-sm font-space font-medium mb-8 tracking-widest uppercase">Mission Control</p>
                 
-                <div class="glass-panel p-8 rounded-2xl w-full mx-auto border border-white/10">
-                    <div>
-                        <p class="text-xs text-white/50 mb-6 font-space tracking-widest flex items-center justify-center gap-2 uppercase">
-                            <i data-lucide="shield-check" class="w-4 h-4 text-white"></i> Secure Portal
-                        </p>
-                    </div>
+                <div class="glass-panel p-8 rounded-2xl w-full mx-auto">
+                    <div><p class="text-xs text-white/50 mb-6 font-space tracking-widest flex items-center justify-center gap-2 uppercase"><i data-lucide="shield-check" class="w-4 h-4 text-white"></i> Secure Portal</p></div>
                     
                     <div class="flex flex-col gap-2 text-left mb-4">
-                        <label class="text-xs font-semibold text-white/70 flex items-center gap-2 tracking-widest"><i data-lucide="mail" class="w-3 h-3 inline"></i> ADMIN EMAIL</label>
+                        <label class="text-[10px] font-semibold text-white/70 tracking-widest">ADMIN EMAIL</label>
                         <input type="email" id="emailInput" class="login-input" placeholder="admin@aircross.com" autocomplete="off">
                     </div>
 
-                    <div class="flex flex-col gap-2 text-left mb-6">
-                        <label class="text-xs font-semibold text-white/70 flex items-center gap-2 tracking-widest"><i data-lucide="key" class="w-3 h-3 inline"></i> ACCESS CODE</label>
+                    <div class="flex flex-col gap-2 text-left mb-8">
+                        <label class="text-[10px] font-semibold text-white/70 tracking-widest">ACCESS CODE</label>
                         <input type="password" id="passwordInput" class="login-input" placeholder="••••••••••••" autocomplete="off">
                     </div>
                     
-                    <button class="w-full py-3 bg-white text-black rounded-xl font-space text-sm font-bold tracking-widest flex justify-center items-center gap-2 hover:bg-gray-200 transition-colors" onclick="window.authenticateAdmin()">
+                    <button class="w-full py-3 bg-white text-black rounded-xl font-space text-xs font-bold tracking-widest flex justify-center items-center gap-2 hover:bg-white/80 transition-colors" onclick="window.authenticateAdmin()">
                         <i data-lucide="unlock" class="w-4 h-4"></i> UNLOCK
                     </button>
                     
-                    <a href="#" onclick="window.location.hash=''; window.location.reload(); return false;" class="text-xs text-white/40 text-center mt-6 flex justify-center items-center gap-1 hover:text-white transition-colors">
+                    <a href="#" onclick="window.location.hash=''; window.location.reload(); return false;" class="text-[10px] text-white/40 text-center mt-6 flex justify-center items-center gap-1 hover:text-white transition-colors uppercase tracking-widest">
                         <i data-lucide="arrow-left" class="w-3 h-3"></i> Return to Site
                     </a>
                 </div>
             </div>
         </div>
 
-        <div id="dashboard" class="max-w-7xl mx-auto px-6 pb-12 pt-12 hidden">
-            
+        <div id="dashboard" class="max-w-7xl mx-auto px-6 pb-12 pt-8 hidden relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-white/10 pb-6 gap-4">
                 <div>
-                    <h1 class="text-2xl font-space font-bold text-white tracking-widest">MISSION CONTROL</h1>
-                    <p class="text-xs font-medium text-white/50 mt-2 flex items-center gap-2 tracking-widest uppercase">
-                        <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span> DB SYNCHRONIZED
+                    <h1 class="text-xl font-space font-bold text-white tracking-widest">MISSION CONTROL</h1>
+                    <p class="text-[10px] font-medium text-white/40 mt-1 flex items-center gap-2 tracking-widest uppercase">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> DB SYNCHRONIZED
                     </p>
                 </div>
-                <div class="flex gap-4 w-full md:w-auto">
-                    <a href="#" onclick="window.location.hash=''; window.location.reload(); return false;" class="px-5 py-2 glass-panel rounded-lg text-white text-xs font-semibold tracking-widest flex items-center gap-2 transition-all">
-                        PUBLIC VIEW
-                    </a>
-                    <button class="px-5 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs font-semibold tracking-widest flex items-center gap-2 transition-colors" onclick="window.logoutAdmin()">
-                        LOGOUT
-                    </button>
+                <div class="flex gap-3 w-full md:w-auto">
+                    <a href="#" onclick="window.location.hash=''; window.location.reload(); return false;" class="px-5 py-2 glass-panel rounded-lg text-white/80 text-[10px] font-semibold tracking-widest flex items-center gap-2 hover:bg-white/5 transition-all">PUBLIC VIEW</a>
+                    <button class="px-5 py-2 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] font-semibold tracking-widest flex items-center gap-2 hover:bg-red-500/20 transition-colors" onclick="window.logoutAdmin()">LOGOUT</button>
                 </div>
             </div>
 
             <!-- Admin Modules Grid -->
-            <div class="glass-panel p-6 rounded-2xl animate-in mb-8 border border-white/10">
-                <h2 class="text-sm font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
-                    <i data-lucide="gauge" class="w-4 h-4 text-blue-400"></i> Telemetry Override
-                </h2>
-                
+            <div class="glass-panel p-6 rounded-2xl animate-in mb-8">
+                <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/5 pb-3"><i data-lucide="gauge" class="w-4 h-4 text-sky-400"></i> Telemetry</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Current Pilot</label>
-                        <select id="adminDriver" class="form-select"><option value="AWAITING">AWAITING</option><option value="AUTOPILOT">AUTOPILOT</option></select>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Distance (KM)</label>
-                        <input type="number" id="adminDist" class="form-input" placeholder="e.g. 250">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Cabin Vibe</label>
-                        <input type="text" id="adminVibe" class="form-input" placeholder="e.g. CHAOTIC, CHILL">
-                    </div>
+                    <div><label class="text-[9px] font-bold text-white/40 mb-2 block tracking-widest uppercase">Pilot</label><select id="adminDriver" class="form-select"><option value="AWAITING">AWAITING</option><option value="AUTOPILOT">AUTOPILOT</option></select></div>
+                    <div><label class="text-[9px] font-bold text-white/40 mb-2 block tracking-widest uppercase">Dist (KM)</label><input type="number" id="adminDist" class="form-input" placeholder="250"></div>
+                    <div><label class="text-[9px] font-bold text-white/40 mb-2 block tracking-widest uppercase">Cabin Vibe</label><input type="text" id="adminVibe" class="form-input" placeholder="CHILL"></div>
                 </div>
-                <button class="mt-6 px-6 py-2.5 bg-white text-black rounded-lg text-xs font-bold tracking-widest hover:bg-gray-200 transition-colors" onclick="window.updateTelemetry()">SYNC TELEMETRY</button>
+                <button class="mt-6 px-6 py-2 bg-white/10 border border-white/20 text-white rounded-lg text-[10px] font-bold tracking-widest hover:bg-white/20 transition-colors" onclick="window.updateTelemetry()">SYNC</button>
             </div>
 
-            <div class="glass-panel p-6 rounded-2xl animate-in mb-8 border border-white/10">
-                <h2 class="text-sm font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
-                    <i data-lucide="users" class="w-4 h-4 text-blue-400"></i> Squadron Roster
-                </h2>
-                
-                <div class="mb-6 p-5 bg-black/20 rounded-xl border border-white/5">
-                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 items-end">
-                        <div class="md:col-span-1 flex flex-col justify-end">
-                            <input type="file" id="crewPhotoInput" class="hidden" accept="image/*" onchange="window.handleCrewPhotoSelect(event)">
-                            <button id="crewPhotoBtn" onclick="document.getElementById('crewPhotoInput').click()" class="w-full py-2 bg-white/10 text-white border border-white/20 rounded-lg text-xs font-semibold tracking-widest hover:bg-white/20 transition-colors flex justify-center items-center gap-2 h-[42px]">
-                                <i data-lucide="camera" class="w-4 h-4"></i> PHOTO
-                            </button>
-                        </div>
-                        <div class="md:col-span-1"><input type="text" id="crewName" class="form-input" placeholder="Name"></div>
-                        <div class="md:col-span-1"><input type="text" id="crewRole" class="form-input" placeholder="Role"></div>
-                        <div class="md:col-span-1"><input type="text" id="crewId" class="form-input" placeholder="ID"></div>
-                        <div class="md:col-span-1">
-                            <select id="crewColor" class="form-select">
-                                <option value="emerald">Emerald</option><option value="cyan">Cyan</option><option value="pink">Pink</option>
-                                <option value="orange">Orange</option><option value="violet">Violet</option><option value="yellow">Yellow</option>
-                            </select>
-                        </div>
+            <div class="glass-panel p-6 rounded-2xl animate-in mb-8">
+                <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/5 pb-3"><i data-lucide="users" class="w-4 h-4 text-sky-400"></i> Roster</h2>
+                <div class="mb-6 bg-black/20 p-4 rounded-xl border border-white/5">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3 items-end">
+                        <div class="md:col-span-1"><input type="file" id="crewPhotoInput" class="hidden" accept="image/*" onchange="window.handleCrewPhotoSelect(event)"><button id="crewPhotoBtn" onclick="document.getElementById('crewPhotoInput').click()" class="w-full py-2 bg-white/5 text-white/70 border border-white/10 rounded-lg text-[10px] font-semibold tracking-widest hover:bg-white/10 h-[38px]">PHOTO</button></div>
+                        <div class="md:col-span-1"><input type="text" id="crewName" class="form-input py-2" placeholder="Name"></div>
+                        <div class="md:col-span-1"><input type="text" id="crewRole" class="form-input py-2" placeholder="Role"></div>
+                        <div class="md:col-span-1"><input type="text" id="crewId" class="form-input py-2" placeholder="ID"></div>
+                        <div class="md:col-span-1"><select id="crewColor" class="form-select py-2"><option value="emerald">Emerald</option><option value="cyan">Cyan</option><option value="pink">Pink</option><option value="orange">Orange</option><option value="violet">Violet</option><option value="yellow">Yellow</option></select></div>
                     </div>
-                    <textarea id="crewDesc" class="form-textarea mb-4" placeholder="Operative Bio / Description (Optional)"></textarea>
-                    <button class="w-full py-2.5 bg-white text-black rounded-lg text-xs font-bold tracking-widest hover:bg-gray-200 transition-colors" onclick="window.addCrewMember()">ADD TO ROSTER</button>
+                    <textarea id="crewDesc" class="form-textarea mb-3 py-2" placeholder="Bio"></textarea>
+                    <button class="w-full py-2 bg-white text-black rounded-lg text-[10px] font-bold tracking-widest hover:bg-white/80" onclick="window.addCrewMember()">ADD TO ROSTER</button>
                 </div>
-                
-                <div class="overflow-x-auto max-h-[300px] overflow-y-auto custom-scrollbar bg-black/20 rounded-xl border border-white/5">
-                    <table class="table-admin text-sm text-white">
-                        <thead class="bg-black/50 sticky top-0 z-10 border-b border-white/10">
-                            <tr><th>IMG</th><th>NAME</th><th>ROLE</th><th>ID</th><th>ACT</th></tr>
-                        </thead>
-                        <tbody id="adminCrewTableBody">
-                            <tr><td colspan="5" class="text-center py-8 text-white/50 text-xs"><i data-lucide="loader" class="w-4 h-4 animate-spin inline mr-2"></i> Syncing roster...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div class="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar bg-black/20 rounded-xl border border-white/5"><table class="table-admin text-xs text-white/70 w-full"><thead class="bg-black/40 sticky top-0 border-b border-white/10 text-left"><tr><th class="p-3">IMG</th><th class="p-3">NAME</th><th class="p-3">ROLE</th><th class="p-3">ID</th><th class="p-3">ACT</th></tr></thead><tbody id="adminCrewTableBody"><tr><td colspan="5" class="text-center py-6 text-white/30">Syncing...</td></tr></tbody></table></div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="glass-panel p-6 rounded-2xl animate-in border border-white/10">
-                    <h2 class="text-sm font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
-                        <i data-lucide="bell" class="w-4 h-4 text-blue-400"></i> Banners
-                    </h2>
-                    
-                    <div class="mb-6 p-5 bg-black/20 rounded-xl border border-white/5">
-                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">New Mission Update</label>
-                        <textarea id="bannerText" class="form-textarea mb-4" placeholder="Announcement..."></textarea>
-                        <button class="w-full py-2.5 bg-white text-black rounded-lg text-xs font-bold tracking-widest hover:bg-gray-200 transition-colors flex justify-center items-center gap-2" onclick="window.addBanner()">
-                            <i data-lucide="send" class="w-4 h-4"></i> PUBLISH
-                        </button>
-                    </div>
-                    
-                    <div class="overflow-x-auto max-h-[300px] overflow-y-auto custom-scrollbar bg-black/20 rounded-xl border border-white/5">
-                        <table class="table-admin text-sm text-white">
-                            <thead class="bg-black/50 sticky top-0 z-10 border-b border-white/10">
-                                <tr><th>BROADCAST TEXT</th><th>STATUS</th><th>ACT</th></tr>
-                            </thead>
-                            <tbody id="bannersTableBody">
-                                <tr><td colspan="3" class="text-center py-8 text-white/50 text-xs"><i data-lucide="loader" class="w-4 h-4 animate-spin inline mr-2"></i> Syncing...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="glass-panel p-6 rounded-2xl animate-in">
+                    <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/5 pb-3"><i data-lucide="bell" class="w-4 h-4 text-sky-400"></i> Banners</h2>
+                    <div class="mb-4"><textarea id="bannerText" class="form-textarea mb-3 text-sm" placeholder="Announcement..."></textarea><button class="w-full py-2 bg-white text-black rounded-lg text-[10px] font-bold tracking-widest hover:bg-white/80" onclick="window.addBanner()">PUBLISH</button></div>
+                    <div class="overflow-x-auto max-h-[200px] overflow-y-auto custom-scrollbar bg-black/20 rounded-xl border border-white/5"><table class="table-admin text-xs text-white/70 w-full"><thead class="bg-black/40 sticky top-0 border-b border-white/10 text-left"><tr><th class="p-3">TEXT</th><th class="p-3">STATUS</th><th class="p-3">ACT</th></tr></thead><tbody id="bannersTableBody"><tr><td colspan="3" class="text-center py-6 text-white/30">Syncing...</td></tr></tbody></table></div>
                 </div>
 
-                <div class="glass-panel p-6 rounded-2xl animate-in border border-white/10" style="animation-delay: 100ms;">
-                    <h2 class="text-sm font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
-                        <i data-lucide="image" class="w-4 h-4 text-blue-400"></i> Gallery
-                    </h2>
-                    
-                    <div class="mb-6 p-5 bg-black/20 rounded-xl border border-white/5">
-                        <label class="text-[10px] font-bold text-white/50 mb-2 block tracking-widest uppercase">Upload Photo</label>
-                        <div class="border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:bg-white/5 hover:border-white/40 transition-colors cursor-pointer" id="dropZone" onclick="document.getElementById('imageInput').click()">
-                            <input type="file" id="imageInput" class="hidden" accept="image/*" onchange="window.handleImageSelect(event)">
-                            <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto mb-2 text-white/50"></i>
-                            <p class="text-xs font-medium text-white/50">Click to browse files</p>
-                        </div>
-                    </div>
-                    
-                    <div class="overflow-x-auto max-h-[300px] overflow-y-auto custom-scrollbar bg-black/20 rounded-xl border border-white/5">
-                        <table class="table-admin text-sm text-white">
-                            <thead class="bg-black/50 sticky top-0 z-10 border-b border-white/10">
-                                <tr><th>PREVIEW</th><th>STATUS</th><th>ACT</th></tr>
-                            </thead>
-                            <tbody id="galleryTableBody">
-                                <tr><td colspan="3" class="text-center py-8 text-white/50 text-xs"><i data-lucide="loader" class="w-4 h-4 animate-spin inline mr-2"></i> Syncing...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="glass-panel p-6 rounded-2xl animate-in" style="animation-delay: 100ms;">
+                    <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/5 pb-3"><i data-lucide="image" class="w-4 h-4 text-sky-400"></i> Gallery</h2>
+                    <div class="mb-4"><div class="border border-dashed border-white/20 rounded-xl p-6 text-center hover:bg-white/5 cursor-pointer" id="dropZone" onclick="document.getElementById('imageInput').click()"><input type="file" id="imageInput" class="hidden" accept="image/*" onchange="window.handleImageSelect(event)"><i data-lucide="upload-cloud" class="w-6 h-6 mx-auto mb-2 text-white/30"></i><p class="text-[10px] text-white/50">Upload</p></div></div>
+                    <div class="overflow-x-auto max-h-[200px] overflow-y-auto custom-scrollbar bg-black/20 rounded-xl border border-white/5"><table class="table-admin text-xs text-white/70 w-full"><thead class="bg-black/40 sticky top-0 border-b border-white/10 text-left"><tr><th class="p-3">IMG</th><th class="p-3">STATUS</th><th class="p-3">ACT</th></tr></thead><tbody id="galleryTableBody"><tr><td colspan="3" class="text-center py-6 text-white/30">Syncing...</td></tr></tbody></table></div>
                 </div>
             </div>
-
-            <div class="glass-panel p-6 rounded-2xl animate-in lg:col-span-2 mt-8 border border-white/10" style="animation-delay: 200ms;">
-                <h2 class="text-sm font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/10 pb-3">
-                    <i data-lucide="message-square" class="w-4 h-4 text-blue-400"></i> Comms Moderation
-                </h2>
-                <div class="overflow-x-auto max-h-[300px] overflow-y-auto custom-scrollbar bg-black/20 rounded-xl border border-white/5">
-                    <table class="table-admin text-sm text-white">
-                        <thead class="bg-black/50 sticky top-0 z-10 border-b border-white/10">
-                            <tr><th>AUTHOR</th><th>MESSAGE / AUDIO</th><th>DATE</th><th>ACT</th></tr>
-                        </thead>
-                        <tbody id="adminCommsTableBody">
-                            <tr><td colspan="4" class="text-center py-8 text-white/50 text-xs"><i data-lucide="loader" class="w-4 h-4 animate-spin inline mr-2"></i> Syncing...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            
+            <div class="glass-panel p-6 rounded-2xl animate-in lg:col-span-2 mt-8" style="animation-delay: 200ms;">
+                <h2 class="text-xs font-space font-bold text-white mb-6 flex items-center gap-2 tracking-widest uppercase border-b border-white/5 pb-3"><i data-lucide="message-square" class="w-4 h-4 text-sky-400"></i> Comms Moderation</h2>
+                <div class="overflow-x-auto max-h-[200px] overflow-y-auto custom-scrollbar bg-black/20 rounded-xl border border-white/5"><table class="table-admin text-xs text-white/70 w-full"><thead class="bg-black/40 sticky top-0 border-b border-white/10 text-left"><tr><th class="p-3">AUTHOR</th><th class="p-3">MSG</th><th class="p-3">DATE</th><th class="p-3">ACT</th></tr></thead><tbody id="adminCommsTableBody"><tr><td colspan="4" class="text-center py-6 text-white/30">Syncing...</td></tr></tbody></table></div>
             </div>
-
         </div>
     </div>
 
     <div id="toastContainer" class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
     
-    <!-- Hidden Block for JS Injection (Maintained for functionality) -->
+    <!-- Safeguard Hidden Tailwind Block (DO NOT REMOVE) -->
     <div class="hidden bg-slate-800/50 truncate max-w-xs text-slate-300 text-cyan-400 text-emerald-400 text-pink-400 text-orange-400 text-violet-400 text-yellow-400 text-slate-500 text-red-400 text-xs font-bold border-b border-slate-800 hover:bg-slate-800/50 transition-colors py-3 w-14 h-14 rounded-lg object-cover shadow-md line-through opacity-60 bg-emerald-50 border-emerald-200 glass-panel border-white/80 text-slate-700 hover:text-emerald-400 bg-white/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border-slate-200/50 pb-2 bg-white/50 px-2 py-0.5 rounded leading-relaxed font-medium mt-3 custom-audio pointer-events-none pointer-events-auto bg-gradient-to-t from-emerald-900/80 via-emerald-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5 bg-white/20 backdrop-blur-md rounded-full border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.4)] hover:bg-white/40 text-white w-5 h-5 animate-pulse bg-emerald-900/30 ml-2 px-1 text-center py-10 text-slate-400 font-space text-sm col-span-full opacity-100 scale-100 scale-95 hover:scale-125 hover:scale-110 cursor-pointer hover:bg-slate-200 hover:text-slate-600 bg-slate-100 pr-6 pb-3 text-[9px] text-[10px] py-1 border-t-2 border-l-2 border-b-2 border-r-2 rounded-tl rounded-br w-[200px] animate-[spin_10s_linear_infinite] origin-top-left border-emerald-500 border-cyan-500 border-pink-500 border-orange-500 border-violet-500 border-yellow-500 text-emerald-600 text-cyan-600 text-pink-600 text-orange-600 text-violet-600 text-yellow-600 border-emerald-300 border-cyan-300 border-pink-300 border-orange-300 border-violet-300 border-yellow-300 bg-emerald-400 bg-cyan-400 bg-pink-400 bg-orange-400 bg-violet-400 bg-yellow-400 bg-emerald-500 bg-cyan-500 bg-pink-500 bg-orange-500 bg-violet-500 bg-yellow-500 border-cyan-500/50 bg-cyan-900/10 border-slate-700/50 bg-slate-800/20 hover:bg-slate-700/30 pt-0.5 shadow-[0_0_8px_#22d3ee] sm:items-start sm:flex-row sm:w-36 mb-3 rounded-xl border-l-2 gap-2 sm:gap-6 border-emerald-500/40 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.3)] text-emerald-500/70 border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.3)] text-cyan-500/70 border-pink-500/40 bg-pink-500/10 shadow-[0_0_20px_rgba(236,72,153,0.3)] text-pink-500/70 border-orange-500/40 bg-orange-500/10 shadow-[0_0_20px_rgba(249,115,22,0.3)] text-orange-500/70 border-violet-500/40 bg-violet-500/10 shadow-[0_0_20px_rgba(139,92,246,0.3)] text-violet-500/70 border-yellow-500/40 bg-yellow-500/10 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-yellow-500/70 drop-shadow-[0_0_15px_currentColor] text-3xl sm:text-4xl animate-in fade-in slide-in-from-top-2 bg-slate-900/95 backdrop-blur-xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-20 z-10 group-hover:text-emerald-300 group-hover:text-cyan-300 group-hover:text-pink-300 group-hover:text-orange-300 group-hover:text-violet-300 group-hover:text-yellow-300 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 aspect-square overflow-y-auto max-w-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 fixed w-24 h-24 rounded-2xl w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300 absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent inline-block px-2 py-1 bg-slate-800 border border-slate-700 rounded text-2xl font-black text-white uppercase tracking-widest truncate mt-6 pt-4 border-t border-slate-700/50 bg-slate-800/30"></div>
 
     <script type="module" src="app.js"></script>
