@@ -61,9 +61,11 @@ let mapInitialized = false;
 let realMapInstance = null;
 let mapMarkersLayer = null;
 
+// Global Departure Date for Countdown
+window.missionDepartureDate = "2026-07-11T10:30:00Z";
+
 // FOUC & Loader Synchronization Variables
 let metadataLoaded = false;
-let initialLoadComplete = false;
 
 // Easter Egg
 let hyperdriveMode = false; 
@@ -81,7 +83,10 @@ let searchTimeout = null;
 // ==========================================
 function hexToRgb(hex) {
     let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : "56, 189, 248";
+    if (result) {
+        return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
+    }
+    return "56, 189, 248";
 }
 
 // ==========================================
@@ -97,7 +102,9 @@ function setupFirestoreListeners() {
         
         if (isMainPage) { 
             renderPublicCrew(); 
-            if (isAuthenticated) renderAdminCrew(); 
+            if (isAuthenticated) {
+                renderAdminCrew(); 
+            }
             updateDriverDropdown(); 
         }
         
@@ -135,6 +142,11 @@ function setupFirestoreListeners() {
                     document.getElementById('meta-hero-title').innerText = data.heroTitle || 'AIRCROSS ODYSSEY';
                 }
                 
+                // Set the global departure date for the independent countdown timer
+                if (data.departureDate) {
+                    window.missionDepartureDate = data.departureDate;
+                }
+
                 // Format and display the new datetime-local string beautifully
                 if (document.getElementById('meta-hero-date')) {
                     const dStr = data.departureDate;
@@ -219,7 +231,7 @@ function setupFirestoreListeners() {
                     lucide.createIcons();
                 }
 
-                // Call dynamic weather and update map
+                // Call dynamic weather and update map if already initialized
                 fetchDynamicWeather();
                 
                 if (mapInitialized) {
@@ -239,16 +251,24 @@ function setupFirestoreListeners() {
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), (snapshot) => {
             publicBanners = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
             renderPublicBanners(); 
-            if (isAuthenticated) renderAdminBanners();
+            if (isAuthenticated) {
+                renderAdminBanners();
+            }
         });
 
         // 4. Telemetry Listener
         onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'telemetry', 'latest'), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                if (document.getElementById('tel-driver')) document.getElementById('tel-driver').innerText = data.driver || 'AWAITING';
-                if (document.getElementById('tel-distance')) document.getElementById('tel-distance').innerText = (data.distance || 0) + ' KM';
-                if (document.getElementById('tel-vibe')) document.getElementById('tel-vibe').innerText = data.vibe || 'UNKNOWN';
+                if (document.getElementById('tel-driver')) {
+                    document.getElementById('tel-driver').innerText = data.driver || 'AWAITING';
+                }
+                if (document.getElementById('tel-distance')) {
+                    document.getElementById('tel-distance').innerText = (data.distance || 0) + ' KM';
+                }
+                if (document.getElementById('tel-vibe')) {
+                    document.getElementById('tel-vibe').innerText = data.vibe || 'UNKNOWN';
+                }
                 
                 if (document.getElementById('adminDist')) {
                     document.getElementById('adminDriver').value = data.driver || 'AWAITING';
@@ -263,8 +283,12 @@ function setupFirestoreListeners() {
     if (isMainPage || isGalleryPage) {
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), (snapshot) => {
             publicGallery = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
-            if (isGalleryPage) renderDedicatedGallery(); 
-            if (isMainPage && isAuthenticated) renderAdminGallery();
+            if (isGalleryPage) {
+                renderDedicatedGallery(); 
+            }
+            if (isMainPage && isAuthenticated) {
+                renderAdminGallery();
+            }
         });
     }
 
@@ -272,8 +296,12 @@ function setupFirestoreListeners() {
     if (isCommsPage || isMainPage) {
         onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'comms'), (snapshot) => {
             publicComms = snapshot.docs.map(d => d.data()).sort((a, b) => b.timestamp - a.timestamp);
-            if (isCommsPage || isMainPage) renderPublicComms(); 
-            if (isAuthenticated && isMainPage) renderAdminComms();
+            if (isCommsPage || isMainPage) {
+                renderPublicComms(); 
+            }
+            if (isAuthenticated && isMainPage) {
+                renderAdminComms();
+            }
         });
     }
 
@@ -329,19 +357,50 @@ initAuth();
 // SYNCHRONIZED FOUC LOADER LOGIC
 // ==========================================
 function checkAndHideLoader() {
-    if (metadataLoaded && initialLoadComplete) {
+    if (metadataLoaded) {
         const loader = document.getElementById('loader');
         if (loader) {
             loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 500);
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 500);
         }
     }
 }
 
+// Max timeout fallback: if Firebase is slow, hide loader after 1.5s max to prevent brutal load times
 setTimeout(() => {
     metadataLoaded = true;
     checkAndHideLoader();
-}, 3500);
+}, 1500);
+
+// ==========================================
+// INDEPENDENT COUNTDOWN TIMER LOGIC
+// ==========================================
+// Extracted out of map initialization so it runs instantly on page load
+function initCountdownTimer() {
+    if (document.getElementById('cd-days')) {
+        setInterval(() => {
+            // It reads from the global variable updated by Firebase snapshot
+            const targetDate = new Date(window.missionDepartureDate).getTime();
+            if(isNaN(targetDate)) return;
+            
+            const now = new Date().getTime(); 
+            const dist = targetDate - now;
+            
+            if (dist < 0) return; // Optional: Handle past dates by setting to 0
+            
+            const d = document.getElementById('cd-days');
+            if (d) {
+                d.innerText = Math.floor(dist / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+                document.getElementById('cd-hours').innerText = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+                document.getElementById('cd-minutes').innerText = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                document.getElementById('cd-seconds').innerText = Math.floor((dist % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            }
+        }, 1000);
+    }
+}
+initCountdownTimer(); // Start the clock immediately
 
 // ==========================================
 // MOBILE MENU LOGIC (SIDE DRAWER)
@@ -352,8 +411,9 @@ window.openMobileMenu = () => {
     if(menu && backdrop) {
         menu.classList.remove('translate-x-full');
         backdrop.classList.remove('hidden');
-        // brief delay for animation
-        setTimeout(() => backdrop.classList.add('opacity-100'), 10);
+        setTimeout(() => {
+            backdrop.classList.add('opacity-100');
+        }, 10);
     }
 };
 
@@ -363,7 +423,9 @@ window.closeMobileMenu = () => {
     if(menu && backdrop) {
         menu.classList.add('translate-x-full');
         backdrop.classList.remove('opacity-100');
-        setTimeout(() => backdrop.classList.add('hidden'), 300);
+        setTimeout(() => {
+            backdrop.classList.add('hidden');
+        }, 300);
     }
 };
 
@@ -701,7 +763,9 @@ window.cancelEditCrew = () => {
 };
 
 window.saveCrewMember = async () => {
-    if (!isAuthenticated) return showToast('Not authenticated', 'error');
+    if (!isAuthenticated) {
+        return showToast('Not authenticated', 'error');
+    }
     
     const name = document.getElementById('crewName').value.trim(); 
     const role = document.getElementById('crewRole').value.trim();
@@ -710,13 +774,20 @@ window.saveCrewMember = async () => {
     const color = document.getElementById('crewColor').value;
     const desc = document.getElementById('crewDesc').value.trim();
     
-    if (!name || !role || !crewId) return showToast('Fill Name, Role, and ID', 'error');
+    if (!name || !role || !crewId) {
+        return showToast('Fill Name, Role, and ID', 'error');
+    }
     
     const id = editingCrewId ? editingCrewId : Date.now().toString();
     
     try {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'crew', id), { 
-            id, name, role, crewId, status, color, 
+            id: id, 
+            name: name, 
+            role: role, 
+            crewId: crewId, 
+            status: status, 
+            color: color, 
             description: desc || null, 
             photo: tempCrewPhoto || null 
         }, { merge: true });
@@ -796,8 +867,12 @@ window.postComm = async () => {
     const author = authorElement.value; 
     const msg = msgElement.value.trim();
     
-    if (!msg && !audioBase64) return showToast('Enter text or record audio', 'error');
-    if (audioBase64 && audioBase64.length > 900000) return showToast('Audio file too large', 'error');
+    if (!msg && !audioBase64) {
+        return showToast('Enter text or record audio', 'error');
+    }
+    if (audioBase64 && audioBase64.length > 900000) {
+        return showToast('Audio file too large', 'error');
+    }
     
     const id = Date.now().toString();
     try {
@@ -927,7 +1002,9 @@ window.addNote = async () => {
     if (!input) return;
     
     const text = input.value.trim(); 
-    if (!text) return showToast('Enter an idea first', 'error');
+    if (!text) {
+        return showToast('Enter an idea first', 'error');
+    }
     
     const id = Date.now().toString();
     try { 
@@ -1407,7 +1484,9 @@ window.removeRoutePoint = (index) => {
 };
 
 window.updateTripMetadata = async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+        return showToast('Not authenticated', 'error');
+    }
     try {
         const bgVal = document.getElementById('adminMetaBgBase64').value;
         const payload = {
@@ -1633,7 +1712,27 @@ function renderAdminComms() {
 }
 
 // ==========================================
-// UTILITY LOGIC
+// LAZY LOAD HEAVY ASSETS (MAP & 3D MODEL)
+// ==========================================
+function lazyLoadHeavyAssets() {
+    const triggerSection = document.getElementById('machine');
+    if (!triggerSection) return;
+
+    const assetObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !mapInitialized) {
+                initMapAndGraphics();
+                mapInitialized = true;
+                observer.disconnect(); 
+            }
+        });
+    }, { rootMargin: '400px 0px' }); 
+
+    assetObserver.observe(triggerSection);
+}
+
+// ==========================================
+// UTILITY LOGIC & ROUTING
 // ==========================================
 function showToast(msg, type) {
     const container = document.getElementById('toastContainer'); 
@@ -1665,19 +1764,17 @@ function handleRoute() {
     } else { 
         document.getElementById('admin-view').classList.add('hidden'); 
         document.getElementById('public-view').classList.remove('hidden'); 
-        if (!mapInitialized) { 
-            setTimeout(initMapAndGraphics, 100); 
-            mapInitialized = true; 
-        } 
+        lazyLoadHeavyAssets(); 
     }
 }
 
 window.addEventListener('hashchange', handleRoute);
 
 window.addEventListener('load', () => {
-    // This removes the 3.5s failsafe issue and relies purely on initialization
-    initialLoadComplete = true;
-    checkAndHideLoader();
+    // Ensures that the UI loads if Firebase hasn't already fired
+    if (!metadataLoaded) {
+        checkAndHideLoader();
+    }
     if (isMainPage) handleRoute(); 
     lucide.createIcons();
 });
@@ -1734,6 +1831,7 @@ function updatePublicMap(routeArray) {
     const rootStyles = getComputedStyle(document.documentElement);
     const themeHex = rootStyles.getPropertyValue('--theme-hex').trim() || '#38bdf8';
 
+    // Map dynamic data to UI formatting
     const mapData = routeArray.map((point, index) => {
         let status = "WAYPOINT";
         let hex = themeHex;
@@ -1826,6 +1924,7 @@ function initMapAndGraphics() {
         
         mapMarkersLayer = L.layerGroup().addTo(realMapInstance);
         
+        // If dynamic data loaded before map initialized, draw it now
         if (currentRoutePoints.length > 0) {
             updatePublicMap(currentRoutePoints);
         }
