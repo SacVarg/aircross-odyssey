@@ -48,7 +48,7 @@ let audioChunks = [];
 let audioBase64 = null; 
 let recordingTimer = null;
 let tempCrewPhoto = null;
-let editingCrewId = null; // Used to track if we are updating an existing roster member
+let editingCrewId = null; 
 
 // Routing Context Checks
 const isMainPage = !!document.getElementById('public-view');
@@ -75,6 +75,14 @@ let listenersSetup = false;
 // --- DYNAMIC ROUTE AUTOCOMPLETE VARIABLES ---
 let currentRoutePoints = [];
 let searchTimeout = null;
+
+// ==========================================
+// UTILITY: HEX TO RGB FOR DYNAMIC THEME
+// ==========================================
+function hexToRgb(hex) {
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : "56, 189, 248";
+}
 
 // ==========================================
 // FIREBASE REAL-TIME LISTENERS
@@ -104,6 +112,18 @@ function setupFirestoreListeners() {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 
+                // --- APPLY DYNAMIC THEME COLOR ---
+                const root = document.documentElement;
+                const activeColor = data.themeColor || '#38bdf8';
+                root.style.setProperty('--theme-hex', activeColor);
+                root.style.setProperty('--theme-rgb', hexToRgb(activeColor));
+
+                // --- APPLY DYNAMIC BACKGROUND IMAGE ---
+                const bgLayer = document.getElementById('global-bg-layer');
+                if (bgLayer && data.bgImage) {
+                    bgLayer.style.backgroundImage = `url('${data.bgImage}')`;
+                }
+                
                 // Update HTML DOM Elements dynamically
                 if (document.getElementById('meta-loader-name')) {
                     document.getElementById('meta-loader-name').innerText = data.projectName || 'VOYAGER';
@@ -120,7 +140,6 @@ function setupFirestoreListeners() {
                     const dStr = data.departureDate;
                     if (dStr) {
                         const dateObj = new Date(dStr);
-                        // Make sure it doesn't say Invalid Date if formatting is weird
                         if (!isNaN(dateObj.getTime())) {
                             const formatted = dateObj.toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                             document.getElementById('meta-hero-date').innerText = formatted.toUpperCase();
@@ -167,16 +186,22 @@ function setupFirestoreListeners() {
                 if (document.getElementById('adminMetaProj')) {
                     document.getElementById('adminMetaProj').value = data.projectName || '';
                     document.getElementById('adminMetaTitle').value = data.heroTitle || '';
-                    document.getElementById('adminMetaDate').value = data.departureDate || ''; // Now accepts datetime-local format automatically
+                    document.getElementById('adminMetaDate').value = data.departureDate || ''; 
                     document.getElementById('adminMetaDesc').value = data.heroDesc || '';
                     document.getElementById('adminMetaChariot').value = data.chariotName || '';
                     document.getElementById('adminMetaPlatform').value = data.chariotPlatform || '';
+                    document.getElementById('adminThemeColor').value = activeColor;
                     
                     document.getElementById('adminMetaCountdownTitle').value = data.countdownTitle || '';
                     document.getElementById('adminMetaMapTitle').value = data.mapTitle || '';
                     document.getElementById('adminMetaRosterTitle').value = data.rosterTitle || '';
                     
                     document.getElementById('adminMetaTagline').value = data.footerTagline || '';
+                    
+                    // We don't refill the file input programmatically for security reasons,
+                    // but we store the base64 value in a hidden input so we don't overwrite it with null if unchanged
+                    document.getElementById('adminMetaBgBase64').value = data.bgImage || '';
+
                     renderAdminRouteTags();
                 }
 
@@ -187,7 +212,7 @@ function setupFirestoreListeners() {
                     currentRoutePoints.forEach((point, index) => {
                         routeHtml += `<span class="hover:text-white cursor-default transition-colors">${point.name}</span>`;
                         if (index < currentRoutePoints.length - 1) {
-                            routeHtml += `<i data-lucide="chevron-right" class="w-3 h-3 text-sky-400"></i>`;
+                            routeHtml += `<i data-lucide="chevron-right" class="w-3 h-3 theme-text"></i>`;
                         }
                     });
                     routeContainer.innerHTML = routeHtml;
@@ -205,7 +230,6 @@ function setupFirestoreListeners() {
                 metadataLoaded = true;
                 checkAndHideLoader();
             } else {
-                // If doc doesn't exist yet, hide loader gracefully anyway
                 metadataLoaded = true;
                 checkAndHideLoader();
             }
@@ -314,12 +338,34 @@ function checkAndHideLoader() {
     }
 }
 
-// Failsafe: if Firebase is slow, hide loader after 3.5 seconds anyway
 setTimeout(() => {
     metadataLoaded = true;
     checkAndHideLoader();
 }, 3500);
 
+// ==========================================
+// MOBILE MENU LOGIC (SIDE DRAWER)
+// ==========================================
+window.openMobileMenu = () => {
+    const menu = document.getElementById('mobile-menu');
+    const backdrop = document.getElementById('mobile-menu-backdrop');
+    if(menu && backdrop) {
+        menu.classList.remove('translate-x-full');
+        backdrop.classList.remove('hidden');
+        // brief delay for animation
+        setTimeout(() => backdrop.classList.add('opacity-100'), 10);
+    }
+};
+
+window.closeMobileMenu = () => {
+    const menu = document.getElementById('mobile-menu');
+    const backdrop = document.getElementById('mobile-menu-backdrop');
+    if(menu && backdrop) {
+        menu.classList.add('translate-x-full');
+        backdrop.classList.remove('opacity-100');
+        setTimeout(() => backdrop.classList.add('hidden'), 300);
+    }
+};
 
 // ==========================================
 // BULLETIN BOARD SCROLL LOGIC
@@ -398,12 +444,12 @@ function renderPublicBanners() {
         const formattedDate = new Date(b.timestamp).toLocaleString('en-US', dateOptions).toUpperCase();
         const isLatest = index === 0;
         
-        const borderClass = isLatest ? 'border-sky-400 bg-sky-400/10' : 'border-white/10 bg-white/5';
-        const dateColor = isLatest ? 'text-sky-400' : 'text-white/40';
+        const borderClass = isLatest ? 'border-t-theme theme-bg-10 theme-border' : 'border-white/10 bg-white/5';
+        const dateColor = isLatest ? 'theme-text' : 'text-white/40';
         const textColor = isLatest ? 'text-white' : 'text-white/70';
         
         const dot = isLatest 
-            ? `<span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse mr-2 inline-block shadow-[0_0_8px_#38bdf8]"></span>` 
+            ? `<span class="w-1.5 h-1.5 rounded-full theme-bg animate-pulse mr-2 inline-block theme-glow"></span>` 
             : `<span class="w-1.5 h-1.5 rounded-full bg-white/30 mr-2 inline-block"></span>`;
         
         return `
@@ -458,7 +504,7 @@ function renderPublicCrew() {
                     ${avatarHtml}
                     ${badgeHtml}
                 </div>
-                <h3>${c.name}</h3>
+                <h3 style="color: ${c.color} !important;">${c.name}</h3>
                 <p>${c.role}</p>
             </div>
         `;
@@ -485,14 +531,14 @@ window.openCrewDossier = (id) => {
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="inline-flex px-2 py-1 bg-white/10 border border-white/20 rounded text-[10px] text-white font-bold tracking-[0.2em] uppercase mb-1.5 items-center gap-1">
-                        OP-ID: ${c.crewId}
+                        OP-ID: <span style="color: ${c.color};">${c.crewId}</span>
                         ${c.status === 'Pending' ? '<span class="text-amber-400 ml-2">PENDING</span>' : '<span class="text-emerald-400 ml-2">CONFIRMED</span>'}
                     </div>
                     <div class="text-xl sm:text-2xl font-black text-white font-space tracking-wider truncate uppercase">
                         ${c.name}
                     </div>
-                    <div class="text-xs sm:text-sm text-sky-400 font-bold tracking-widest uppercase truncate mt-0.5">
-                        <i data-lucide="shield" class="w-3 h-3 inline mr-1 text-sky-400"></i>${c.role}
+                    <div class="text-xs sm:text-sm font-bold tracking-widest uppercase truncate mt-0.5" style="color: ${c.color};">
+                        <i data-lucide="shield" class="w-3 h-3 inline mr-1"></i>${c.role}
                     </div>
                 </div>
             </div>
@@ -604,7 +650,6 @@ window.handleCrewPhotoSelect = async (e) => {
     }
 };
 
-// --- NEW CREW EDIT FUNCTIONALITY ---
 window.editCrewMember = (id) => {
     if (!isAuthenticated) return;
     const c = publicCrew.find(x => x.id === id); 
@@ -614,7 +659,7 @@ window.editCrewMember = (id) => {
     document.getElementById('crewRole').value = c.role || '';
     document.getElementById('crewId').value = c.crewId || '';
     document.getElementById('crewStatus').value = c.status || 'Confirmed';
-    document.getElementById('crewColor').value = c.color || 'emerald';
+    document.getElementById('crewColor').value = c.color || '#38bdf8';
     document.getElementById('crewDesc').value = c.description || '';
     
     tempCrewPhoto = c.photo || null;
@@ -640,7 +685,7 @@ window.cancelEditCrew = () => {
     document.getElementById('crewRole').value = '';
     document.getElementById('crewId').value = '';
     document.getElementById('crewStatus').value = 'Confirmed';
-    document.getElementById('crewColor').value = 'emerald';
+    document.getElementById('crewColor').value = '#38bdf8';
     document.getElementById('crewDesc').value = '';
     
     tempCrewPhoto = null;
@@ -655,7 +700,6 @@ window.cancelEditCrew = () => {
     lucide.createIcons();
 };
 
-// Replaces previous addCrewMember logic to handle both add and edit
 window.saveCrewMember = async () => {
     if (!isAuthenticated) return showToast('Not authenticated', 'error');
     
@@ -678,7 +722,7 @@ window.saveCrewMember = async () => {
         }, { merge: true });
         
         const isUpdate = !!editingCrewId;
-        window.cancelEditCrew(); // this resets form fields and button states
+        window.cancelEditCrew(); 
         showToast(isUpdate ? 'Operative Updated' : 'Operative Added', 'success'); 
     } catch (e) { 
         showToast('Sync failed', 'error'); 
@@ -692,7 +736,6 @@ window.deleteCrewMember = async (id) => {
     try { 
         await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'crew', id.toString())); 
         
-        // If we were editing this user, cancel the edit mode
         if (editingCrewId === id) {
             window.cancelEditCrew();
         }
@@ -723,7 +766,7 @@ function renderAdminCrew() {
                         : `<div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-white border border-white/20">${c.name.charAt(0)}</div>`
                     }
                 </td>
-                <td class="py-3 text-white font-bold text-xs uppercase">${c.name}</td>
+                <td class="py-3 font-bold text-xs uppercase" style="color: ${c.color};">${c.name}</td>
                 <td class="py-3 text-white/50 text-[10px] uppercase">${c.role}</td>
                 <td class="py-3 text-[10px]">${statusIcon}</td>
                 <td class="py-3 flex gap-3 items-center">
@@ -860,7 +903,7 @@ function renderPublicComms() {
         return `
         <div class="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-sm hover:bg-white/10 transition-colors">
             <div class="flex justify-between items-start mb-2 border-b border-white/10 pb-2">
-                <span class="font-space font-bold text-sky-400 text-xs tracking-widest flex items-center gap-1">
+                <span class="font-space font-bold theme-text text-xs tracking-widest flex items-center gap-1">
                     <i data-lucide="user" class="w-3 h-3"></i> ${c.author}
                 </span>
                 <span class="text-[10px] text-white/40 font-space bg-black/20 px-2 py-0.5 rounded border border-white/5">
@@ -969,12 +1012,11 @@ async function fetchDynamicWeather() {
     const wBox = document.getElementById('weather-hud');
     
     if (currentRoutePoints.length === 0) {
-        if (wBox) wBox.innerHTML = `<div class="text-[10px] text-sky-400 font-space font-bold">AWAITING NAV DATA</div>`;
+        if (wBox) wBox.innerHTML = `<div class="text-[10px] theme-text font-space font-bold">AWAITING NAV DATA</div>`;
         return;
     }
 
     try {
-        // Fetch data for ALL route points 
         const displayPoints = currentRoutePoints; 
         const lats = displayPoints.map(p => p.lat).join(',');
         const lngs = displayPoints.map(p => p.lng).join(',');
@@ -994,10 +1036,10 @@ async function fetchDynamicWeather() {
             html += `
             <div class="flex justify-between items-center gap-6 border-b border-white/10 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
                 <span class="text-[10px] md:text-xs font-space font-bold text-white/60 uppercase truncate max-w-[100px]">${cityName}</span>
-                <span class="text-[10px] md:text-xs font-space text-sky-400 font-bold whitespace-nowrap">
+                <span class="text-[10px] md:text-xs font-space theme-text font-bold whitespace-nowrap">
                     ${temp}°C 
                     <span class="text-white/20 mx-1 opacity-50">|</span> 
-                    <span class="text-sky-400/50">${wind}km/h</span>
+                    <span class="theme-text opacity-70">${wind}km/h</span>
                 </span>
             </div>`;
         });
@@ -1009,7 +1051,7 @@ async function fetchDynamicWeather() {
         
     } catch (e) {
         console.error("Weather API Error:", e);
-        if (wBox) wBox.innerHTML = `<div class="text-[10px] text-sky-400 font-space font-bold">SYS ONLINE: 28°C AVG</div>`;
+        if (wBox) wBox.innerHTML = `<div class="text-[10px] theme-text font-space font-bold">SYS ONLINE: 28°C AVG</div>`;
     }
 }
 
@@ -1024,10 +1066,10 @@ window.toggleGalleryView = (viewType) => {
     const btnList = document.getElementById('btn-view-list');
     
     if (viewType === 'grid') { 
-        btnGrid.className = "p-2.5 rounded-lg bg-white/10 text-sky-400 border border-white/10 shadow-sm transition-all"; 
+        btnGrid.className = "p-2.5 rounded-lg bg-white/10 theme-text border border-white/10 shadow-sm transition-all"; 
         btnList.className = "p-2.5 rounded-lg text-white/40 hover:text-white/80 transition-all"; 
     } else { 
-        btnList.className = "p-2.5 rounded-lg bg-white/10 text-sky-400 border border-white/10 shadow-sm transition-all"; 
+        btnList.className = "p-2.5 rounded-lg bg-white/10 theme-text border border-white/10 shadow-sm transition-all"; 
         btnGrid.className = "p-2.5 rounded-lg text-white/40 hover:text-white/80 transition-all"; 
     }
     
@@ -1066,7 +1108,7 @@ function renderDedicatedGallery() {
                             <button onclick="window.downloadImage('${item.image}', 'voyager-${item.id}.jpg'); event.stopPropagation();" class="bg-white/10 backdrop-blur-md rounded-full p-2 border border-white/20 hover:bg-white/30 transition-colors" title="Download">
                                 <i data-lucide="download" class="w-4 h-4 text-white"></i>
                             </button>
-                            <button onclick="window.openLightbox('${item.id}'); event.stopPropagation();" class="bg-sky-500/80 backdrop-blur-md rounded-full p-2 border border-sky-400 hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(56,189,248,0.5)]" title="Enlarge">
+                            <button onclick="window.openLightbox('${item.id}'); event.stopPropagation();" class="theme-bg opacity-80 backdrop-blur-md rounded-full p-2 theme-border hover:opacity-100 transition-colors theme-glow" title="Enlarge">
                                 <i data-lucide="maximize-2" class="w-4 h-4 text-white"></i>
                             </button>
                         </div>
@@ -1083,7 +1125,7 @@ function renderDedicatedGallery() {
                 </div>
                 <div class="p-6 bg-black/40 backdrop-blur-md flex justify-between items-center border-t border-white/10">
                     <div>
-                        <p class="text-[10px] text-sky-400 font-space font-bold tracking-widest mb-1 uppercase">LOG ENTRY</p>
+                        <p class="text-[10px] theme-text font-space font-bold tracking-widest mb-1 uppercase">LOG ENTRY</p>
                         <p class="text-white/80 font-medium text-xs md:text-sm">
                             ${new Date(item.timestamp).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
@@ -1107,6 +1149,47 @@ window.downloadImage = (dataUrl, filename) => {
     document.body.appendChild(a); 
     a.click(); 
     document.body.removeChild(a); 
+};
+
+window.handleMetaBgSelect = async (e) => {
+    if (!isAuthenticated) return showToast('Not authenticated', 'error');
+    const file = e.target.files[0]; 
+    if (!file) return;
+    
+    showToast('Compressing BG Image...', 'success');
+    
+    try {
+        const base64 = await new Promise((resolve) => {
+            const reader = new FileReader(); 
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image(); 
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); 
+                    let { width, height } = img; 
+                    const max = 1920; 
+                    
+                    if (width > height && width > max) { 
+                        height *= max / width; width = max; 
+                    } else if (height > max) { 
+                        width *= max / height; height = max; 
+                    }
+                    
+                    canvas.width = width; 
+                    canvas.height = height; 
+                    const ctx = canvas.getContext('2d'); 
+                    ctx.drawImage(img, 0, 0, width, height); 
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+            };
+        });
+        
+        document.getElementById('adminMetaBgBase64').value = base64;
+        showToast('Ready to Save', 'success');
+    } catch(err) { 
+        showToast('Upload failed', 'error'); 
+    }
 };
 
 window.handleImageSelect = async (e) => {
@@ -1279,7 +1362,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const formattedName = `${name}${state}${country}`;
                             
                             const div = document.createElement('div');
-                            div.className = 'p-3 text-[10px] text-white hover:bg-sky-500/20 cursor-pointer border-b border-white/5 last:border-0 uppercase tracking-widest';
+                            div.className = 'p-3 text-[10px] text-white hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0 uppercase tracking-widest';
                             div.innerText = formattedName;
                             
                             div.onclick = () => {
@@ -1326,24 +1409,35 @@ window.removeRoutePoint = (index) => {
 window.updateTripMetadata = async () => {
     if (!isAuthenticated) return;
     try {
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'trip_meta', 'latest'), {
+        const bgVal = document.getElementById('adminMetaBgBase64').value;
+        const payload = {
             projectName: document.getElementById('adminMetaProj').value.trim(),
             heroTitle: document.getElementById('adminMetaTitle').value.trim(),
-            departureDate: document.getElementById('adminMetaDate').value.trim(), // Now saving the datetime-local format
+            departureDate: document.getElementById('adminMetaDate').value.trim(),
             heroDesc: document.getElementById('adminMetaDesc').value.trim(),
             chariotName: document.getElementById('adminMetaChariot').value.trim(),
             chariotPlatform: document.getElementById('adminMetaPlatform').value.trim(),
-            footerTagline: document.getElementById('adminMetaTagline').value.trim(),
+            themeColor: document.getElementById('adminThemeColor').value,
             
-            // Dynamic Section Titles
             countdownTitle: document.getElementById('adminMetaCountdownTitle').value.trim(),
             mapTitle: document.getElementById('adminMetaMapTitle').value.trim(),
             rosterTitle: document.getElementById('adminMetaRosterTitle').value.trim(),
             
+            footerTagline: document.getElementById('adminMetaTagline').value.trim(),
             routePoints: currentRoutePoints, 
             timestamp: Date.now()
-        }, { merge: true });
-        showToast('Global Site Data & Map Updated', 'success');
+        };
+        
+        if (bgVal && bgVal.length > 100) {
+            payload.bgImage = bgVal;
+        }
+
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'trip_meta', 'latest'), payload, { merge: true });
+        
+        // Reset the BG file input to blank visually
+        document.getElementById('adminMetaBgInput').value = '';
+        
+        showToast('Global Settings Updated', 'success');
     } catch (e) {
         showToast('Failed to sync metadata', 'error');
         console.error(e);
@@ -1448,7 +1542,7 @@ function renderAdminBanners() {
             <td class="py-3">
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" class="sr-only peer" ${b.visible ? 'checked' : ''} onchange="window.toggleBannerVisibility('${b.id}', ${b.visible})">
-                    <div class="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
+                    <div class="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all theme-bg"></div>
                 </label>
             </td>
             <td class="py-3">
@@ -1487,7 +1581,7 @@ function renderAdminGallery() {
             <td class="py-3">
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" class="sr-only peer" ${g.visible ? 'checked' : ''} onchange="window.toggleGalleryVisibility('${g.id}', ${g.visible})">
-                    <div class="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
+                    <div class="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all theme-bg"></div>
                 </label>
             </td>
             <td class="py-3">
@@ -1524,7 +1618,7 @@ function renderAdminComms() {
         
         return `
         <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-            <td class="py-3 text-sky-400 font-bold text-xs uppercase">${c.author}</td>
+            <td class="py-3 theme-text font-bold text-xs uppercase">${c.author}</td>
             <td class="py-3 text-white/80 max-w-xs truncate text-xs">${c.message || '---'} ${audioLabel}</td>
             <td class="py-3 text-white/50 text-[10px] uppercase tracking-widest">${date}</td>
             <td class="py-3">
@@ -1581,6 +1675,7 @@ function handleRoute() {
 window.addEventListener('hashchange', handleRoute);
 
 window.addEventListener('load', () => {
+    // This removes the 3.5s failsafe issue and relies purely on initialization
     initialLoadComplete = true;
     checkAndHideLoader();
     if (isMainPage) handleRoute(); 
@@ -1636,23 +1731,17 @@ function updatePublicMap(routeArray) {
     // Clear existing markers and lines
     mapMarkersLayer.clearLayers();
 
-    // Map dynamic data to UI formatting
+    const rootStyles = getComputedStyle(document.documentElement);
+    const themeHex = rootStyles.getPropertyValue('--theme-hex').trim() || '#38bdf8';
+
     const mapData = routeArray.map((point, index) => {
         let status = "WAYPOINT";
-        let color = "text-purple-400"; 
-        let bg = "bg-purple-400/20"; 
-        let hex = "#a855f7";
+        let hex = themeHex;
         
         if (index === 0) { 
             status = "DEPARTURE"; 
-            color = "text-sky-400"; 
-            bg = "bg-sky-400/20"; 
-            hex = "#38bdf8"; 
         } else if (index === routeArray.length - 1) { 
             status = "DESTINATION"; 
-            color = "text-emerald-400"; 
-            bg = "bg-emerald-400/20"; 
-            hex = "#34d399"; 
         }
 
         return {
@@ -1660,8 +1749,6 @@ function updatePublicMap(routeArray) {
             name: point.name.toUpperCase(),
             status: status,
             desc: point.formattedName,
-            color: color, 
-            bg: bg, 
             markerHex: hex,
             coords: [point.lat, point.lng]
         };
@@ -1669,17 +1756,17 @@ function updatePublicMap(routeArray) {
 
     const forwardCoords = mapData.map(d => d.coords);
     
-    // Draw connecting lines
-    L.polyline(forwardCoords, { color: '#38bdf8', weight: 6, opacity: 0.8 }).addTo(mapMarkersLayer);
+    // Draw connecting lines using the theme color
+    L.polyline(forwardCoords, { color: themeHex, weight: 6, opacity: 0.8 }).addTo(mapMarkersLayer);
     L.polyline(forwardCoords, { color: '#ffffff', weight: 2, dashArray: '10, 10' }).addTo(mapMarkersLayer);
 
-    // DYNAMIC RETURN ROUTE LINE (Dashed Purple Line from End back to Start)
+    // DYNAMIC RETURN ROUTE LINE (Dashed Purple/Theme Line from End back to Start)
     if (forwardCoords.length > 1) {
         const returnCoords = [forwardCoords[forwardCoords.length - 1], forwardCoords[0]];
         L.polyline(returnCoords, { color: '#a855f7', weight: 4, opacity: 0.6, dashArray: '5, 10' }).addTo(mapMarkersLayer);
     }
 
-    // Draw glowing pins
+    // Draw glowing pins using theme color
     mapData.forEach((loc) => {
         const vibrantIcon = L.divIcon({ 
             className: 'custom-vibrant-marker', 
@@ -1703,7 +1790,7 @@ function updatePublicMap(routeArray) {
                 </button>
                 <div class="flex justify-between items-center mb-3 border-b border-white/10 pb-3 pr-6">
                     <div class="font-space font-bold text-[10px] tracking-[0.2em] text-white/50">NAV PNT ${loc.id}</div>
-                    <div class="${loc.color} ${loc.bg} border border-${loc.color.replace('text-', '')}/30 text-[9px] tracking-widest font-bold px-2 py-1 rounded shadow-sm">
+                    <div class="theme-text theme-bg-10 theme-border-30 border text-[9px] tracking-widest font-bold px-2 py-1 rounded shadow-sm">
                         ${loc.status}
                     </div>
                 </div>
@@ -1720,7 +1807,6 @@ function updatePublicMap(routeArray) {
         });
     });
 
-    // Auto-zoom map to fit all points dynamically
     if (forwardCoords.length > 0) {
         realMapInstance.fitBounds(L.latLngBounds(forwardCoords), { padding: [50, 50] });
     }
@@ -1740,30 +1826,8 @@ function initMapAndGraphics() {
         
         mapMarkersLayer = L.layerGroup().addTo(realMapInstance);
         
-        // If dynamic data loaded before map initialized, draw it now
         if (currentRoutePoints.length > 0) {
             updatePublicMap(currentRoutePoints);
         }
-    }
-
-    if (document.getElementById('cd-days')) {
-        setInterval(() => {
-            const dStr = document.getElementById('adminMetaDate') ? document.getElementById('adminMetaDate').value : "2026-07-11T10:30";
-            const targetDate = new Date(dStr).getTime();
-            if(isNaN(targetDate)) return;
-            
-            const now = new Date().getTime(); 
-            const dist = targetDate - now;
-            
-            if (dist < 0) return;
-            
-            const d = document.getElementById('cd-days');
-            if (d) {
-                d.innerText = Math.floor(dist / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-                document.getElementById('cd-hours').innerText = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-                document.getElementById('cd-minutes').innerText = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-                document.getElementById('cd-seconds').innerText = Math.floor((dist % (1000 * 60)) / 1000).toString().padStart(2, '0');
-            }
-        }, 1000);
     }
 }
