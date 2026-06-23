@@ -85,11 +85,13 @@ function setupFirestoreListeners() {
     // 1. Crew Roster
     onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'crew'), (snapshot) => {
         publicCrew = snapshot.docs.map(d => d.data()).sort((a, b) => a.crewId.localeCompare(b.crewId));
+        
         if (isMainPage) { 
             renderPublicCrew(); 
             if (isAuthenticated) renderAdminCrew(); 
             updateDriverDropdown(); 
         }
+        
         if (isCommsPage || isMainPage) { 
             updateCommsAuthorDropdown(); 
         }
@@ -102,17 +104,33 @@ function setupFirestoreListeners() {
                 const data = docSnap.data();
                 
                 // Update HTML DOM Elements dynamically
-                if (document.getElementById('meta-loader-name')) document.getElementById('meta-loader-name').innerText = data.projectName || 'VOYAGER';
-                if (document.getElementById('meta-nav-name')) document.getElementById('meta-nav-name').innerText = data.projectName || 'VOYAGER';
-                if (document.getElementById('meta-hero-title')) document.getElementById('meta-hero-title').innerText = data.heroTitle || 'AIRCROSS ODYSSEY';
-                if (document.getElementById('meta-hero-date')) document.getElementById('meta-hero-date').innerText = data.departureDate || '11 July 2026';
-                if (document.getElementById('meta-hero-desc')) document.getElementById('meta-hero-desc').innerText = data.heroDesc || '6 friends, 1 magnificent Citroën Aircross, and hundreds of kilometers mapped beautifully into one experience.';
-                if (document.getElementById('meta-machine-name')) document.getElementById('meta-machine-name').innerText = data.chariotName || 'Citroën Aircross';
-                
-                // Footer fix: Strictly displaying Project Name without appended text
-                if (document.getElementById('meta-footer-title')) document.getElementById('meta-footer-title').innerText = data.projectName || 'VOYAGER';
-                
-                if (document.getElementById('meta-footer-tagline')) document.getElementById('meta-footer-tagline').innerText = data.footerTagline || 'MAPPING THE UNKNOWN // EMBRACING THE JOURNEY // CHASING THE HORIZON';
+                if (document.getElementById('meta-loader-name')) {
+                    document.getElementById('meta-loader-name').innerText = data.projectName || 'VOYAGER';
+                }
+                if (document.getElementById('meta-nav-name')) {
+                    document.getElementById('meta-nav-name').innerText = data.projectName || 'VOYAGER';
+                }
+                if (document.getElementById('meta-hero-title')) {
+                    document.getElementById('meta-hero-title').innerText = data.heroTitle || 'AIRCROSS ODYSSEY';
+                }
+                if (document.getElementById('meta-hero-date')) {
+                    document.getElementById('meta-hero-date').innerText = data.departureDate || '11 July 2026';
+                }
+                if (document.getElementById('meta-hero-desc')) {
+                    document.getElementById('meta-hero-desc').innerText = data.heroDesc || '6 friends, 1 magnificent Citroën Aircross, and hundreds of kilometers mapped beautifully into one experience.';
+                }
+                if (document.getElementById('meta-machine-name')) {
+                    document.getElementById('meta-machine-name').innerText = data.chariotName || 'Citroën Aircross';
+                }
+                if (document.getElementById('meta-machine-platform')) {
+                    document.getElementById('meta-machine-platform').innerText = data.chariotPlatform || 'AX-7 PLATFORM';
+                }
+                if (document.getElementById('meta-footer-title')) {
+                    document.getElementById('meta-footer-title').innerText = data.projectName || 'VOYAGER';
+                }
+                if (document.getElementById('meta-footer-tagline')) {
+                    document.getElementById('meta-footer-tagline').innerText = data.footerTagline || 'MAPPING THE UNKNOWN // EMBRACING THE JOURNEY // CHASING THE HORIZON';
+                }
                 
                 // Read and set the active route array fetched from Firebase
                 currentRoutePoints = data.routePoints || [];
@@ -124,6 +142,7 @@ function setupFirestoreListeners() {
                     document.getElementById('adminMetaDate').value = data.departureDate || '';
                     document.getElementById('adminMetaDesc').value = data.heroDesc || '';
                     document.getElementById('adminMetaChariot').value = data.chariotName || '';
+                    document.getElementById('adminMetaPlatform').value = data.chariotPlatform || '';
                     document.getElementById('adminMetaTagline').value = data.footerTagline || '';
                     renderAdminRouteTags();
                 }
@@ -144,6 +163,7 @@ function setupFirestoreListeners() {
 
                 // Call dynamic weather and update map
                 fetchDynamicWeather();
+                
                 if (mapInitialized) {
                     updatePublicMap(currentRoutePoints);
                 }
@@ -152,7 +172,7 @@ function setupFirestoreListeners() {
                 metadataLoaded = true;
                 checkAndHideLoader();
             } else {
-                // If doc doesn't exist yet, just hide loader gracefully
+                // If doc doesn't exist yet, hide loader gracefully anyway
                 metadataLoaded = true;
                 checkAndHideLoader();
             }
@@ -169,9 +189,16 @@ function setupFirestoreListeners() {
         onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'telemetry', 'latest'), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                if (document.getElementById('tel-driver')) document.getElementById('tel-driver').innerText = data.driver || 'AWAITING';
-                if (document.getElementById('tel-distance')) document.getElementById('tel-distance').innerText = (data.distance || 0) + ' KM';
-                if (document.getElementById('tel-vibe')) document.getElementById('tel-vibe').innerText = data.vibe || 'UNKNOWN';
+                
+                if (document.getElementById('tel-driver')) {
+                    document.getElementById('tel-driver').innerText = data.driver || 'AWAITING';
+                }
+                if (document.getElementById('tel-distance')) {
+                    document.getElementById('tel-distance').innerText = (data.distance || 0) + ' KM';
+                }
+                if (document.getElementById('tel-vibe')) {
+                    document.getElementById('tel-vibe').innerText = data.vibe || 'UNKNOWN';
+                }
                 
                 if (document.getElementById('adminDist')) {
                     document.getElementById('adminDriver').value = data.driver || 'AWAITING';
@@ -218,16 +245,19 @@ setupFirestoreListeners();
 onAuthStateChanged(auth, (user) => {
     if (user && !user.isAnonymous) {
         isAuthenticated = true;
+        
         if (isMainPage) {
             renderAdminBanners(); 
             renderAdminGallery(); 
             renderAdminComms(); 
             renderAdminCrew();
+            
             document.getElementById('loginScreen').classList.add('hidden'); 
             document.getElementById('dashboard').classList.remove('hidden');
         }
     } else {
         isAuthenticated = false;
+        
         if (isMainPage) { 
             document.getElementById('loginScreen').classList.remove('hidden'); 
             document.getElementById('dashboard').classList.add('hidden'); 
@@ -242,6 +272,7 @@ const initAuth = async () => {
         console.error("Anonymous Auth Error:", error); 
     } 
 };
+
 initAuth();
 
 // ==========================================
@@ -381,13 +412,29 @@ function renderPublicCrew() {
     }
 
     container.innerHTML = publicCrew.map(c => {
-        const photoBg = c.photo 
-            ? `<img src="${c.photo}" alt="${c.name}">` 
-            : `<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='%231e293b'/><text x='50%' y='50%' font-family='sans-serif' font-size='30' font-weight='bold' fill='white' dominant-baseline='middle' text-anchor='middle'>${c.name.charAt(0)}</text></svg>">`;
+        // Determine status formatting
+        const isConfirmed = c.status !== 'Pending';
+        const filterClass = isConfirmed ? '' : 'style="filter: grayscale(100%); opacity: 0.6;"';
+        
+        // Render either green tick or amber question mark
+        const badgeHtml = isConfirmed 
+            ? `<div class="crew-status-badge status-confirmed"><i data-lucide="check" class="w-3 h-3 text-white"></i></div>`
+            : `<div class="crew-status-badge status-pending"><i data-lucide="help-circle" class="w-3 h-3 text-white"></i></div>`;
+        
+        // Render photo or placeholder
+        let avatarHtml = '';
+        if (c.photo) {
+            avatarHtml = `<img src="${c.photo}" alt="${c.name}" class="crew-avatar-img" ${filterClass}>`;
+        } else {
+            avatarHtml = `<div class="crew-avatar-placeholder" ${filterClass}>${c.name.charAt(0)}</div>`;
+        }
             
         return `
-            <div onclick="window.openCrewDossier('${c.id}')" style="cursor:pointer;">
-                ${photoBg}
+            <div onclick="window.openCrewDossier('${c.id}')">
+                <div class="crew-avatar-wrapper">
+                    ${avatarHtml}
+                    ${badgeHtml}
+                </div>
                 <h3>${c.name}</h3>
                 <p>${c.role}</p>
             </div>
@@ -414,8 +461,9 @@ window.openCrewDossier = (id) => {
                     ${c.photo ? `<img src="${c.photo}" class="w-full h-full object-cover">` : `<span class="text-4xl font-black text-white font-space">${c.name.charAt(0).toUpperCase()}</span>`}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="inline-block px-2 py-1 bg-white/10 border border-white/20 rounded text-[10px] text-white font-bold tracking-[0.2em] uppercase mb-1.5">
+                    <div class="inline-flex px-2 py-1 bg-white/10 border border-white/20 rounded text-[10px] text-white font-bold tracking-[0.2em] uppercase mb-1.5 items-center gap-1">
                         OP-ID: ${c.crewId}
+                        ${c.status === 'Pending' ? '<span class="text-amber-400 ml-2">PENDING</span>' : '<span class="text-emerald-400 ml-2">CONFIRMED</span>'}
                     </div>
                     <div class="text-xl sm:text-2xl font-black text-white font-space tracking-wider truncate uppercase">
                         ${c.name}
@@ -461,7 +509,10 @@ function updateDriverDropdown() {
     if (!select) return;
     
     const currentVal = select.value;
-    let html = `<option value="AWAITING">AWAITING</option><option value="AUTOPILOT">AUTOPILOT</option>`;
+    let html = `
+        <option value="AWAITING">AWAITING</option>
+        <option value="AUTOPILOT">AUTOPILOT</option>
+    `;
     
     html += publicCrew.map(c => `<option value="${c.name.toUpperCase()}">${c.name.toUpperCase()}</option>`).join('');
     select.innerHTML = html; 
@@ -504,9 +555,11 @@ window.handleCrewPhotoSelect = async (e) => {
                     const max = 300; 
                     
                     if (width > height && width > max) { 
-                        height *= max / width; width = max; 
+                        height *= max / width; 
+                        width = max; 
                     } else if (height > max) { 
-                        width *= max / height; height = max; 
+                        width *= max / height; 
+                        height = max; 
                     }
                     
                     canvas.width = width; 
@@ -534,6 +587,7 @@ window.addCrewMember = async () => {
     const name = document.getElementById('crewName').value.trim(); 
     const role = document.getElementById('crewRole').value.trim();
     const crewId = document.getElementById('crewId').value.trim(); 
+    const status = document.getElementById('crewStatus').value;
     const color = document.getElementById('crewColor').value;
     const desc = document.getElementById('crewDesc').value.trim();
     
@@ -542,7 +596,7 @@ window.addCrewMember = async () => {
     const id = Date.now().toString();
     try {
         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'crew', id), { 
-            id, name, role, crewId, color, 
+            id, name, role, crewId, status, color, 
             description: desc || null, 
             photo: tempCrewPhoto || null 
         });
@@ -550,6 +604,7 @@ window.addCrewMember = async () => {
         document.getElementById('crewName').value = ''; 
         document.getElementById('crewRole').value = ''; 
         document.getElementById('crewId').value = ''; 
+        document.getElementById('crewStatus').value = 'Confirmed'; 
         document.getElementById('crewDesc').value = ''; 
         tempCrewPhoto = null;
         
@@ -585,24 +640,28 @@ function renderAdminCrew() {
         return; 
     }
     
-    tbody.innerHTML = publicCrew.map(c => `
-        <tr class="border-b border-white/5">
-            <td class="py-3">
-                ${c.photo 
-                    ? `<img src="${c.photo}" class="w-8 h-8 rounded-full object-cover border border-white/20">` 
-                    : `<div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-white border border-white/20">${c.name.charAt(0)}</div>`
-                }
-            </td>
-            <td class="py-3 text-white font-bold text-xs uppercase">${c.name}</td>
-            <td class="py-3 text-white/50 text-[10px] uppercase">${c.role}</td>
-            <td class="py-3 text-sky-400 text-[10px] font-space">${c.crewId}</td>
-            <td class="py-3">
-                <button class="text-red-400 hover:text-red-300 transition-colors" onclick="window.deleteCrewMember('${c.id}')">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = publicCrew.map(c => {
+        const statusIcon = c.status === 'Pending' ? '<span class="text-amber-500 font-bold px-2">PENDING</span>' : '<span class="text-emerald-500 font-bold px-2">CONFIRMED</span>';
+        
+        return `
+            <tr class="border-b border-white/5">
+                <td class="py-3">
+                    ${c.photo 
+                        ? `<img src="${c.photo}" class="w-8 h-8 rounded-full object-cover border border-white/20">` 
+                        : `<div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-white border border-white/20">${c.name.charAt(0)}</div>`
+                    }
+                </td>
+                <td class="py-3 text-white font-bold text-xs uppercase">${c.name}</td>
+                <td class="py-3 text-white/50 text-[10px] uppercase">${c.role}</td>
+                <td class="py-3 text-[10px]">${statusIcon}</td>
+                <td class="py-3">
+                    <button class="text-red-400 hover:text-red-300 transition-colors" onclick="window.deleteCrewMember('${c.id}')">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
     
     lucide.createIcons();
 }
@@ -667,7 +726,9 @@ window.toggleRecord = async () => {
         mediaRecorder = new MediaRecorder(stream); 
         audioChunks = [];
         
-        mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
+        mediaRecorder.ondataavailable = e => { 
+            audioChunks.push(e.data); 
+        };
         
         mediaRecorder.onstop = async () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
@@ -838,8 +899,8 @@ async function fetchDynamicWeather() {
     }
 
     try {
-        // Limit to first 3 points to keep the HUD clean
-        const displayPoints = currentRoutePoints.slice(0, 3);
+        // Now fetching data for ALL route points instead of slicing to 3
+        const displayPoints = currentRoutePoints; 
         const lats = displayPoints.map(p => p.lat).join(',');
         const lngs = displayPoints.map(p => p.lng).join(',');
 
@@ -856,17 +917,21 @@ async function fetchDynamicWeather() {
             const cityName = displayPoints[i].name;
             
             html += `
-            <div class="flex justify-between items-center gap-6">
-                <span class="text-[10px] md:text-xs font-space font-bold text-white/60 uppercase">${cityName}</span>
-                <span class="text-[10px] md:text-xs font-space text-sky-400 font-bold">
+            <div class="flex justify-between items-center gap-6 border-b border-white/10 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
+                <span class="text-[10px] md:text-xs font-space font-bold text-white/60 uppercase truncate max-w-[100px]">${cityName}</span>
+                <span class="text-[10px] md:text-xs font-space text-sky-400 font-bold whitespace-nowrap">
                     ${temp}°C 
-                    <span class="text-white/20 ml-1 opacity-50">|</span> 
-                    <span class="text-sky-400/50 ml-1">${wind}km/h</span>
+                    <span class="text-white/20 mx-1 opacity-50">|</span> 
+                    <span class="text-sky-400/50">${wind}km/h</span>
                 </span>
             </div>`;
         });
         
-        if (wBox) wBox.innerHTML = html;
+        if (wBox) {
+            // Apply a max height and scrollbar if there are many cities
+            wBox.innerHTML = html;
+            wBox.classList.add('max-h-[150px]', 'overflow-y-auto', 'custom-scrollbar', 'pr-2');
+        }
         
     } catch (e) {
         console.error("Weather API Error:", e);
@@ -1193,6 +1258,7 @@ window.updateTripMetadata = async () => {
             departureDate: document.getElementById('adminMetaDate').value.trim(),
             heroDesc: document.getElementById('adminMetaDesc').value.trim(),
             chariotName: document.getElementById('adminMetaChariot').value.trim(),
+            chariotPlatform: document.getElementById('adminMetaPlatform').value.trim(),
             footerTagline: document.getElementById('adminMetaTagline').value.trim(),
             routePoints: currentRoutePoints, 
             timestamp: Date.now()
@@ -1583,6 +1649,7 @@ function updatePublicMap(routeArray) {
 function initMapAndGraphics() {
     if (document.getElementById('real-map') && !realMapInstance) {
         realMapInstance = L.map('real-map', { zoomControl: false }).setView([11.6, 76.8], 7);
+        
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { 
             attribution: '&copy; OpenStreetMap', 
             subdomains: 'abcd', 
