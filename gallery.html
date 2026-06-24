@@ -27,7 +27,7 @@
 
     <style>
         :root { 
-            /* Fallback colors. App.js/Firebase script will overwrite this instantly. */
+            /* Fallback colors. The script below will instantly overwrite this with your Firebase theme. */
             --theme-hex: #38bdf8; 
             --theme-rgb: 56, 189, 248; 
         }
@@ -42,7 +42,7 @@
             min-height: 100vh;
         }
 
-        /* Dynamic Background mapped to your index page */
+        /* Dynamic Background exactly mirroring the index page */
         .immersive-bg {
             position: fixed; inset: 0; z-index: -10;
             background-size: cover; background-position: center; background-attachment: fixed;
@@ -69,81 +69,100 @@
 
         /* ========================================================
            CSS INTERCEPTORS FOR GALLERY RENDERING
-           These rules automatically style the HTML output from app.js 
+           These rules automatically intercept and restyle the HTML 
+           that your existing app.js spits out.
            ======================================================== */
 
-        /* 1. Global Container Fixes */
+        /* 1. Global Picture Border & Shadows */
         #gallery-dynamic-container > div {
-            background: rgba(0, 0, 0, 0.4) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+            border-radius: 1.5rem !important;
+            background: rgba(0, 0, 0, 0.2) !important;
         }
 
-        /* 2. GRID VIEW OVERRIDES */
-        /* Make the Enlarge button use the active theme color */
-        #gallery-dynamic-container.grid > div button[title="Enlarge"] {
-            background-color: var(--theme-hex) !important;
-            border-color: var(--theme-hex) !important;
-            color: #000 !important;
-            box-shadow: 0 0 15px rgba(var(--theme-rgb), 0.5) !important;
+        /* 2. GRID VIEW SPECIFIC FIXES */
+        
+        /* Force the overlay to ALWAYS be visible (fixes the missing download button issue) */
+        #gallery-dynamic-container.grid > div > div.absolute.inset-0 {
+            opacity: 1 !important; 
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 60%) !important;
+            padding: 1rem !important;
         }
-        /* Make the Download button sleek */
-        #gallery-dynamic-container.grid > div button[title="Download"] {
-            background-color: rgba(0, 0, 0, 0.5) !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+
+        /* Style the Date box to look like plain text with a shadow */
+        #gallery-dynamic-container.grid > div > div.absolute > div > div:first-child {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            font-size: 0.75rem !important;
             color: white !important;
-        }
-        #gallery-dynamic-container.grid > div button[title="Download"]:hover {
-            background-color: white !important;
-            color: black !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
         }
 
-        /* 3. LIST VIEW OVERRIDES (Moving buttons INSIDE the picture) */
+        /* Inject the "Image Name" directly before the Date */
+        #gallery-dynamic-container.grid > div > div.absolute > div > div:first-child::before {
+            content: "VAULT LOG // ";
+            color: var(--theme-hex);
+            font-weight: 800;
+        }
+
+        /* Make Grid Buttons stand out */
+        #gallery-dynamic-container.grid > div button[title="Download"] {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        #gallery-dynamic-container.grid > div button[title="Enlarge"] {
+            background: var(--theme-hex) !important;
+            color: #000 !important;
+            border: none !important;
+            box-shadow: 0 0 15px rgba(var(--theme-rgb), 0.4) !important;
+        }
+
+        /* 3. LIST VIEW SPECIFIC FIXES */
+        
+        /* Make sure the main list wrapper is relative so we can overlay the bottom bar */
         #gallery-dynamic-container.flex > div {
-            border-radius: 2rem !important;
-            overflow: hidden !important;
             position: relative !important;
         }
-        
-        /* Force the info/button bar to float over the bottom of the image */
+
+        /* Pull the text and button bar UP and INSIDE the image */
         #gallery-dynamic-container.flex > div > div.p-6 {
             position: absolute !important;
             bottom: 0 !important;
             left: 0 !important;
             right: 0 !important;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 60%, transparent 100%) !important;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%) !important;
             border: none !important;
             backdrop-filter: none !important;
             padding: 2rem 1.5rem 1.5rem 1.5rem !important;
-            pointer-events: none; /* Allows user to click the image behind it to open lightbox */
+            pointer-events: none !important; /* Lets you click the image behind the gradient to open the lightbox */
         }
-        
-        /* Re-enable clicking on the text and buttons */
+
+        /* Re-enable clicking on the actual text and buttons inside the overlay */
         #gallery-dynamic-container.flex > div > div.p-6 > div {
             pointer-events: auto !important;
         }
 
-        /* Style the Download button in List View */
+        /* Style the Name (LOG ENTRY) and Date in List view */
+        #gallery-dynamic-container.flex > div > div.p-6 p:first-child {
+            color: var(--theme-hex) !important;
+            font-size: 0.65rem !important;
+        }
+        #gallery-dynamic-container.flex > div > div.p-6 p:last-child {
+            color: white !important;
+            font-size: 0.9rem !important;
+            font-weight: 700 !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
+        }
+
+        /* Style the Download button in List View to match theme */
         #gallery-dynamic-container.flex > div > div.p-6 button {
             background-color: var(--theme-hex) !important;
             color: #000 !important;
             border: none !important;
-            border-radius: 1rem !important;
-            padding: 0.5rem 1.25rem !important;
-            font-weight: 800 !important;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
-            transition: all 0.2s ease !important;
-        }
-        #gallery-dynamic-container.flex > div > div.p-6 button:hover {
-            opacity: 0.9 !important;
-            transform: scale(1.05) !important;
-        }
-        
-        /* Make list mode Date Text pop */
-        #gallery-dynamic-container.flex > div > div.p-6 p:last-child {
-            color: white !important;
-            font-size: 0.875rem !important;
-            font-weight: 600 !important;
         }
 
         /* ========================================================
@@ -156,12 +175,8 @@
             display: none; align-items: center; justify-content: center;
             opacity: 0; transition: opacity 0.3s ease;
         }
-        .gallery-lightbox.active {
-            display: flex; opacity: 1;
-        }
-        .lightbox-content {
-            position: relative; max-width: 90vw; max-height: 90vh;
-        }
+        .gallery-lightbox.active { display: flex; opacity: 1; }
+        .lightbox-content { position: relative; max-width: 90vw; max-height: 90vh; }
         .lightbox-image {
             max-width: 100%; max-height: 90vh; object-fit: contain;
             border-radius: 1rem; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
@@ -185,11 +200,14 @@
         }
         .lightbox-close:hover { color: var(--theme-hex); }
 
-        /* Lightbox Mobile Adjustments */
         @media (max-width: 768px) {
             .lightbox-prev { left: 0.5rem; width: 2.5rem; height: 2.5rem; }
             .lightbox-next { right: 0.5rem; width: 2.5rem; height: 2.5rem; }
-            .lightbox-close { top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.6); width: 2.5rem; height: 2.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;}
+            .lightbox-close { 
+                top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.6); 
+                width: 2.5rem; height: 2.5rem; border-radius: 50%; 
+                display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -211,7 +229,7 @@
 
     <div class="max-w-7xl mx-auto pt-32 px-4 md:px-8 relative z-10">
         
-        <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 glass-panel p-6 rounded-3xl border-t-2 border-t-theme shadow-2xl bg-black/20">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 glass-panel p-6 rounded-[2rem] border-t-2 border-t-theme shadow-2xl bg-black/20">
             <div class="text-center md:text-left">
                 <h1 class="text-3xl md:text-5xl font-black font-space uppercase text-white tracking-tighter">
                     Archived Memories
@@ -262,7 +280,6 @@
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Safely connect to Firebase alongside app.js
         const firebaseConfig = {
             apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
             authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
