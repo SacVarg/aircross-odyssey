@@ -14,7 +14,7 @@
 
     <style>
         :root { 
-            /* Fallback colors. App.js will overwrite this instantly. */
+            /* Fallback colors. Will be instantly overwritten by Firebase. */
             --theme-hex: #38bdf8; 
             --theme-rgb: 56, 189, 248; 
         }
@@ -158,8 +158,35 @@
     <script type="module" src="app.js"></script>
 
     <script type="module">
-        import { getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- 1. SAFELY INITIALIZE FIREBASE & FETCH BACKGROUND / THEME ---
+        // This mirrors exactly what works in your radio.html
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
+            authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
+            projectId: "aircross-odyssey-f6e2f",
+            storageBucket: "aircross-odyssey-f6e2f.firebasestorage.app",
+            messagingSenderId: "641282553954",
+            appId: "1:641282553954:web:4b3fa456d9eda8adf2393b"
+        };
+        
+        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        const db = getFirestore(app);
+
+        onSnapshot(doc(db, 'artifacts/aircross-odyssey-main/public/data/trip_meta/latest'), (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data.themeColor) {
+                    document.documentElement.style.setProperty('--theme-hex', data.themeColor);
+                }
+                const bgLayer = document.getElementById('global-bg-layer');
+                if (bgLayer && data.bgImage) {
+                    bgLayer.style.backgroundImage = `url('${data.bgImage}')`;
+                }
+            }
+        });
 
         // Initialize icons
         if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -308,10 +335,6 @@
             }
 
             try {
-                // Lazily get DB to avoid race conditions with app.js
-                const app = getApp();
-                const db = getFirestore(app);
-
                 await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/comms", Date.now().toString()), {
                     id: Date.now().toString(),
                     author: author,
