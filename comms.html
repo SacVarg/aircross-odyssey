@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOYAGER | Chat</title>
+    <title>VOYAGER | Messenger</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -71,25 +71,25 @@
         .comms-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden">
+<body class="flex flex-col min-h-screen pb-12">
 
     <div class="immersive-bg" id="global-bg-layer"></div>
     <div class="bg-overlay"></div>
 
-    <nav class="shrink-0 w-full z-50 px-6 py-4 flex items-center bg-slate-900/50 backdrop-blur-md border-b border-white/10">
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex items-center bg-slate-900/50 backdrop-blur-md border-b border-white/10">
         <a href="index.html" class="flex items-center gap-3 text-white hover:text-white/70 transition-colors">
             <i data-lucide="arrow-left" class="w-5 h-5 theme-text"></i>
             <span class="font-space font-bold tracking-widest text-sm uppercase">Back</span>
         </a>
     </nav>
 
-    <div class="flex-1 w-full max-w-4xl mx-auto p-4 flex flex-col relative z-10 h-full overflow-hidden">
+    <div class="flex-1 w-full max-w-4xl mx-auto pt-24 px-4 flex flex-col relative z-10">
         
-        <div class="text-center mb-4 shrink-0">
+        <div class="text-center mb-6 shrink-0">
             <h1 class="text-3xl md:text-5xl font-black font-space uppercase text-white tracking-tighter">Chat</h1>
         </div>
 
-        <div class="glass-panel flex-1 rounded-[2rem] flex flex-col shadow-2xl overflow-hidden border border-white/10 relative">
+        <div class="glass-panel h-[70vh] md:h-[75vh] rounded-[2rem] flex flex-col shadow-2xl overflow-hidden border border-white/10 relative">
             
             <div class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5 shrink-0">
                 <span class="font-space font-bold text-[10px] tracking-widest uppercase text-white/50">Messages</span>
