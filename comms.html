@@ -14,14 +14,14 @@
 
     <style>
         :root { 
-            /* Default fallback colors. These are instantly overwritten by the script below to match your theme. */
+            /* Default fallback colors. Instantly overwritten when Firebase connects. */
             --theme-hex: #38bdf8; 
             --theme-rgb: 56, 189, 248; 
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* The 100dvh trick ensures the body never exceeds the actual visible screen, even on mobile */
+        /* 100dvh ensures the UI perfectly fits the mobile screen without getting cut off by the keyboard */
         html, body { 
             height: 100%; 
             height: 100dvh; 
@@ -32,16 +32,16 @@
             margin: 0;
         }
 
-        /* Dynamic Background */
+        /* Fixed immersive background ensures it covers the whole screen */
         .immersive-bg {
-            position: absolute; inset: 0; z-index: -10;
-            background-size: cover; background-position: center;
+            position: fixed; inset: 0; z-index: -10;
+            background-size: cover; background-position: center; background-attachment: fixed;
             background-color: #0f172a;
             transition: background-image 0.5s ease-in-out;
         }
         
         .bg-overlay {
-            position: absolute; inset: 0; z-index: -9;
+            position: fixed; inset: 0; z-index: -9;
             background: linear-gradient(to bottom, rgba(15, 23, 42, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
         }
 
@@ -162,9 +162,10 @@
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Re-connect to Firebase to handle logic independently of app.js
+        // Re-connect to Firebase inside this module
         const firebaseConfig = {
             apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
             authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
@@ -175,22 +176,28 @@
         };
         const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // --- THEME SYNC ---
-        async function applyTheme() {
-            const snap = await getDoc(doc(db, 'artifacts/aircross-odyssey-main/public/data/trip_meta/latest'));
-            if (snap.exists()) {
-                const data = snap.data();
-                if (data.themeColor) {
-                    document.documentElement.style.setProperty('--theme-hex', data.themeColor);
-                }
-                if (data.bgImage) {
-                    document.getElementById('global-bg-layer').style.backgroundImage = `url('${data.bgImage}')`;
-                }
+        // --- THEME SYNC (Protected by Auth to prevent Firebase Rejection) ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Listen to the document securely now that the user is logged in
+                onSnapshot(doc(db, 'artifacts/aircross-odyssey-main/public/data/trip_meta/latest'), (snap) => {
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        if (data.themeColor) {
+                            document.documentElement.style.setProperty('--theme-hex', data.themeColor);
+                        }
+                        if (data.bgImage) {
+                            document.getElementById('global-bg-layer').style.backgroundImage = `url('${data.bgImage}')`;
+                        }
+                    }
+                });
             }
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-        applyTheme();
+        });
+
+        // Initialize icons on load
+        if (typeof lucide !== 'undefined') lucide.createIcons();
 
         // --- CUSTOM TOAST NOTIFICATION ---
         function showLocalToast(msg, type) {
@@ -241,7 +248,7 @@
             const playback = document.getElementById('audioPlayback');
             const deleteBtn = document.getElementById('deleteAudioBtn');
 
-            // If an audio file is already attached and ready to send, prevent recording over it
+            // Prevent recording if audio is already queued
             if (localAudioBase64 && (!localMediaRecorder || localMediaRecorder.state !== 'recording')) {
                 showLocalToast('Delete current audio to record again', 'error');
                 return;
@@ -256,7 +263,7 @@
                 btn.classList.remove('text-red-400', 'bg-red-500/20');
                 btn.classList.add('text-white/50');
                 
-                // Stop the wave animation
+                // Stop the wave animation securely
                 cancelAnimationFrame(animationId);
                 const canvasCtx = visualizer.getContext('2d');
                 canvasCtx.clearRect(0, 0, visualizer.width, visualizer.height);
@@ -310,7 +317,7 @@
                 };
                 drawWave();
 
-                // Process Data
+                // Process Audio Data
                 localMediaRecorder.ondataavailable = e => localAudioChunks.push(e.data);
                 localMediaRecorder.onstop = () => {
                     const blob = new Blob(localAudioChunks, { type: 'audio/webm' });
@@ -324,16 +331,16 @@
                     reader.readAsDataURL(blob);
                     reader.onloadend = () => { localAudioBase64 = reader.result; };
                     
-                    // Release the microphone
+                    // Release the microphone securely
                     stream.getTracks().forEach(t => t.stop());
                 };
 
-                // Begin
+                // Begin Action
                 localMediaRecorder.start();
                 status.innerText = "Recording...";
                 btn.innerHTML = `<i data-lucide="square" class="w-4 h-4 text-red-400 fill-current animate-pulse"></i>`;
                 btn.classList.remove('text-white/50');
-                btn.classList.add('bg-red-500/20', 'text-red-400');
+                btn.classList.add('bg-red-500/20');
                 if (typeof lucide !== 'undefined') lucide.createIcons();
 
                 // Auto-stop after 15 seconds
