@@ -2,53 +2,189 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>VOYAGER | Ideas Board</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <script>
         tailwind.config = {
-            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], space: ['Space Grotesk', 'sans-serif'] }, colors: { emerald: '#10b981', cyan: '#06b6d4', violet: '#8b5cf6' } } }
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'], 
+                        space: ['Space Grotesk', 'sans-serif'] 
+                    }
+                }
+            }
         }
     </script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root { 
+            /* Fallback colors. Overwritten instantly by Firebase script below. */
+            --theme-hex: #38bdf8; 
+            --theme-rgb: 56, 189, 248; 
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background-color: #0f172a; 
+            color: #ffffff; 
+            font-family: 'Inter', sans-serif; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Dynamic Background mapped to your index page */
+        .immersive-bg {
+            position: fixed; inset: 0; z-index: -10;
+            background-size: cover; background-position: center; background-attachment: fixed;
+            background-color: #0f172a;
+            transition: background-image 0.5s ease-in-out;
+        }
+        
+        .bg-overlay {
+            position: fixed; inset: 0; z-index: -9;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
+        }
+
+        /* Theme Application Classes */
+        .theme-text { color: var(--theme-hex) !important; }
+        .theme-bg { background-color: var(--theme-hex) !important; }
+        .border-t-theme { border-top-color: var(--theme-hex) !important; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* ========================================================
+           CSS OVERRIDES FOR NOTES (Intercepts app.js output)
+           ======================================================== */
+        
+        /* 1. Base Redesign for all Note Cards */
+        #notesContainer > div {
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(12px) !important;
+            border-radius: 1.5rem !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        /* Hover Effect */
+        #notesContainer > div:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            transform: translateY(-4px) !important;
+        }
+
+        /* 2. Redesign Completed Cards (Replaces the hardcoded Emerald color) */
+        #notesContainer > div.opacity-60 {
+            background: rgba(var(--theme-rgb), 0.1) !important;
+            border-color: rgba(var(--theme-rgb), 0.3) !important;
+            opacity: 0.8 !important;
+        }
+
+        /* Forces the checkmark icon to use the global theme color */
+        #notesContainer > div .text-emerald-400 {
+            color: var(--theme-hex) !important;
+        }
+
+        /* 3. Completely hide the Delete Button */
+        #notesContainer > div button[title="Delete Idea"],
+        #notesContainer > div button[onclick^="window.deleteNote"] {
+            display: none !important;
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--theme-hex); }
+    </style>
 </head>
-<body class="theme-public min-h-screen pb-20">
+<body class="flex flex-col relative pb-20">
 
-    <div class="blob-bg blob-1"></div><div class="blob-bg blob-2"></div><div class="blob-bg blob-3"></div>
+    <div class="immersive-bg" id="global-bg-layer"></div>
+    <div class="bg-overlay"></div>
 
-    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/50 backdrop-blur-xl border-b border-white/60 shadow-sm">
-        <a href="index.html" class="font-space font-bold text-xl tracking-[0.2em] text-slate-800 flex items-center gap-2 hover:text-emerald-600 transition-colors">
-            <i data-lucide="arrow-left" class="w-5 h-5 text-emerald-500"></i> BACK
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-slate-900/50 backdrop-blur-md border-b border-white/10">
+        <a href="index.html" class="flex items-center gap-3 text-white hover:text-white/70 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5 theme-text"></i>
+            <span class="font-space font-bold tracking-widest text-sm uppercase">Back</span>
         </a>
-        <div class="text-xs font-space font-bold tracking-widest text-emerald-600 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
-            MISSION BOARD
+        <div class="text-[9px] md:text-[10px] font-space font-bold tracking-widest text-white/50 uppercase">
+            Ideas Board
         </div>
     </nav>
 
-    <div class="max-w-5xl mx-auto pt-32 px-4 relative z-10">
+    <main class="flex-1 w-full max-w-6xl mx-auto pt-32 px-4 relative z-10">
+        
         <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-6xl font-black font-space uppercase text-slate-800 cyber-title">Ideas & Waypoints</h1>
-            <p class="text-slate-500 mt-4 font-medium">Drop spontaneous stops, snack ideas, or tasks here. Anyone can add or tick off.</p>
+            <h1 class="text-4xl md:text-6xl font-black font-space uppercase text-white tracking-tighter shadow-sm">Ideas & Waypoints</h1>
+            <p class="text-white/60 mt-4 font-medium text-sm md:text-base">Drop spontaneous stops, snack ideas, or tasks here. Anyone can add or tick off.</p>
         </div>
 
-        <div class="glass-panel p-4 md:p-6 rounded-3xl mb-12 max-w-2xl mx-auto flex flex-col md:flex-row gap-4 items-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-            <input type="text" id="newNoteInput" class="flex-1 bg-white/60 border border-slate-200 rounded-xl p-4 text-sm font-medium outline-none focus:border-emerald-500 w-full" placeholder="e.g. Stop for Biryani in Mysore...">
-            <button onclick="window.addNote()" class="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-space font-bold tracking-widest rounded-xl hover:shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all flex justify-center items-center gap-2">
+        <div class="glass-panel p-6 rounded-[2rem] mb-16 max-w-3xl mx-auto flex flex-col md:flex-row gap-4 items-center border-t-2 border-t-theme shadow-2xl">
+            <input type="text" id="newNoteInput" class="flex-1 bg-black/40 border border-white/20 rounded-xl p-4 text-sm font-medium text-white outline-none focus:border-white/50 w-full placeholder:text-white/30 transition-colors" placeholder="e.g. Stop for Biryani in Mysore...">
+            
+            <button onclick="window.addNote()" class="w-full md:w-auto px-10 py-4 theme-bg text-black font-space font-bold tracking-widest rounded-xl hover:opacity-90 transition-opacity flex justify-center items-center gap-2 uppercase shadow-lg">
                 <i data-lucide="plus" class="w-5 h-5"></i> ADD
             </button>
         </div>
 
         <div id="notesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="text-center col-span-full py-10 text-slate-400 font-space text-sm">
-                <i data-lucide="loader" class="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-500"></i> Loading mission board...
+            <div class="text-center col-span-full py-10 text-white/40 font-space text-sm uppercase tracking-widest font-bold">
+                <i data-lucide="loader" class="w-6 h-6 animate-spin mx-auto mb-3 theme-text"></i> Loading mission board...
             </div>
         </div>
-    </div>
+    </main>
 
-    <div id="toastContainer"></div>
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
     <script type="module" src="app.js"></script>
+
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Connect to Firebase safely alongside app.js
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
+            authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
+            projectId: "aircross-odyssey-f6e2f",
+            storageBucket: "aircross-odyssey-f6e2f.firebasestorage.app",
+            messagingSenderId: "641282553954",
+            appId: "1:641282553954:web:4b3fa456d9eda8adf2393b"
+        };
+        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        const db = getFirestore(app);
+
+        // Fetch dynamic theme and background image
+        onSnapshot(doc(db, 'artifacts/aircross-odyssey-main/public/data/trip_meta/latest'), (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data.themeColor) {
+                    document.documentElement.style.setProperty('--theme-hex', data.themeColor);
+                }
+                if (data.bgImage) {
+                    document.getElementById('global-bg-layer').style.backgroundImage = `url('${data.bgImage}')`;
+                }
+            }
+        });
+
+        // Initialize Lucide icons on load
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    </script>
 </body>
 </html>
