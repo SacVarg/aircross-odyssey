@@ -14,14 +14,14 @@
 
     <style>
         :root { 
-            /* Default fallback colors. Instantly overwritten when Firebase connects. */
+            /* Fallback colors. App.js will overwrite this instantly. */
             --theme-hex: #38bdf8; 
             --theme-rgb: 56, 189, 248; 
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* 100dvh ensures the UI perfectly fits the mobile screen without getting cut off by the keyboard */
+        /* Strict flex layout prevents the screen from being cut off by mobile keyboards */
         html, body { 
             height: 100%; 
             height: 100dvh; 
@@ -32,24 +32,22 @@
             margin: 0;
         }
 
-        /* Fixed immersive background ensures it covers the whole screen */
+        /* Dynamic Background container */
         .immersive-bg {
-            position: fixed; inset: 0; z-index: -10;
-            background-size: cover; background-position: center; background-attachment: fixed;
+            position: absolute; inset: 0; z-index: -10;
+            background-size: cover; background-position: center;
             background-color: #0f172a;
             transition: background-image 0.5s ease-in-out;
         }
         
         .bg-overlay {
-            position: fixed; inset: 0; z-index: -9;
+            position: absolute; inset: 0; z-index: -9;
             background: linear-gradient(to bottom, rgba(15, 23, 42, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
         }
 
-        /* Theme Application Classes */
         .theme-text { color: var(--theme-hex) !important; }
         .theme-bg { background-color: var(--theme-hex) !important; }
 
-        /* Main UI Container */
         .glass-panel {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(24px); 
@@ -69,11 +67,10 @@
             margin-bottom: 1rem !important;
         }
         
-        /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 
-        /* Sleek Audio Player */
+        /* Audio Player Styling */
         .custom-audio {
             filter: invert(1) hue-rotate(180deg);
             opacity: 0.9;
@@ -85,6 +82,8 @@
     </style>
 </head>
 <body class="flex flex-col relative">
+
+    <div id="public-view" class="hidden"></div>
 
     <div class="immersive-bg" id="global-bg-layer"></div>
     <div class="bg-overlay"></div>
@@ -132,7 +131,6 @@
                 </div>
 
                 <div class="flex gap-2 items-end">
-                    
                     <div class="w-[30%] md:w-32 shrink-0">
                         <select id="commAuthor" class="w-full bg-white/5 border border-white/20 rounded-xl p-3 md:p-3.5 text-xs font-space font-bold text-white outline-none focus:border-white/50 shadow-inner appearance-none cursor-pointer">
                             <option value="Loading...">Syncing...</option>
@@ -151,7 +149,6 @@
                         <i data-lucide="send" class="w-5 h-5 ml-1 group-active:scale-90 transition-transform"></i>
                     </button>
                 </div>
-
             </div>
         </div>
     </main>
@@ -161,45 +158,13 @@
     <script type="module" src="app.js"></script>
 
     <script type="module">
-        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Re-connect to Firebase inside this module
-        const firebaseConfig = {
-            apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
-            authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
-            projectId: "aircross-odyssey-f6e2f",
-            storageBucket: "aircross-odyssey-f6e2f.firebasestorage.app",
-            messagingSenderId: "641282553954",
-            appId: "1:641282553954:web:4b3fa456d9eda8adf2393b"
-        };
-        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // --- THEME SYNC (Protected by Auth to prevent Firebase Rejection) ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // Listen to the document securely now that the user is logged in
-                onSnapshot(doc(db, 'artifacts/aircross-odyssey-main/public/data/trip_meta/latest'), (snap) => {
-                    if (snap.exists()) {
-                        const data = snap.data();
-                        if (data.themeColor) {
-                            document.documentElement.style.setProperty('--theme-hex', data.themeColor);
-                        }
-                        if (data.bgImage) {
-                            document.getElementById('global-bg-layer').style.backgroundImage = `url('${data.bgImage}')`;
-                        }
-                    }
-                });
-            }
-        });
-
-        // Initialize icons on load
+        // Initialize icons
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
-        // --- CUSTOM TOAST NOTIFICATION ---
+        // Toast Engine
         function showLocalToast(msg, type) {
             const container = document.getElementById('toastContainer'); 
             if (!container) return;
@@ -215,28 +180,23 @@
             }, 3000);
         }
 
-        // --- AUDIO RECORDING & VISUALIZER ENGINE ---
+        // --- Audio Globals ---
         let localMediaRecorder;
         let localAudioChunks = [];
         let localAudioBase64 = null;
         let audioCtx, analyser, dataArray, animationId;
 
-        // Reset/Delete Audio Function
         window.localDeleteAudio = () => {
             localAudioBase64 = null;
             localAudioChunks = [];
             document.getElementById('audioPlayback').src = "";
-            
-            // Hide the entire attachment area
             document.getElementById('audioAttachmentArea').classList.add('hidden');
             document.getElementById('recordStatus').innerText = "";
             
-            // Reset Mic Button
             const btn = document.getElementById('recordBtn');
             btn.innerHTML = `<i data-lucide="mic" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>`;
             btn.classList.remove('text-red-400', 'bg-red-500/20');
             btn.classList.add('text-white/50');
-            
             if (typeof lucide !== 'undefined') lucide.createIcons();
         };
 
@@ -248,43 +208,36 @@
             const playback = document.getElementById('audioPlayback');
             const deleteBtn = document.getElementById('deleteAudioBtn');
 
-            // Prevent recording if audio is already queued
             if (localAudioBase64 && (!localMediaRecorder || localMediaRecorder.state !== 'recording')) {
                 showLocalToast('Delete current audio to record again', 'error');
                 return;
             }
 
-            // STOP RECORDING
+            // Stop
             if (localMediaRecorder && localMediaRecorder.state === 'recording') {
                 localMediaRecorder.stop();
-                
-                // Reset Mic Icon
                 btn.innerHTML = `<i data-lucide="mic" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>`;
                 btn.classList.remove('text-red-400', 'bg-red-500/20');
                 btn.classList.add('text-white/50');
                 
-                // Stop the wave animation securely
                 cancelAnimationFrame(animationId);
                 const canvasCtx = visualizer.getContext('2d');
                 canvasCtx.clearRect(0, 0, visualizer.width, visualizer.height);
                 
-                // Swap UI: Hide Visualizer, Show Player & Delete Button
                 visualizer.classList.add('hidden');
                 playback.classList.remove('hidden');
                 deleteBtn.classList.remove('hidden');
                 status.innerText = "Audio Attached";
-                
                 if (typeof lucide !== 'undefined') lucide.createIcons();
                 return;
             }
 
-            // START RECORDING
+            // Start
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 localMediaRecorder = new MediaRecorder(stream);
                 localAudioChunks = [];
 
-                // Initialize Web Audio API for the visualizer
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const source = audioCtx.createMediaStreamSource(stream);
                 analyser = audioCtx.createAnalyser();
@@ -292,7 +245,6 @@
                 analyser.fftSize = 64; 
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // Prepare UI for Recording
                 attachmentArea.classList.remove('hidden');
                 visualizer.classList.remove('hidden');
                 playback.classList.add('hidden');
@@ -317,25 +269,18 @@
                 };
                 drawWave();
 
-                // Process Audio Data
                 localMediaRecorder.ondataavailable = e => localAudioChunks.push(e.data);
                 localMediaRecorder.onstop = () => {
                     const blob = new Blob(localAudioChunks, { type: 'audio/webm' });
-                    
-                    // Generate playable URL for the <audio> element
                     const audioUrl = URL.createObjectURL(blob);
                     playback.src = audioUrl;
-
-                    // Generate Base64 for Firebase submission
+                    
                     const reader = new FileReader();
                     reader.readAsDataURL(blob);
                     reader.onloadend = () => { localAudioBase64 = reader.result; };
-                    
-                    // Release the microphone securely
                     stream.getTracks().forEach(t => t.stop());
                 };
 
-                // Begin Action
                 localMediaRecorder.start();
                 status.innerText = "Recording...";
                 btn.innerHTML = `<i data-lucide="square" class="w-4 h-4 text-red-400 fill-current animate-pulse"></i>`;
@@ -343,7 +288,6 @@
                 btn.classList.add('bg-red-500/20');
                 if (typeof lucide !== 'undefined') lucide.createIcons();
 
-                // Auto-stop after 15 seconds
                 setTimeout(() => {
                     if (localMediaRecorder.state === 'recording') window.localToggleRecord();
                 }, 15000);
@@ -353,7 +297,7 @@
             }
         };
 
-        // --- DISPATCH MESSAGE LOGIC ---
+        // --- DISPATCH MESSAGE ---
         window.localPostComm = async () => {
             const author = document.getElementById('commAuthor').value;
             const msgElement = document.getElementById('commMessage');
@@ -364,6 +308,10 @@
             }
 
             try {
+                // Lazily get DB to avoid race conditions with app.js
+                const app = getApp();
+                const db = getFirestore(app);
+
                 await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/comms", Date.now().toString()), {
                     id: Date.now().toString(),
                     author: author,
@@ -372,13 +320,10 @@
                     timestamp: Date.now()
                 });
 
-                // Reset Interface completely
                 msgElement.value = '';
                 window.localDeleteAudio(); 
-                
                 showLocalToast('Message Sent', 'success');
 
-                // Auto-scroll to bottom of chat
                 setTimeout(() => {
                     const container = document.getElementById('commsContainer');
                     if (container) container.scrollTop = container.scrollHeight;
