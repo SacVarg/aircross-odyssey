@@ -136,7 +136,7 @@
 
             <button id="btn-alerts" onclick="window.toggleAudioAlerts()" class="w-full py-3 mb-3 border border-white/20 bg-white/5 font-space font-bold tracking-widest text-[10px] rounded-xl flex justify-center items-center gap-2 uppercase text-white/50 hover:text-white transition-colors shadow-sm">
                 <i data-lucide="bell-off" id="alert-icon" class="w-4 h-4"></i>
-                <span id="alert-text">Enable Audio Alerts</span>
+                <span id="alert-text">Enable Push Alerts</span>
             </button>
 
             <button onclick="window.shareToWhatsApp()" class="w-full py-3.5 whatsapp-btn font-space font-bold tracking-widest text-[10px] rounded-xl flex justify-center items-center gap-2 uppercase">
@@ -156,6 +156,9 @@
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Import Firebase Cloud Messaging for Push Notifications
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
         // Connect to Firebase
         const firebaseConfig = {
@@ -169,6 +172,7 @@
         const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const messaging = getMessaging(app);
         const appId = "aircross-odyssey-main";
 
         // Globals
@@ -212,22 +216,48 @@
             window.open(whatsappUrl, '_blank');
         };
 
-        // AUDIO ALERTS LOGIC
-        window.toggleAudioAlerts = () => {
-            alertsEnabled = !alertsEnabled;
+        // PUSH ALERTS & BACKGROUND NOTIFICATIONS LOGIC
+        window.toggleAudioAlerts = async () => {
             const icon = document.getElementById('alert-icon');
             const text = document.getElementById('alert-text');
             const btn = document.getElementById('btn-alerts');
-            
-            if (alertsEnabled) {
-                icon.setAttribute('data-lucide', 'bell');
-                text.textContent = 'Audio Alerts: ON';
-                btn.classList.add('theme-text', 'theme-border');
-                btn.classList.remove('text-white/50', 'border-white/20');
-                window.playAlertBeep(800, 150); // Play test beep
+
+            if (!alertsEnabled) {
+                try {
+                    // Request OS-level notification permission
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        alert('Notification permission denied by browser');
+                        return;
+                    }
+
+                    // Request FCM Token from Firebase to enable background delivery
+                    const token = await getToken(messaging);
+                    
+                    if (token) {
+                        // Register device in the database so notify.js can push to it
+                        await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/fcm_tokens", token), {
+                            token: token,
+                            timestamp: Date.now()
+                        });
+
+                        alertsEnabled = true;
+                        icon.setAttribute('data-lucide', 'bell');
+                        text.textContent = 'Push Alerts: ON';
+                        btn.classList.add('theme-text', 'theme-border');
+                        btn.classList.remove('text-white/50', 'border-white/20');
+                        window.playAlertBeep(800, 150); // Play confirm beep
+                    } else {
+                        alert('Failed to generate push token');
+                    }
+                } catch (err) {
+                    console.error("FCM Token Error:", err);
+                    alert('Error enabling alerts. Ensure notifications are allowed in browser settings.');
+                }
             } else {
+                alertsEnabled = false;
                 icon.setAttribute('data-lucide', 'bell-off');
-                text.textContent = 'Enable Audio Alerts';
+                text.textContent = 'Enable Push Alerts';
                 btn.classList.remove('theme-text', 'theme-border');
                 btn.classList.add('text-white/50', 'border-white/20');
             }
@@ -264,9 +294,20 @@
                 localStream.getTracks().forEach(track => track.enabled = false);
             } catch (err) { alert("Microphone access is required."); return; }
 
+            // Log user as active in Firestore
             await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/radio_frequency", localCallsign), {
                 active: true, timestamp: Date.now()
             });
+
+            // Trigger Background Push Notifications using your notify.js backend
+            fetch('/api/notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    caller: localCallsign,
+                    type: 'radio'
+                })
+            }).catch(err => console.error('FCM API trigger failed:', err));
 
             heartbeatInterval = setInterval(() => {
                 if (localCallsign) {
@@ -295,7 +336,7 @@
                     } else {
                         rosterDiv.innerHTML += `<span class="bg-black/40 text-white/70 text-[10px] font-space font-bold px-3 py-1.5 rounded-full border border-white/10">${peerCallsign}</span>`;
                         if (!peerConnections[peerCallsign] && localCallsign.localeCompare(peerCallsign) < 0) {
-                            // Beep when a new user connects
+                            // Foreground beep when a new user connects
                             window.playAlertBeep(900, 200);
                             await initiatePeerConnection(peerCallsign);
                         }
