@@ -14,14 +14,12 @@
 
     <style>
         :root { 
-            /* Fallback colors. Will be instantly overwritten by Firebase. */
             --theme-hex: #38bdf8; 
             --theme-rgb: 56, 189, 248; 
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* Strict flex layout prevents the screen from being cut off by mobile keyboards */
         html, body { 
             height: 100%; 
             height: 100dvh; 
@@ -32,7 +30,6 @@
             margin: 0;
         }
 
-        /* Dynamic Background container */
         .immersive-bg {
             position: absolute; inset: 0; z-index: -10;
             background-size: cover; background-position: center;
@@ -55,7 +52,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* WhatsApp-Style Chat Bubbles */
         #commsContainer > div {
             border: none !important;
             box-shadow: none !important;
@@ -70,7 +66,6 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 
-        /* Audio Player Styling */
         .custom-audio {
             filter: invert(1) hue-rotate(180deg);
             opacity: 0.9;
@@ -104,9 +99,17 @@
             
             <div class="shrink-0 p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                 <span class="font-space font-bold text-[10px] tracking-widest uppercase text-white/50">Encrypted Log</span>
-                <span class="flex items-center gap-2 theme-text text-[9px] font-bold uppercase tracking-widest">
-                    <span class="w-2 h-2 rounded-full theme-bg animate-pulse"></span> Online
-                </span>
+                
+                <div class="flex items-center gap-4">
+                    <button id="btn-comms-alerts" onclick="window.toggleCommsAlerts()" class="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors bg-white/5 px-2 py-1 rounded-md border border-white/10" title="Toggle Desktop Notifications">
+                        <i data-lucide="bell-off" id="comms-alert-icon" class="w-3 h-3"></i>
+                        <span id="comms-alert-text" class="hidden sm:inline">Alerts Off</span>
+                    </button>
+
+                    <span class="flex items-center gap-2 theme-text text-[9px] font-bold uppercase tracking-widest">
+                        <span class="w-2 h-2 rounded-full theme-bg animate-pulse"></span> Online
+                    </span>
+                </div>
             </div>
             
             <div id="commsContainer" class="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col">
@@ -159,10 +162,12 @@
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Import Firebase Cloud Messaging for Push Notifications
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-        // --- 1. SAFELY INITIALIZE FIREBASE & FETCH BACKGROUND / THEME ---
-        // This mirrors exactly what works in your radio.html
+        // --- 1. SAFELY INITIALIZE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyA9FiNMZI50q6AeTS0Fiw1Qs-VVMmVI4Os",
             authDomain: "aircross-odyssey-f6e2f.firebaseapp.com",
@@ -174,17 +179,15 @@
         
         const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         const db = getFirestore(app);
+        const messaging = getMessaging(app);
 
+        // Fetch Background/Theme
         onSnapshot(doc(db, 'artifacts/aircross-odyssey-main/public/data/trip_meta/latest'), (snap) => {
             if (snap.exists()) {
                 const data = snap.data();
-                if (data.themeColor) {
-                    document.documentElement.style.setProperty('--theme-hex', data.themeColor);
-                }
+                if (data.themeColor) document.documentElement.style.setProperty('--theme-hex', data.themeColor);
                 const bgLayer = document.getElementById('global-bg-layer');
-                if (bgLayer && data.bgImage) {
-                    bgLayer.style.backgroundImage = `url('${data.bgImage}')`;
-                }
+                if (bgLayer && data.bgImage) bgLayer.style.backgroundImage = `url('${data.bgImage}')`;
             }
         });
 
@@ -206,6 +209,87 @@
                 setTimeout(() => t.remove(), 300); 
             }, 3000);
         }
+
+        // --- BACKGROUND NOTIFICATIONS ENGINE ---
+        let notificationsEnabled = false;
+        let isInitialLoad = true;
+
+        window.playCommsBeep = () => {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(850, ctx.currentTime);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc.start();
+                setTimeout(() => osc.stop(), 200); 
+            } catch (e) {}
+        };
+
+        window.toggleCommsAlerts = async () => {
+            if (!notificationsEnabled) {
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        showLocalToast('Notification permission denied by browser', 'error');
+                        return;
+                    }
+
+                    // Request FCM Token from Firebase
+                    // (Note: If you have generated a VAPID key in your Firebase Console, pass it here like: getToken(messaging, { vapidKey: 'YOUR_KEY' }))
+                    const token = await getToken(messaging);
+                    
+                    if (token) {
+                        // Register device in database so notify.js can find it
+                        await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/fcm_tokens", token), {
+                            token: token,
+                            timestamp: Date.now()
+                        });
+
+                        notificationsEnabled = true;
+                        document.getElementById('comms-alert-icon').setAttribute('data-lucide', 'bell');
+                        document.getElementById('comms-alert-text').textContent = 'Alerts On';
+                        document.getElementById('btn-comms-alerts').classList.add('theme-text', 'theme-border');
+                        document.getElementById('btn-comms-alerts').classList.remove('text-white/40');
+                        
+                        showLocalToast('Push Notifications Active', 'success');
+                        window.playCommsBeep();
+                    } else {
+                        showLocalToast('Failed to generate push token', 'error');
+                    }
+                } catch (err) {
+                    console.error("FCM Token Error:", err);
+                    showLocalToast('Error enabling alerts', 'error');
+                }
+            } else {
+                notificationsEnabled = false;
+                document.getElementById('comms-alert-icon').setAttribute('data-lucide', 'bell-off');
+                document.getElementById('comms-alert-text').textContent = 'Alerts Off';
+                document.getElementById('btn-comms-alerts').classList.remove('theme-text', 'theme-border');
+                document.getElementById('btn-comms-alerts').classList.add('text-white/40');
+                showLocalToast('Alerts Disabled', 'info');
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        // Foreground Fallback: Play beep if app is currently open and focused
+        onSnapshot(collection(db, "artifacts/aircross-odyssey-main/public/data/comms"), (snapshot) => {
+            if (isInitialLoad) { isInitialLoad = false; return; }
+
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    const data = change.doc.data();
+                    const currentAuthor = document.getElementById('commAuthor').value;
+                    
+                    if (notificationsEnabled && data.author !== currentAuthor) {
+                        window.playCommsBeep();
+                    }
+                }
+            });
+        });
 
         // --- Audio Globals ---
         let localMediaRecorder;
@@ -335,6 +419,7 @@
             }
 
             try {
+                // Save to Firestore First
                 await setDoc(doc(db, "artifacts/aircross-odyssey-main/public/data/comms", Date.now().toString()), {
                     id: Date.now().toString(),
                     author: author,
@@ -342,6 +427,17 @@
                     audio: localAudioBase64 || null,
                     timestamp: Date.now()
                 });
+
+                // Trigger Background Push Notifications
+                fetch('/api/notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        caller: author,
+                        message: msg,
+                        type: 'chat'
+                    })
+                }).catch(err => console.error('FCM API trigger failed:', err));
 
                 msgElement.value = '';
                 window.localDeleteAudio(); 
