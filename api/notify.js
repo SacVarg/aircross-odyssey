@@ -14,7 +14,8 @@ if (!admin.apps.length) {
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { caller } = req.body;
+    // Added "message" and "type" to handle chat payloads dynamically
+    const { caller, message, type } = req.body;
 
     try {
         const db = admin.firestore();
@@ -25,18 +26,30 @@ export default async function handler(req, res) {
         const tokens = [];
         tokensSnap.forEach(doc => tokens.push(doc.data().token));
 
-        const message = {
+        // Default values for the Radio page
+        let notificationTitle = 'RADIO TRANSMISSION INBOUND';
+        let notificationBody = `${caller} has joined the Comms Link!`;
+        let clickUrl = "https://aircross-odyssey-f6e2f.web.app/radio.html";
+
+        // Dynamic overrides if the ping is coming from the Comms page
+        if (type === 'chat') {
+            notificationTitle = `NEW MESSAGE // ${caller}`;
+            notificationBody = message ? message : '🎤 Audio transmission received';
+            clickUrl = "https://aircross-odyssey-f6e2f.web.app/comms.html";
+        }
+
+        const payload = {
             notification: {
-                title: 'RADIO TRANSMISSION INBOUND',
-                body: `${caller} has joined the Comms Link!`,
+                title: notificationTitle,
+                body: notificationBody,
             },
-            data: { click_action: "https://aircross-odyssey-f6e2f.web.app/radio.html" },
+            data: { click_action: clickUrl },
             tokens: tokens
         };
 
-        const response = await admin.messaging().sendEachForMulticast(message);
+        const response = await admin.messaging().sendEachForMulticast(payload);
         
-        // Clean up expired tokens
+        // Clean up expired or revoked tokens automatically
         const failedTokens = [];
         response.responses.forEach((resp, index) => {
             if (!resp.success) {
