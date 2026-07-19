@@ -58,6 +58,7 @@
         .theme-text { color: var(--theme-hex) !important; }
         .theme-bg { background-color: var(--theme-hex) !important; }
         .theme-bg-10 { background-color: rgba(var(--theme-rgb), 0.1) !important; }
+        .theme-bg-20 { background-color: rgba(var(--theme-rgb), 0.2) !important; }
         .theme-border { border-color: var(--theme-hex) !important; }
         .theme-border-20 { border-color: rgba(var(--theme-rgb), 0.2) !important; }
         .theme-border-30 { border-color: rgba(var(--theme-rgb), 0.3) !important; }
@@ -146,6 +147,13 @@
         }
 
         .hide { display: none !important; }
+
+        /* Expense Card Enhancements */
+        .expense-split-details { display: none; animation: slideDown 0.3s ease-out; }
+        .expense-card.expanded .expense-split-details { display: block; }
+        .expense-card.expanded .chevron-icon { transform: rotate(180deg); }
+        
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); max-height: 0; } to { opacity: 1; transform: translateY(0); max-height: 300px; } }
     </style>
 </head>
 <body class="flex flex-col relative">
@@ -159,7 +167,7 @@
             <span class="font-space font-bold tracking-widest text-sm uppercase">Back</span>
         </a>
         <div class="text-[9px] md:text-[10px] font-space font-bold tracking-widest text-white/50 uppercase">
-            Expenses
+            Financial Logs
         </div>
     </nav>
 
@@ -168,7 +176,7 @@
         <div id="view-group-list">
             <div class="text-center mb-10">
                 <h1 class="text-3xl md:text-4xl font-space font-black tracking-widest text-white mb-2 uppercase theme-text">
-                    EXPENSES
+                    FINANCIAL LOGS
                 </h1>
                 <p class="text-white/50 text-sm font-medium">Select a mission or initialize a new group.</p>
             </div>
@@ -205,15 +213,27 @@
             <div class="flex gap-3 overflow-x-auto pb-4 mb-2 custom-scrollbar" id="dash-members-list">
                 </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="glass-panel p-4 border-t-2 border-t-theme">
-                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1">TOTAL EXPENSES</p>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="glass-panel p-4 border-t-2 border-t-theme col-span-2 md:col-span-1">
+                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1">MISSION TOTAL</p>
                     <p class="text-2xl font-black font-space text-white" id="dash-total-exp">₹0</p>
                 </div>
-                <div class="glass-panel p-4 border-t-2 border-t-white/20">
-                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1">YOUR BALANCE</p>
-                    <p class="text-2xl font-black font-space text-white/40" id="dash-my-bal">N/A</p>
+                <div class="glass-panel p-4 border-t-2 border-t-pink-400 col-span-1">
+                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1">YOUR TOTAL SHARE</p>
+                    <p class="text-xl font-black font-space text-white" id="dash-my-share">₹0</p>
                 </div>
+                <div class="glass-panel p-4 border-t-2 border-t-emerald-400 col-span-1">
+                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1">YOUR TOTAL PAID</p>
+                    <p class="text-xl font-black font-space text-white" id="dash-my-paid">₹0</p>
+                </div>
+            </div>
+
+            <!-- Spending Breakdown Section -->
+            <div id="spending-breakdown-container" class="glass-panel p-5 mb-8 bg-black/20 hide">
+                <h3 class="text-xs font-space font-bold text-white/50 tracking-widest mb-4 uppercase flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-4 h-4 theme-text"></i> Spending Breakdown
+                </h3>
+                <div class="space-y-4" id="breakdown-list"></div>
             </div>
 
             <div class="flex border-b border-white/10 mb-6 font-space font-bold text-sm tracking-widest uppercase">
@@ -319,7 +339,7 @@
                     <div id="split-validation-msg" class="text-[10px] text-red-400 mt-2 text-center font-bold tracking-widest uppercase hidden">Total amounts do not match.</div>
                 </div>
 
-                <button onclick="saveExpense()" class="w-full py-3 theme-bg text-black font-space font-bold tracking-widest rounded-xl hover:shadow-[0_0_15px_rgba(var(--theme-rgb),0.4)] transition-all uppercase mt-2">SAVE EXPENSE</button>
+                <button onclick="saveExpense()" class="w-full py-3 theme-bg text-black font-space font-bold tracking-widest rounded-xl hover:shadow-[0_0_15px_rgba(var(--theme-hex),0.4)] transition-all uppercase mt-2">SAVE EXPENSE</button>
                 <button onclick="closeModal('modal-add-expense')" class="w-full py-2 text-white/40 font-medium text-sm uppercase tracking-widest font-space font-bold">Cancel</button>
             </div>
         </div>
@@ -379,17 +399,12 @@
         const APP_ID = "aircross-odyssey-main";
 
         // --- THEME SYNC ---
-        // Mirror the exact database call used in your working index and radio pages
         onSnapshot(doc(db, 'artifacts/aircross-odyssey-main/public/data/trip_meta/latest'), (snap) => {
             if (snap.exists()) {
                 const data = snap.data();
-                if (data.themeColor) {
-                    document.documentElement.style.setProperty('--theme-hex', data.themeColor);
-                }
+                if (data.themeColor) document.documentElement.style.setProperty('--theme-hex', data.themeColor);
                 const bgLayer = document.getElementById('global-bg-layer');
-                if (bgLayer && data.bgImage) {
-                    bgLayer.style.backgroundImage = `url('${data.bgImage}')`;
-                }
+                if (bgLayer && data.bgImage) bgLayer.style.backgroundImage = `url('${data.bgImage}')`;
             }
         });
 
@@ -400,6 +415,7 @@
         let groupExpenses = [];
         let groupSettlements = [];
         let currentBalances = {}; 
+        let categoryMetadata = {};
         
         let currentSplitType = 'equal'; 
         let editingExpenseId = null; 
@@ -407,6 +423,15 @@
         let unsubscribeMembers = null;
         let unsubscribeExpenses = null;
         let unsubscribeSettlements = null;
+
+        // Smart Categorization Definitions based on actual production data titles
+        const CATEGORIES = {
+            transport: { name: 'Transport & Fuel', icon: 'car', keywords: ['fuel', 'petrol', 'diesel', 'toll', 'parking', 'cab', 'uber', 'train', 'flight', 'driver'] },
+            food: { name: 'Food & Drinks', icon: 'utensils', keywords: ['food', 'vada', 'lunch', 'breakfast', 'banana', 'ice cream', 'tea', 'coffee', 'water', 'biryani', 'restaurant', 'bar', 'drinks', 'burger', 'pub', 'snacks', 'cake', 'dinner', 'cold drinks', 'meals'] },
+            stay: { name: 'Stay & Accomodation', icon: 'bed', keywords: ['hotel', 'stay', 'room', 'airbnb', 'resort', 'lodge', 'rent', 'lodging', 'accommodation', 'rooms'] },
+            gear: { name: 'Equipment & Gear', icon: 'satellite', keywords: ['gear', 'camera', 'tent', 'tool', 'equipment', 'gadget'] },
+            misc: { name: 'Miscellaneous', icon: 'package', keywords: [] } // Fallback
+        };
 
         // Init Auth
         signInAnonymously(auth).catch(e => console.error(e));
@@ -479,6 +504,18 @@
 
         const formatMoney = (amount) => '₹' + Number(amount).toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2});
 
+        // Smart Category Detect
+        function getCategoryByTitle(title) {
+            if(!title) return 'misc';
+            const lowerTitle = title.toLowerCase();
+            for (const [key, cat] of Object.entries(CATEGORIES)) {
+                if (cat.keywords.some(keyword => lowerTitle.includes(keyword))) {
+                    return key;
+                }
+            }
+            return 'misc';
+        }
+
         // ----------------------------------------------------
         // GROUPS
         // ----------------------------------------------------
@@ -501,7 +538,7 @@
                 return;
             }
             container.innerHTML = allGroups.map(g => `
-                <div onclick="window.openGroup('${g.id}')" class="glass-panel p-5 cursor-pointer flex justify-between items-center group">
+                <div onclick="window.openGroup('${g.id}')" class="glass-panel p-5 cursor-pointer flex justify-between items-center group bg-black/20 hover:bg-black/40 transition-colors">
                     <div>
                         <h3 class="text-lg font-space font-bold text-white tracking-wider group-hover:theme-text transition-colors uppercase">${g.name}</h3>
                         <p class="text-[10px] tracking-widest font-bold text-white/40 mt-1">${new Date(g.timestamp).toLocaleDateString()}</p>
@@ -555,21 +592,22 @@
                 groupMembers = snap.docs.map(d => d.data()).sort((a,b)=>a.timestamp-b.timestamp);
                 document.getElementById('dash-member-count').textContent = `${groupMembers.length} MEMBERS`;
                 renderMembers();
-                calculateBalances();
+                calculateBalances(); // Rerun calculations when roster changes
             });
 
             const expRef = query(collection(db, `artifacts/${APP_ID}/public/data/exp_expenses`), where("groupId", "==", groupId));
             unsubscribeExpenses = onSnapshot(expRef, (snap) => {
                 groupExpenses = snap.docs.map(d => d.data()).sort((a,b)=>b.timestamp-a.timestamp);
                 renderExpenses();
-                calculateBalances();
+                renderBreakdown();
+                calculateBalances(); // Rerun when expenses change
             });
 
             const stlRef = query(collection(db, `artifacts/${APP_ID}/public/data/exp_settlements`), where("groupId", "==", groupId));
             unsubscribeSettlements = onSnapshot(stlRef, (snap) => {
                 groupSettlements = snap.docs.map(d => d.data()).sort((a,b)=>b.timestamp-a.timestamp);
                 renderSettlements();
-                calculateBalances();
+                calculateBalances(); // Rerun when payments change
             });
         }
 
@@ -607,7 +645,64 @@
         }
 
         // ----------------------------------------------------
-        // EXPENSES (ADD / EDIT / DELETE)
+        // BREAKDOWN & CATEGORIES
+        // ----------------------------------------------------
+        function renderBreakdown() {
+            const breakdownContainer = document.getElementById('spending-breakdown-container');
+            const listContainer = document.getElementById('breakdown-list');
+            
+            if(groupExpenses.length === 0) {
+                breakdownContainer.classList.add('hide');
+                return;
+            }
+
+            // Reset totals
+            Object.keys(CATEGORIES).forEach(k => CATEGORIES[k].total = 0);
+            let grandTotal = 0;
+
+            groupExpenses.forEach(exp => {
+                const cat = getCategoryByTitle(exp.title);
+                const amt = Number(exp.amount) || 0;
+                CATEGORIES[cat].total += amt;
+                grandTotal += amt;
+            });
+
+            if(grandTotal === 0) {
+                breakdownContainer.classList.add('hide');
+                return;
+            }
+
+            breakdownContainer.classList.remove('hide');
+
+            // Sort categories by spending (highest first)
+            const sortedCats = Object.entries(CATEGORIES)
+                .filter(([key, data]) => data.total > 0)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            listContainer.innerHTML = sortedCats.map(([key, data]) => {
+                const percentage = (data.total / grandTotal) * 100;
+                return `
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-xs">
+                        <div class="flex items-center gap-2 font-medium text-white uppercase tracking-wider">
+                            <i data-lucide="${data.icon}" class="w-3.5 h-3.5 theme-text"></i>
+                            ${data.name}
+                        </div>
+                        <div class="font-space font-bold text-white/90">
+                            ${formatMoney(data.total)} <span class="text-white/40 text-[10px] font-normal ml-1">(${percentage.toFixed(0)}%)</span>
+                        </div>
+                    </div>
+                    <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10">
+                        <div class="h-full theme-bg rounded-full" style="width: ${percentage}%"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // ----------------------------------------------------
+        // EXPENSES (ADD / EDIT / DELETE / VIEW)
         // ----------------------------------------------------
         window.openExpenseModal = () => {
             if(groupMembers.length === 0) return showToast('Add members first', 'error');
@@ -643,6 +738,7 @@
 
             setSplitType(exp.splitType || 'equal');
 
+            // Wait for DOM render of split list before applying Custom/Select values
             setTimeout(() => {
                 if(exp.splitType === 'select') {
                     const checks = document.querySelectorAll('.split-sel-check');
@@ -732,6 +828,13 @@
             });
         };
 
+        // NEW: Handles clicking on an expense card to view splits
+        window.toggleExpenseDetails = (cardId) => {
+            const card = document.getElementById(cardId);
+            if(event.target.closest('button')) return; // Ignore if edit/delete clicked
+            card.classList.toggle('expanded');
+        };
+
         window.saveExpense = async () => {
             const title = document.getElementById('exp-title').value.trim() || 'Untitled Expense';
             const total = Number(document.getElementById('exp-amount').value);
@@ -761,7 +864,7 @@
                     if(val > 0) splits[inp.dataset.id] = val;
                     sum += val;
                 });
-                if(Math.abs(sum - total) > 0.1) {
+                if(Math.abs(sum - total) > 0.1) { // Floating point leeway
                     document.getElementById('split-validation-msg').classList.remove('hide');
                     return;
                 }
@@ -801,33 +904,65 @@
                 const month = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
                 const day = dateObj.getDate();
                 const shortMonth = dateObj.toLocaleString('en-US', { month: 'short' });
+                const categoryKey = getCategoryByTitle(exp.title);
+                const category = CATEGORIES[categoryKey];
+                const cardId = `exp-${exp.id}`;
 
                 if(month !== lastMonth) {
-                    html += `<div class="text-[9px] font-bold text-white/40 tracking-widest mt-4 mb-2 uppercase">${month}</div>`;
+                    html += `<div class="text-[9px] font-bold text-white/40 tracking-widest mt-6 mb-2 uppercase border-l-2 border-white/20 pl-2 ml-4">${month}</div>`;
                     lastMonth = month;
                 }
 
+                // Generate split breakdown HTML
+                let splitsHtml = '';
+                groupMembers.forEach(m => {
+                    const oweAmt = exp.splits[m.id] || 0;
+                    if(oweAmt > 0) {
+                        splitsHtml += `
+                        <div class="flex justify-between items-center text-[10px] py-1 border-b border-white/5">
+                            <span class="text-white/70 uppercase tracking-wider">${m.name}</span>
+                            <span class="font-space text-white/90">${formatMoney(oweAmt)}</span>
+                        </div>`;
+                    }
+                });
+
                 html += `
-                <div class="glass-panel p-4 flex gap-4 items-center group relative overflow-hidden bg-black/20 hover:bg-black/40 transition-colors">
-                    <div class="flex flex-col items-center justify-center shrink-0 w-10 text-white/50">
-                        <span class="text-[9px] font-space uppercase font-bold tracking-widest">${shortMonth}</span>
-                        <span class="text-xl font-bold text-white">${day}</span>
+                <div id="${cardId}" onclick="toggleExpenseDetails('${cardId}')" class="expense-card glass-panel p-4 flex flex-col gap-4 group cursor-pointer relative overflow-hidden bg-black/20 hover:bg-black/40 transition-colors border-l-4 border-l-white/10 expanded:border-l-theme">
+                    <div class="flex gap-4 items-center">
+                        <div class="flex flex-col items-center justify-center shrink-0 w-10 text-white/50">
+                            <span class="text-[9px] font-space uppercase font-bold tracking-widest">${shortMonth}</span>
+                            <span class="text-xl font-bold text-white">${day}</span>
+                        </div>
+                        <div class="flex-1 min-w-0 border-l border-white/10 pl-4">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="${category.icon}" class="w-3.5 h-3.5 theme-text shrink-0"></i>
+                                <h4 class="font-bold text-white text-sm truncate pr-2 uppercase">${exp.title}</h4>
+                            </div>
+                            <p class="text-[9px] tracking-widest uppercase font-bold text-white/40">Paid by <span class="theme-text">${getMemberName(exp.paidBy)}</span></p>
+                        </div>
+                        <div class="text-right shrink-0 flex items-center gap-3">
+                            <p class="font-space font-black text-lg text-white">${formatMoney(exp.amount)}</p>
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-white/20 chevron-icon transition-transform"></i>
+                        </div>
                     </div>
-                    <div class="flex-1 min-w-0 border-l border-white/10 pl-4">
-                        <h4 class="font-bold text-white text-sm truncate pr-2 uppercase">${exp.title}</h4>
-                        <p class="text-[9px] tracking-widest uppercase font-bold text-white/40 mt-1">Paid by <span class="theme-text">${getMemberName(exp.paidBy)}</span></p>
-                    </div>
-                    <div class="text-right shrink-0 pr-16 md:pr-0">
-                        <p class="font-space font-black text-lg text-white">${formatMoney(exp.amount)}</p>
-                    </div>
-                    
-                    <div class="absolute top-2 right-2 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                        <button onclick="window.editExpense('${exp.id}')" class="p-1.5 bg-black/40 rounded-md text-white/40 hover:text-white transition-colors border border-white/10" title="Edit">
-                            <i data-lucide="edit-2" class="w-4 h-4"></i>
-                        </button>
-                        <button onclick="window.deleteExpense('${exp.id}')" class="p-1.5 bg-black/40 rounded-md text-white/40 hover:text-red-400 transition-colors border border-white/10" title="Delete">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
+
+                    <!-- Expandable Details -->
+                    <div class="expense-split-details pt-3 border-t border-white/10 mt-1">
+                        <div class="flex justify-between items-center mb-2">
+                            <h5 class="text-[10px] font-space font-bold tracking-widest text-white/50 uppercase">Split Breakdown</h5>
+                            <span class="text-[9px] px-2 py-0.5 theme-bg-10 theme-text rounded font-bold uppercase tracking-widest">${exp.splitType || 'equal'}</span>
+                        </div>
+                        <div class="space-y-1 bg-black/30 p-3 rounded-lg border border-white/5">
+                            ${splitsHtml}
+                        </div>
+                        <div class="flex gap-2 justify-end mt-3 pt-3 border-t border-white/5">
+                            <button onclick="window.editExpense('${exp.id}')" class="p-1.5 bg-white/5 rounded-md text-white/40 hover:text-white transition-colors border border-white/10" title="Edit">
+                                <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="window.deleteExpense('${exp.id}')" class="p-1.5 bg-white/5 rounded-md text-white/40 hover:text-red-400 transition-colors border border-white/10" title="Delete">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>`;
             });
@@ -844,21 +979,30 @@
             if(!currentGroup) return;
 
             currentBalances = {};
+            // Initialize from current roster
             groupMembers.forEach(m => currentBalances[m.id] = { name: m.name, paid: 0, share: 0, net: 0 });
 
+            // Calculate Paid vs Owed from Expenses
             groupExpenses.forEach(exp => {
+                // Add to Paid loop (if payer still in group)
                 if(currentBalances[exp.paidBy]) currentBalances[exp.paidBy].paid += Number(exp.amount);
+                
+                // Add to Share loop
                 Object.entries(exp.splits || {}).forEach(([mId, amt]) => {
                     if(currentBalances[mId]) currentBalances[mId].share += Number(amt);
                 });
             });
 
+            // Apply Settlements (Payments between members)
             groupSettlements.forEach(s => {
-                if(currentBalances[s.from]) currentBalances[s.from].paid += Number(s.amount); 
-                if(currentBalances[s.to]) currentBalances[s.to].share += Number(s.amount); 
+                if(currentBalances[s.from]) currentBalances[s.from].paid += Number(s.amount); // "Paid" increases because they gave money
+                if(currentBalances[s.to]) currentBalances[s.to].share += Number(s.amount); // "Share" increases because they received money (effectively spent less)
             });
 
             let displayHtml = '';
+            let myTotalShare = 0;
+            let myTotalPaid = 0;
+
             for(let id in currentBalances) {
                 const b = currentBalances[id];
                 b.net = b.paid - b.share;
@@ -867,8 +1011,13 @@
                 let statusText = 'Settled up';
                 let absNet = Math.abs(b.net);
                 
-                if(b.net > 0.05) { statusColor = 'theme-text'; statusText = `Gets back ${formatMoney(b.net)}`; }
-                else if (b.net < -0.05) { statusColor = 'text-pink-400'; statusText = `Owes ${formatMoney(absNet)}`; }
+                if(b.net > 0.05) { // Gets back
+                    statusColor = 'theme-text';
+                    statusText = `Gets back ${formatMoney(b.net)}`;
+                } else if (b.net < -0.05) { // Owes
+                    statusColor = 'text-pink-400';
+                    statusText = `Owes ${formatMoney(absNet)}`;
+                }
 
                 displayHtml += `
                 <div class="glass-panel p-4 flex justify-between items-center bg-black/20">
@@ -876,13 +1025,27 @@
                         <div class="w-10 h-10 rounded-full ${getMemberColor(b.name)} border-2 border-white/20 flex items-center justify-center text-black font-space font-bold">${b.name.charAt(0)}</div>
                         <div>
                             <p class="font-bold text-white text-xs uppercase tracking-widest">${b.name}</p>
-                            <p class="text-[9px] text-white/40 font-space font-bold tracking-widest mt-0.5 uppercase">PAID: ${formatMoney(b.paid)}</p>
+                            <div class="flex gap-3 text-[9px] text-white/40 font-space font-bold tracking-widest mt-1 uppercase">
+                                <span>PAID: ${formatMoney(b.paid)}</span>
+                                <span>SHARE: ${formatMoney(b.share)}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="text-right">
                         <p class="font-space font-bold text-xs ${statusColor}">${statusText}</p>
                     </div>
                 </div>`;
+            }
+
+            // Update user's personal summary cards (assuming 'You' is the first member for simplicity in this demo, usually mapped via Auth ID)
+            if(groupMembers.length > 0) {
+                const you = groupMembers[0]; // Logic placeholder
+                const youBal = currentBalances[you.id];
+                document.getElementById('dash-my-share').textContent = formatMoney(youBal ? youBal.share : 0);
+                document.getElementById('dash-my-paid').textContent = formatMoney(youBal ? youBal.paid : 0);
+            } else {
+                document.getElementById('dash-my-share').textContent = '₹0';
+                document.getElementById('dash-my-paid').textContent = '₹0';
             }
 
             document.getElementById('balances-container').innerHTML = displayHtml || '<div class="text-center py-6 text-white/40 text-[10px] font-bold font-space uppercase tracking-widest">Add expenses to see balances.</div>';
@@ -894,14 +1057,16 @@
             let debtors = [];
             let creditors = [];
 
+            // Separate who owes vs gets back
             for(let id in balances) {
                 if(balances[id].net < -0.05) debtors.push({id, name: balances[id].name, amt: Math.abs(balances[id].net)});
                 else if (balances[id].net > 0.05) creditors.push({id, name: balances[id].name, amt: balances[id].net});
             }
 
             let suggestions = [];
-            let iterations = 0; 
+            let iterations = 0; // Safety break
 
+            // Match highest debtor with highest creditor (Greedy approach for minimum transactions)
             while(debtors.length > 0 && creditors.length > 0 && iterations < 1000) {
                 iterations++;
                 debtors.sort((a,b) => b.amt - a.amt);
