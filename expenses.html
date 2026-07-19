@@ -445,13 +445,14 @@
         let selectedMemberId = null; 
         let isShareExpanded = false;
 
-        // Smart Categorization Definitions based on actual production data titles
+        // Smart Categorization Definitions (Fuel separated, Ice cream in Food, Parking in Misc, etc.)
         const CATEGORIES = {
-            transport: { name: 'Transport & Fuel', icon: 'car', keywords: ['fuel', 'petrol', 'diesel', 'toll', 'parking', 'cab', 'uber', 'train', 'flight', 'driver'] },
             food: { name: 'Food & Drinks', icon: 'utensils', keywords: ['food', 'vada', 'lunch', 'breakfast', 'banana', 'ice cream', 'tea', 'coffee', 'water', 'biryani', 'restaurant', 'bar', 'drinks', 'burger', 'pub', 'snacks', 'cake', 'dinner', 'cold drinks', 'meals'] },
-            stay: { name: 'Stay & Accomodation', icon: 'bed', keywords: ['hotel', 'stay', 'room', 'airbnb', 'resort', 'lodge', 'rent', 'lodging', 'accommodation', 'rooms'] },
+            fuel: { name: 'Fuel', icon: 'fuel', keywords: ['fuel', 'petrol', 'diesel'] },
+            transport: { name: 'Transportation', icon: 'car', keywords: ['cab', 'uber', 'train', 'flight', 'driver', 'metro', 'auto', 'bus', 'transport', 'toll'] },
+            stay: { name: 'Stay & Accommodation', icon: 'bed', keywords: ['hotel', 'stay', 'room', 'airbnb', 'resort', 'lodge', 'rent', 'lodging', 'accommodation', 'rooms'] },
             gear: { name: 'Equipment & Gear', icon: 'satellite', keywords: ['gear', 'camera', 'tent', 'tool', 'equipment', 'gadget'] },
-            misc: { name: 'Miscellaneous', icon: 'package', keywords: [] } 
+            misc: { name: 'Miscellaneous', icon: 'package', keywords: ['parking', 'park'] } 
         };
 
         // Init Auth
@@ -697,7 +698,6 @@
         // BREAKDOWN & CATEGORIES
         // ----------------------------------------------------
         
-        // NEW: Toggle category accordion details
         window.toggleCategoryDetails = (cardId) => {
             const card = document.getElementById(cardId);
             card.classList.toggle('expanded');
@@ -712,7 +712,6 @@
                 return;
             }
 
-            // Reset totals and map specific expenses to their categories
             Object.keys(CATEGORIES).forEach(k => {
                 CATEGORIES[k].total = 0;
                 CATEGORIES[k].items = [];
@@ -742,7 +741,6 @@
                 const percentage = (data.total / grandTotal) * 100;
                 const cardId = `cat-card-${key}`;
                 
-                // Build the inner list of individual expenses for this category
                 const itemsHtml = data.items.map(exp => {
                     const dateObj = new Date(exp.date);
                     const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -774,7 +772,6 @@
                         <div class="h-full theme-bg rounded-full" style="width: ${percentage}%"></div>
                     </div>
                     
-                    <!-- New Expandable List of Individual Expenses -->
                     <div class="category-details pt-2">
                         <div class="bg-black/30 p-2.5 rounded-lg border border-white/5 space-y-1 mt-1">
                             ${itemsHtml}
@@ -1112,6 +1109,7 @@
             if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
+        // UPADTED: Now accurately reflects raw expenses independent of settlements
         function updatePersonalSummary() {
             const lblShare = document.getElementById('lbl-my-share');
             const lblPaid = document.getElementById('lbl-my-paid');
@@ -1132,8 +1130,10 @@
 
             lblShare.textContent = `${name}'S SHARE`;
             lblPaid.textContent = `${name}'S PAID`;
-            valShare.textContent = formatMoney(bal ? bal.share : 0);
-            valPaid.textContent = formatMoney(bal ? bal.paid : 0);
+            
+            // Uses displayShare and displayPaid so they don't fluctuate with settlements
+            valShare.textContent = formatMoney(bal ? bal.displayShare : 0);
+            valPaid.textContent = formatMoney(bal ? bal.displayPaid : 0);
 
             if(isShareExpanded) {
                 renderMemberShareDetails();
@@ -1144,16 +1144,33 @@
             if(!currentGroup) return;
 
             currentBalances = {};
-            groupMembers.forEach(m => currentBalances[m.id] = { name: m.name, paid: 0, share: 0, net: 0 });
+            
+            // Initialize balances, including dedicated display variables for top cards
+            groupMembers.forEach(m => currentBalances[m.id] = { 
+                name: m.name, 
+                paid: 0, 
+                share: 0, 
+                net: 0, 
+                displayPaid: 0, 
+                displayShare: 0 
+            });
 
+            // Process actual expenses to build the pure "Share" and "Paid" numbers
             groupExpenses.forEach(exp => {
-                if(currentBalances[exp.paidBy]) currentBalances[exp.paidBy].paid += Number(exp.amount);
+                if(currentBalances[exp.paidBy]) {
+                    currentBalances[exp.paidBy].paid += Number(exp.amount);
+                    currentBalances[exp.paidBy].displayPaid += Number(exp.amount); // Pure paid value
+                }
                 
                 Object.entries(exp.splits || {}).forEach(([mId, amt]) => {
-                    if(currentBalances[mId]) currentBalances[mId].share += Number(amt);
+                    if(currentBalances[mId]) {
+                        currentBalances[mId].share += Number(amt);
+                        currentBalances[mId].displayShare += Number(amt); // Pure share value
+                    }
                 });
             });
 
+            // Process settlements ONLY for calculating who owes who (does NOT affect displayPaid or displayShare)
             groupSettlements.forEach(s => {
                 if(currentBalances[s.from]) currentBalances[s.from].paid += Number(s.amount); 
                 if(currentBalances[s.to]) currentBalances[s.to].share += Number(s.amount); 
