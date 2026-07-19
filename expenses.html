@@ -26,6 +26,7 @@
 
     <style>
         :root { 
+            /* Fallback colors. App.js/Inline Script will overwrite this instantly. */
             --theme-hex: #38bdf8; 
             --theme-rgb: 56, 189, 248; 
         }
@@ -40,6 +41,7 @@
             min-height: 100vh;
         }
         
+        /* Dynamic Background container */
         .immersive-bg {
             position: fixed; inset: 0; z-index: -10;
             background-size: cover; background-position: center; background-attachment: fixed;
@@ -52,6 +54,7 @@
             background: linear-gradient(to bottom, rgba(15, 23, 42, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
         }
 
+        /* Theme Application Classes */
         .theme-text { color: var(--theme-hex) !important; }
         .theme-bg { background-color: var(--theme-hex) !important; }
         .theme-bg-10 { background-color: rgba(var(--theme-rgb), 0.1) !important; }
@@ -61,6 +64,7 @@
         .theme-border-30 { border-color: rgba(var(--theme-rgb), 0.3) !important; }
         .theme-ring { --tw-ring-color: var(--theme-hex) !important; }
 
+        /* UI Elements */
         .glass-panel {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(24px); 
@@ -87,11 +91,13 @@
         }
         .glass-input::placeholder { color: rgba(255,255,255,0.3); }
 
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--theme-hex); }
 
+        /* Modals */
         .modal {
             position: fixed; inset: 0; z-index: 1000; display: none;
             align-items: flex-end; justify-content: center;
@@ -111,6 +117,7 @@
         @media (min-width: 768px) { .modal-content { transform: scale(0.95); } }
         .modal.active .modal-content { transform: translateY(0) scale(1); }
 
+        /* Toasts */
         .toast {
             position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-100%);
             background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255, 255, 255, 0.2);
@@ -120,6 +127,7 @@
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
+        /* Tabs */
         .tab-btn { color: rgba(255,255,255,0.4); border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab-btn.active { color: var(--theme-hex); border-bottom-color: var(--theme-hex); text-shadow: 0 0 10px rgba(var(--theme-rgb), 0.4); }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
@@ -127,6 +135,7 @@
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Checkbox overrides */
         .split-checkbox {
             appearance: none; width: 1.25rem; height: 1.25rem; border: 1px solid rgba(255,255,255,0.2);
             border-radius: 0.25rem; background: rgba(255,255,255,0.05); cursor: pointer;
@@ -140,11 +149,17 @@
 
         .hide { display: none !important; }
 
+        /* Expandable Cards Enhancements */
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); max-height: 0; } to { opacity: 1; transform: translateY(0); max-height: 500px; } }
+
         .expense-split-details { display: none; animation: slideDown 0.3s ease-out; }
         .expense-card.expanded .expense-split-details { display: block; }
         .expense-card.expanded .chevron-icon { transform: rotate(180deg); }
+
+        .category-details { display: none; animation: slideDown 0.3s ease-out; }
+        .category-card.expanded .category-details { display: block; }
+        .category-card.expanded .cat-chevron { transform: rotate(180deg); }
         
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); max-height: 0; } to { opacity: 1; transform: translateY(0); max-height: 300px; } }
     </style>
 </head>
 <body class="flex flex-col relative">
@@ -226,7 +241,7 @@
                 </div>
             </div>
 
-            <!-- New Expandable Member Share Details -->
+            <!-- Expandable Member Share Details -->
             <div id="member-share-details-container" class="glass-panel p-5 mb-4 bg-black/40 hide border-t border-white/10">
                 <h3 class="text-[10px] font-space font-bold text-white/50 tracking-widest mb-3 uppercase flex items-center gap-2" id="lbl-share-details-title">
                     <i data-lucide="list" class="w-3.5 h-3.5 theme-text"></i> INDIVIDUAL BREAKDOWN
@@ -681,6 +696,13 @@
         // ----------------------------------------------------
         // BREAKDOWN & CATEGORIES
         // ----------------------------------------------------
+        
+        // NEW: Toggle category accordion details
+        window.toggleCategoryDetails = (cardId) => {
+            const card = document.getElementById(cardId);
+            card.classList.toggle('expanded');
+        };
+
         function renderBreakdown() {
             const breakdownContainer = document.getElementById('spending-breakdown-container');
             const listContainer = document.getElementById('breakdown-list');
@@ -690,13 +712,18 @@
                 return;
             }
 
-            Object.keys(CATEGORIES).forEach(k => CATEGORIES[k].total = 0);
+            // Reset totals and map specific expenses to their categories
+            Object.keys(CATEGORIES).forEach(k => {
+                CATEGORIES[k].total = 0;
+                CATEGORIES[k].items = [];
+            });
             let grandTotal = 0;
 
             groupExpenses.forEach(exp => {
                 const cat = getCategoryByTitle(exp.title);
                 const amt = Number(exp.amount) || 0;
                 CATEGORIES[cat].total += amt;
+                CATEGORIES[cat].items.push(exp);
                 grandTotal += amt;
             });
 
@@ -713,19 +740,45 @@
 
             listContainer.innerHTML = sortedCats.map(([key, data]) => {
                 const percentage = (data.total / grandTotal) * 100;
+                const cardId = `cat-card-${key}`;
+                
+                // Build the inner list of individual expenses for this category
+                const itemsHtml = data.items.map(exp => {
+                    const dateObj = new Date(exp.date);
+                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    return `
+                    <div class="flex justify-between items-center text-[10px] py-1 border-b border-white/5 last:border-0">
+                        <div>
+                            <span class="text-white/70 uppercase tracking-wider block truncate max-w-[150px] sm:max-w-[250px]">${exp.title}</span>
+                            <span class="text-white/30 font-space font-bold tracking-widest text-[8px] uppercase">${dateStr}</span>
+                        </div>
+                        <span class="font-space text-white/90 font-bold">${formatMoney(exp.amount)}</span>
+                    </div>`;
+                }).join('');
+
                 return `
-                <div class="space-y-1">
+                <div id="${cardId}" class="space-y-1 category-card group cursor-pointer" onclick="toggleCategoryDetails('${cardId}')">
                     <div class="flex justify-between items-center text-xs">
                         <div class="flex items-center gap-2 font-medium text-white uppercase tracking-wider">
                             <i data-lucide="${data.icon}" class="w-3.5 h-3.5 theme-text"></i>
                             ${data.name}
                         </div>
-                        <div class="font-space font-bold text-white/90">
-                            ${formatMoney(data.total)} <span class="text-white/40 text-[10px] font-normal ml-1">(${percentage.toFixed(0)}%)</span>
+                        <div class="flex items-center gap-2">
+                            <div class="font-space font-bold text-white/90">
+                                ${formatMoney(data.total)} <span class="text-white/40 text-[10px] font-normal ml-1">(${percentage.toFixed(0)}%)</span>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-white/30 transition-transform duration-300 cat-chevron"></i>
                         </div>
                     </div>
                     <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10">
                         <div class="h-full theme-bg rounded-full" style="width: ${percentage}%"></div>
+                    </div>
+                    
+                    <!-- New Expandable List of Individual Expenses -->
+                    <div class="category-details pt-2">
+                        <div class="bg-black/30 p-2.5 rounded-lg border border-white/5 space-y-1 mt-1">
+                            ${itemsHtml}
+                        </div>
                     </div>
                 </div>`;
             }).join('');
@@ -1004,7 +1057,6 @@
         // BALANCES & SETTLEMENT ENGINE
         // ----------------------------------------------------
         
-        // NEW: Handles the Expansion of the Share Card
         window.toggleMemberShareDetails = () => {
             if(!selectedMemberId) return;
             isShareExpanded = !isShareExpanded;
@@ -1021,7 +1073,6 @@
             }
         };
 
-        // NEW: Generates the detailed list of expenses that make up the user's share
         function renderMemberShareDetails() {
             const container = document.getElementById('member-share-list');
             
@@ -1061,7 +1112,6 @@
             if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // Updates the "Share" and "Paid" top cards based on the selected member
         function updatePersonalSummary() {
             const lblShare = document.getElementById('lbl-my-share');
             const lblPaid = document.getElementById('lbl-my-paid');
@@ -1085,7 +1135,6 @@
             valShare.textContent = formatMoney(bal ? bal.share : 0);
             valPaid.textContent = formatMoney(bal ? bal.paid : 0);
 
-            // Re-render the expanded view if it's currently open
             if(isShareExpanded) {
                 renderMemberShareDetails();
             }
