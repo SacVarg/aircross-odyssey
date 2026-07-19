@@ -26,7 +26,6 @@
 
     <style>
         :root { 
-            /* Fallback colors. App.js/Inline Script will overwrite this instantly. */
             --theme-hex: #38bdf8; 
             --theme-rgb: 56, 189, 248; 
         }
@@ -41,7 +40,6 @@
             min-height: 100vh;
         }
         
-        /* Dynamic Background container */
         .immersive-bg {
             position: fixed; inset: 0; z-index: -10;
             background-size: cover; background-position: center; background-attachment: fixed;
@@ -54,7 +52,6 @@
             background: linear-gradient(to bottom, rgba(15, 23, 42, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
         }
 
-        /* Theme Application Classes */
         .theme-text { color: var(--theme-hex) !important; }
         .theme-bg { background-color: var(--theme-hex) !important; }
         .theme-bg-10 { background-color: rgba(var(--theme-rgb), 0.1) !important; }
@@ -64,7 +61,6 @@
         .theme-border-30 { border-color: rgba(var(--theme-rgb), 0.3) !important; }
         .theme-ring { --tw-ring-color: var(--theme-hex) !important; }
 
-        /* UI Elements */
         .glass-panel {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(24px); 
@@ -91,13 +87,11 @@
         }
         .glass-input::placeholder { color: rgba(255,255,255,0.3); }
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--theme-hex); }
 
-        /* Modals */
         .modal {
             position: fixed; inset: 0; z-index: 1000; display: none;
             align-items: flex-end; justify-content: center;
@@ -117,7 +111,6 @@
         @media (min-width: 768px) { .modal-content { transform: scale(0.95); } }
         .modal.active .modal-content { transform: translateY(0) scale(1); }
 
-        /* Toasts */
         .toast {
             position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-100%);
             background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255, 255, 255, 0.2);
@@ -127,7 +120,6 @@
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
-        /* Tabs */
         .tab-btn { color: rgba(255,255,255,0.4); border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab-btn.active { color: var(--theme-hex); border-bottom-color: var(--theme-hex); text-shadow: 0 0 10px rgba(var(--theme-rgb), 0.4); }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
@@ -135,7 +127,6 @@
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Checkbox overrides */
         .split-checkbox {
             appearance: none; width: 1.25rem; height: 1.25rem; border: 1px solid rgba(255,255,255,0.2);
             border-radius: 0.25rem; background: rgba(255,255,255,0.05); cursor: pointer;
@@ -149,7 +140,6 @@
 
         .hide { display: none !important; }
 
-        /* Expense Card Enhancements */
         .expense-split-details { display: none; animation: slideDown 0.3s ease-out; }
         .expense-card.expanded .expense-split-details { display: block; }
         .expense-card.expanded .chevron-icon { transform: rotate(180deg); }
@@ -220,14 +210,29 @@
                     <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1">MISSION TOTAL</p>
                     <p class="text-2xl font-black font-space text-white" id="dash-total-exp">₹0</p>
                 </div>
-                <!-- Dynamic Personal Summary Cards -->
-                <div class="glass-panel p-4 border-t-2 border-t-pink-400 col-span-1 transition-all">
-                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1 uppercase" id="lbl-my-share">MEMBER'S SHARE</p>
+                
+                <!-- Dynamic Personal Summary Cards (Share Card is now clickable) -->
+                <div class="glass-panel p-4 border-t-2 border-t-pink-400 col-span-1 transition-all cursor-pointer hover:bg-white/5 group relative" onclick="window.toggleMemberShareDetails()">
+                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1 uppercase flex justify-between items-center">
+                        <span id="lbl-my-share">MEMBER'S SHARE</span>
+                        <i data-lucide="chevron-down" id="icon-share-expand" class="w-4 h-4 text-white/30 group-hover:text-white transition-transform duration-300"></i>
+                    </p>
                     <p class="text-xl font-black font-space text-white" id="dash-my-share">₹0</p>
                 </div>
+                
                 <div class="glass-panel p-4 border-t-2 border-t-emerald-400 col-span-1 transition-all">
                     <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1 uppercase" id="lbl-my-paid">MEMBER'S PAID</p>
                     <p class="text-xl font-black font-space text-white" id="dash-my-paid">₹0</p>
+                </div>
+            </div>
+
+            <!-- New Expandable Member Share Details -->
+            <div id="member-share-details-container" class="glass-panel p-5 mb-4 bg-black/40 hide border-t border-white/10">
+                <h3 class="text-[10px] font-space font-bold text-white/50 tracking-widest mb-3 uppercase flex items-center gap-2" id="lbl-share-details-title">
+                    <i data-lucide="list" class="w-3.5 h-3.5 theme-text"></i> INDIVIDUAL BREAKDOWN
+                </h3>
+                <div id="member-share-list" class="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-2">
+                    <!-- Javascript populates expenses specific to the selected member here -->
                 </div>
             </div>
 
@@ -246,25 +251,21 @@
             </div>
 
             <div id="tab-expenses" class="tab-content active space-y-4">
-                <div id="expenses-container" class="space-y-3">
-                    </div>
+                <div id="expenses-container" class="space-y-3"></div>
             </div>
 
             <div id="tab-balances" class="tab-content space-y-3">
-                <div id="balances-container" class="space-y-3">
-                    </div>
+                <div id="balances-container" class="space-y-3"></div>
             </div>
 
             <div id="tab-settle" class="tab-content space-y-4">
                 <div class="bg-white/5 border border-white/10 p-4 rounded-xl mb-4">
                     <p class="text-xs text-white/50 font-medium">The system automatically calculates the minimum number of transactions required to settle all debts.</p>
                 </div>
-                <div id="suggestions-container" class="space-y-3">
-                    </div>
+                <div id="suggestions-container" class="space-y-3"></div>
                 
                 <h3 class="font-space font-bold text-white/50 text-xs tracking-widest mt-8 mb-4">SETTLEMENT HISTORY</h3>
-                <div id="settlement-history-container" class="space-y-3">
-                    </div>
+                <div id="settlement-history-container" class="space-y-3"></div>
             </div>
 
         </div>
@@ -337,8 +338,7 @@
                         <button class="flex-1 py-1.5 text-xs font-bold rounded-md text-white/40 hover:text-white transition-colors uppercase tracking-widest" id="btn-split-custom" onclick="setSplitType('custom')">CUSTOM</button>
                     </div>
 
-                    <div id="split-dynamic-container" class="max-h-[150px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                        </div>
+                    <div id="split-dynamic-container" class="max-h-[150px] overflow-y-auto space-y-2 pr-1 custom-scrollbar"></div>
                     <div id="split-validation-msg" class="text-[10px] text-red-400 mt-2 text-center font-bold tracking-widest uppercase hidden">Total amounts do not match.</div>
                 </div>
 
@@ -426,8 +426,9 @@
         let unsubscribeExpenses = null;
         let unsubscribeSettlements = null;
         
-        // NEW: State for tracking which member's summary is selected
+        // State for tracking selected member and breakdown UI
         let selectedMemberId = null; 
+        let isShareExpanded = false;
 
         // Smart Categorization Definitions based on actual production data titles
         const CATEGORIES = {
@@ -435,7 +436,7 @@
             food: { name: 'Food & Drinks', icon: 'utensils', keywords: ['food', 'vada', 'lunch', 'breakfast', 'banana', 'ice cream', 'tea', 'coffee', 'water', 'biryani', 'restaurant', 'bar', 'drinks', 'burger', 'pub', 'snacks', 'cake', 'dinner', 'cold drinks', 'meals'] },
             stay: { name: 'Stay & Accomodation', icon: 'bed', keywords: ['hotel', 'stay', 'room', 'airbnb', 'resort', 'lodge', 'rent', 'lodging', 'accommodation', 'rooms'] },
             gear: { name: 'Equipment & Gear', icon: 'satellite', keywords: ['gear', 'camera', 'tent', 'tool', 'equipment', 'gadget'] },
-            misc: { name: 'Miscellaneous', icon: 'package', keywords: [] } // Fallback
+            misc: { name: 'Miscellaneous', icon: 'package', keywords: [] } 
         };
 
         // Init Auth
@@ -483,7 +484,8 @@
                 document.getElementById('fab-add-expense').classList.add('hide');
                 document.getElementById('view-group-list').classList.remove('hide');
                 currentGroup = null;
-                selectedMemberId = null; // Reset selection on group change
+                selectedMemberId = null; 
+                isShareExpanded = false;
                 
                 if(unsubscribeMembers) { unsubscribeMembers(); unsubscribeMembers = null; }
                 if(unsubscribeExpenses) { unsubscribeExpenses(); unsubscribeExpenses = null; }
@@ -558,7 +560,12 @@
         window.openGroup = (id) => {
             currentGroup = allGroups.find(g => g.id === id);
             document.getElementById('dash-group-name').textContent = currentGroup.name;
-            selectedMemberId = null; // Ensure fresh start
+            
+            selectedMemberId = null; 
+            isShareExpanded = false;
+            document.getElementById('member-share-details-container').classList.add('hide');
+            document.getElementById('icon-share-expand').classList.remove('rotate-180');
+            
             showView('detail');
             setupGroupListeners(id);
         };
@@ -633,11 +640,10 @@
             } catch(e) { showToast('Error', 'error'); }
         };
 
-        // Select a member to update the personal summary cards
         window.selectMember = (id) => {
             selectedMemberId = id;
-            renderMembers(); // Re-render to update the active UI states
-            updatePersonalSummary(); // Update the dynamic text and amounts
+            renderMembers(); 
+            updatePersonalSummary(); 
         };
 
         function renderMembers() {
@@ -648,7 +654,6 @@
                 return; 
             }
 
-            // Fallback: If no one is selected, auto-select the first member
             if (!selectedMemberId && groupMembers.length > 0) {
                 selectedMemberId = groupMembers[0].id;
             }
@@ -725,7 +730,7 @@
                 </div>`;
             }).join('');
 
-            lucide.createIcons();
+            if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         // ----------------------------------------------------
@@ -744,7 +749,7 @@
             pBy.innerHTML = groupMembers.map(m => `<option value="${m.id}" class="bg-slate-800">${m.name}</option>`).join('');
             
             setSplitType('equal');
-            lucide.createIcons();
+            if(typeof lucide !== 'undefined') lucide.createIcons();
             openModal('modal-add-expense');
         };
 
@@ -776,7 +781,7 @@
                 }
             }, 50);
 
-            lucide.createIcons();
+            if(typeof lucide !== 'undefined') lucide.createIcons();
             openModal('modal-add-expense');
         };
 
@@ -992,13 +997,70 @@
 
             totalEl.textContent = formatMoney(grandTotal);
             container.innerHTML = html;
-            lucide.createIcons();
+            if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         // ----------------------------------------------------
         // BALANCES & SETTLEMENT ENGINE
         // ----------------------------------------------------
         
+        // NEW: Handles the Expansion of the Share Card
+        window.toggleMemberShareDetails = () => {
+            if(!selectedMemberId) return;
+            isShareExpanded = !isShareExpanded;
+            const container = document.getElementById('member-share-details-container');
+            const icon = document.getElementById('icon-share-expand');
+            
+            if(isShareExpanded) {
+                container.classList.remove('hide');
+                icon.classList.add('rotate-180');
+                renderMemberShareDetails();
+            } else {
+                container.classList.add('hide');
+                icon.classList.remove('rotate-180');
+            }
+        };
+
+        // NEW: Generates the detailed list of expenses that make up the user's share
+        function renderMemberShareDetails() {
+            const container = document.getElementById('member-share-list');
+            
+            if (!selectedMemberId || groupExpenses.length === 0) {
+                container.innerHTML = '<div class="text-[10px] text-white/40 font-bold uppercase tracking-widest text-center py-4">No expenses found.</div>';
+                return;
+            }
+
+            const memberExpenses = groupExpenses.filter(exp => exp.splits && exp.splits[selectedMemberId] > 0);
+
+            if (memberExpenses.length === 0) {
+                container.innerHTML = '<div class="text-[10px] text-white/40 font-bold uppercase tracking-widest text-center py-4">No shared expenses logged for this member.</div>';
+                return;
+            }
+
+            container.innerHTML = memberExpenses.map(exp => {
+                const amt = exp.splits[selectedMemberId];
+                const dateObj = new Date(exp.date);
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const cat = getCategoryByTitle(exp.title);
+                const icon = CATEGORIES[cat].icon;
+
+                return `
+                <div class="flex justify-between items-center p-2.5 bg-white/5 rounded-lg border border-white/5">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="${icon}" class="w-4 h-4 text-pink-400"></i>
+                        <div>
+                            <p class="text-xs font-bold text-white uppercase truncate max-w-[150px] sm:max-w-[250px]">${exp.title}</p>
+                            <p class="text-[9px] text-white/40 font-space font-bold tracking-widest uppercase mt-0.5">${dateStr}</p>
+                        </div>
+                    </div>
+                    <span class="text-white font-space font-bold text-sm bg-black/40 px-2 py-1 rounded border border-white/10">${formatMoney(amt)}</span>
+                </div>
+                `;
+            }).join('');
+            
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
         // Updates the "Share" and "Paid" top cards based on the selected member
         function updatePersonalSummary() {
             const lblShare = document.getElementById('lbl-my-share');
@@ -1022,6 +1084,11 @@
             lblPaid.textContent = `${name}'S PAID`;
             valShare.textContent = formatMoney(bal ? bal.share : 0);
             valPaid.textContent = formatMoney(bal ? bal.paid : 0);
+
+            // Re-render the expanded view if it's currently open
+            if(isShareExpanded) {
+                renderMemberShareDetails();
+            }
         }
 
         function calculateBalances() {
@@ -1079,7 +1146,6 @@
                 </div>`;
             }
 
-            // Immediately update the dynamic top cards after calculating
             updatePersonalSummary();
 
             document.getElementById('balances-container').innerHTML = displayHtml || '<div class="text-center py-6 text-white/40 text-[10px] font-bold font-space uppercase tracking-widest">Add expenses to see balances.</div>';
@@ -1135,7 +1201,7 @@
                     </div>
                 `).join('');
             }
-            lucide.createIcons();
+            if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         // ----------------------------------------------------
@@ -1196,7 +1262,7 @@
                     </button>
                 </div>
             `).join('');
-            lucide.createIcons();
+            if(typeof lucide !== 'undefined') lucide.createIcons();
         }
     </script>
 </body>
