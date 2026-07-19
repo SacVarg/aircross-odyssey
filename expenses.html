@@ -1109,7 +1109,6 @@
             if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // UPADTED: Now accurately reflects raw expenses independent of settlements
         function updatePersonalSummary() {
             const lblShare = document.getElementById('lbl-my-share');
             const lblPaid = document.getElementById('lbl-my-paid');
@@ -1131,7 +1130,6 @@
             lblShare.textContent = `${name}'S SHARE`;
             lblPaid.textContent = `${name}'S PAID`;
             
-            // Uses displayShare and displayPaid so they don't fluctuate with settlements
             valShare.textContent = formatMoney(bal ? bal.displayShare : 0);
             valPaid.textContent = formatMoney(bal ? bal.displayPaid : 0);
 
@@ -1145,7 +1143,6 @@
 
             currentBalances = {};
             
-            // Initialize balances, including dedicated display variables for top cards
             groupMembers.forEach(m => currentBalances[m.id] = { 
                 name: m.name, 
                 paid: 0, 
@@ -1155,22 +1152,20 @@
                 displayShare: 0 
             });
 
-            // Process actual expenses to build the pure "Share" and "Paid" numbers
             groupExpenses.forEach(exp => {
                 if(currentBalances[exp.paidBy]) {
                     currentBalances[exp.paidBy].paid += Number(exp.amount);
-                    currentBalances[exp.paidBy].displayPaid += Number(exp.amount); // Pure paid value
+                    currentBalances[exp.paidBy].displayPaid += Number(exp.amount); 
                 }
                 
                 Object.entries(exp.splits || {}).forEach(([mId, amt]) => {
                     if(currentBalances[mId]) {
                         currentBalances[mId].share += Number(amt);
-                        currentBalances[mId].displayShare += Number(amt); // Pure share value
+                        currentBalances[mId].displayShare += Number(amt); 
                     }
                 });
             });
 
-            // Process settlements ONLY for calculating who owes who (does NOT affect displayPaid or displayShare)
             groupSettlements.forEach(s => {
                 if(currentBalances[s.from]) currentBalances[s.from].paid += Number(s.amount); 
                 if(currentBalances[s.to]) currentBalances[s.to].share += Number(s.amount); 
@@ -1200,10 +1195,6 @@
                         <div class="w-10 h-10 rounded-full ${getMemberColor(b.name)} border-2 border-white/20 flex items-center justify-center text-black font-space font-bold">${b.name.charAt(0)}</div>
                         <div>
                             <p class="font-bold text-white text-xs uppercase tracking-widest">${b.name}</p>
-                            <div class="flex gap-3 text-[9px] text-white/40 font-space font-bold tracking-widest mt-1 uppercase">
-                                <span>PAID: ${formatMoney(b.paid)}</span>
-                                <span>SHARE: ${formatMoney(b.share)}</span>
-                            </div>
                         </div>
                     </div>
                     <div class="text-right">
