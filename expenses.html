@@ -62,6 +62,7 @@
         .theme-border { border-color: var(--theme-hex) !important; }
         .theme-border-20 { border-color: rgba(var(--theme-rgb), 0.2) !important; }
         .theme-border-30 { border-color: rgba(var(--theme-rgb), 0.3) !important; }
+        .theme-ring { --tw-ring-color: var(--theme-hex) !important; }
 
         /* UI Elements */
         .glass-panel {
@@ -91,7 +92,7 @@
         .glass-input::placeholder { color: rgba(255,255,255,0.3); }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--theme-hex); }
@@ -210,20 +211,22 @@
                 </button>
             </div>
 
-            <div class="flex gap-3 overflow-x-auto pb-4 mb-2 custom-scrollbar" id="dash-members-list">
-                </div>
+            <div class="flex gap-3 overflow-x-auto pb-6 mb-2 custom-scrollbar items-end" id="dash-members-list">
+                <!-- Javascript will populate this with clickable avatars -->
+            </div>
 
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div class="glass-panel p-4 border-t-2 border-t-theme col-span-2 md:col-span-1">
                     <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1">MISSION TOTAL</p>
                     <p class="text-2xl font-black font-space text-white" id="dash-total-exp">₹0</p>
                 </div>
-                <div class="glass-panel p-4 border-t-2 border-t-pink-400 col-span-1">
-                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1">YOUR TOTAL SHARE</p>
+                <!-- Dynamic Personal Summary Cards -->
+                <div class="glass-panel p-4 border-t-2 border-t-pink-400 col-span-1 transition-all">
+                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1 uppercase" id="lbl-my-share">MEMBER'S SHARE</p>
                     <p class="text-xl font-black font-space text-white" id="dash-my-share">₹0</p>
                 </div>
-                <div class="glass-panel p-4 border-t-2 border-t-emerald-400 col-span-1">
-                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1">YOUR TOTAL PAID</p>
+                <div class="glass-panel p-4 border-t-2 border-t-emerald-400 col-span-1 transition-all">
+                    <p class="text-xs text-white/50 font-space font-bold tracking-widest mb-1 uppercase" id="lbl-my-paid">MEMBER'S PAID</p>
                     <p class="text-xl font-black font-space text-white" id="dash-my-paid">₹0</p>
                 </div>
             </div>
@@ -415,7 +418,6 @@
         let groupExpenses = [];
         let groupSettlements = [];
         let currentBalances = {}; 
-        let categoryMetadata = {};
         
         let currentSplitType = 'equal'; 
         let editingExpenseId = null; 
@@ -423,6 +425,9 @@
         let unsubscribeMembers = null;
         let unsubscribeExpenses = null;
         let unsubscribeSettlements = null;
+        
+        // NEW: State for tracking which member's summary is selected
+        let selectedMemberId = null; 
 
         // Smart Categorization Definitions based on actual production data titles
         const CATEGORIES = {
@@ -478,6 +483,8 @@
                 document.getElementById('fab-add-expense').classList.add('hide');
                 document.getElementById('view-group-list').classList.remove('hide');
                 currentGroup = null;
+                selectedMemberId = null; // Reset selection on group change
+                
                 if(unsubscribeMembers) { unsubscribeMembers(); unsubscribeMembers = null; }
                 if(unsubscribeExpenses) { unsubscribeExpenses(); unsubscribeExpenses = null; }
                 if(unsubscribeSettlements) { unsubscribeSettlements(); unsubscribeSettlements = null; }
@@ -504,7 +511,6 @@
 
         const formatMoney = (amount) => '₹' + Number(amount).toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2});
 
-        // Smart Category Detect
         function getCategoryByTitle(title) {
             if(!title) return 'misc';
             const lowerTitle = title.toLowerCase();
@@ -552,6 +558,7 @@
         window.openGroup = (id) => {
             currentGroup = allGroups.find(g => g.id === id);
             document.getElementById('dash-group-name').textContent = currentGroup.name;
+            selectedMemberId = null; // Ensure fresh start
             showView('detail');
             setupGroupListeners(id);
         };
@@ -592,7 +599,7 @@
                 groupMembers = snap.docs.map(d => d.data()).sort((a,b)=>a.timestamp-b.timestamp);
                 document.getElementById('dash-member-count').textContent = `${groupMembers.length} MEMBERS`;
                 renderMembers();
-                calculateBalances(); // Rerun calculations when roster changes
+                calculateBalances(); 
             });
 
             const expRef = query(collection(db, `artifacts/${APP_ID}/public/data/exp_expenses`), where("groupId", "==", groupId));
@@ -600,19 +607,19 @@
                 groupExpenses = snap.docs.map(d => d.data()).sort((a,b)=>b.timestamp-a.timestamp);
                 renderExpenses();
                 renderBreakdown();
-                calculateBalances(); // Rerun when expenses change
+                calculateBalances(); 
             });
 
             const stlRef = query(collection(db, `artifacts/${APP_ID}/public/data/exp_settlements`), where("groupId", "==", groupId));
             unsubscribeSettlements = onSnapshot(stlRef, (snap) => {
                 groupSettlements = snap.docs.map(d => d.data()).sort((a,b)=>b.timestamp-a.timestamp);
                 renderSettlements();
-                calculateBalances(); // Rerun when payments change
+                calculateBalances(); 
             });
         }
 
         // ----------------------------------------------------
-        // MEMBERS
+        // MEMBERS (Clickable Roster)
         // ----------------------------------------------------
         window.addMember = async () => {
             const name = document.getElementById('inp-member-name').value.trim();
@@ -626,17 +633,39 @@
             } catch(e) { showToast('Error', 'error'); }
         };
 
+        // Select a member to update the personal summary cards
+        window.selectMember = (id) => {
+            selectedMemberId = id;
+            renderMembers(); // Re-render to update the active UI states
+            updatePersonalSummary(); // Update the dynamic text and amounts
+        };
+
         function renderMembers() {
             const container = document.getElementById('dash-members-list');
-            if(groupMembers.length === 0) { container.innerHTML = '<span class="text-xs text-white/40 py-2 font-bold tracking-widest uppercase">Add crew members to start</span>'; return; }
-            container.innerHTML = groupMembers.map(m => `
-                <div class="flex flex-col items-center shrink-0 w-16">
-                    <div class="w-12 h-12 rounded-full ${getMemberColor(m.name)} text-black flex items-center justify-center font-space font-bold text-lg shadow-lg border-2 border-white/20">
+            
+            if(groupMembers.length === 0) { 
+                container.innerHTML = '<span class="text-xs text-white/40 py-2 font-bold tracking-widest uppercase">Add crew members to start</span>'; 
+                return; 
+            }
+
+            // Fallback: If no one is selected, auto-select the first member
+            if (!selectedMemberId && groupMembers.length > 0) {
+                selectedMemberId = groupMembers[0].id;
+            }
+
+            container.innerHTML = groupMembers.map(m => {
+                const isActive = m.id === selectedMemberId;
+                const activeContainerClass = isActive ? 'scale-110 opacity-100' : 'scale-100 opacity-50 hover:opacity-100 hover:scale-105';
+                const activeRingClass = isActive ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900 border-transparent' : 'border-2 border-white/20';
+                
+                return `
+                <div class="flex flex-col items-center shrink-0 w-16 cursor-pointer transition-all duration-300 ${activeContainerClass}" onclick="window.selectMember('${m.id}')">
+                    <div class="w-12 h-12 rounded-full ${getMemberColor(m.name)} text-black flex items-center justify-center font-space font-bold text-lg shadow-lg ${activeRingClass} transition-all">
                         ${m.name.charAt(0).toUpperCase()}
                     </div>
-                    <span class="text-[10px] text-white/60 font-bold tracking-widest mt-1 truncate w-full text-center uppercase">${m.name}</span>
+                    <span class="text-[10px] ${isActive ? 'text-white' : 'text-white/60'} font-bold tracking-widest mt-1.5 truncate w-full text-center uppercase transition-colors">${m.name}</span>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function getMemberName(id) {
@@ -656,7 +685,6 @@
                 return;
             }
 
-            // Reset totals
             Object.keys(CATEGORIES).forEach(k => CATEGORIES[k].total = 0);
             let grandTotal = 0;
 
@@ -674,7 +702,6 @@
 
             breakdownContainer.classList.remove('hide');
 
-            // Sort categories by spending (highest first)
             const sortedCats = Object.entries(CATEGORIES)
                 .filter(([key, data]) => data.total > 0)
                 .sort((a, b) => b[1].total - a[1].total);
@@ -702,7 +729,7 @@
         }
 
         // ----------------------------------------------------
-        // EXPENSES (ADD / EDIT / DELETE / VIEW)
+        // EXPENSES
         // ----------------------------------------------------
         window.openExpenseModal = () => {
             if(groupMembers.length === 0) return showToast('Add members first', 'error');
@@ -738,7 +765,6 @@
 
             setSplitType(exp.splitType || 'equal');
 
-            // Wait for DOM render of split list before applying Custom/Select values
             setTimeout(() => {
                 if(exp.splitType === 'select') {
                     const checks = document.querySelectorAll('.split-sel-check');
@@ -828,10 +854,9 @@
             });
         };
 
-        // NEW: Handles clicking on an expense card to view splits
         window.toggleExpenseDetails = (cardId) => {
             const card = document.getElementById(cardId);
-            if(event.target.closest('button')) return; // Ignore if edit/delete clicked
+            if(event.target.closest('button')) return; 
             card.classList.toggle('expanded');
         };
 
@@ -864,7 +889,7 @@
                     if(val > 0) splits[inp.dataset.id] = val;
                     sum += val;
                 });
-                if(Math.abs(sum - total) > 0.1) { // Floating point leeway
+                if(Math.abs(sum - total) > 0.1) {
                     document.getElementById('split-validation-msg').classList.remove('hide');
                     return;
                 }
@@ -913,7 +938,6 @@
                     lastMonth = month;
                 }
 
-                // Generate split breakdown HTML
                 let splitsHtml = '';
                 groupMembers.forEach(m => {
                     const oweAmt = exp.splits[m.id] || 0;
@@ -946,7 +970,6 @@
                         </div>
                     </div>
 
-                    <!-- Expandable Details -->
                     <div class="expense-split-details pt-3 border-t border-white/10 mt-1">
                         <div class="flex justify-between items-center mb-2">
                             <h5 class="text-[10px] font-space font-bold tracking-widest text-white/50 uppercase">Split Breakdown</h5>
@@ -975,33 +998,52 @@
         // ----------------------------------------------------
         // BALANCES & SETTLEMENT ENGINE
         // ----------------------------------------------------
+        
+        // Updates the "Share" and "Paid" top cards based on the selected member
+        function updatePersonalSummary() {
+            const lblShare = document.getElementById('lbl-my-share');
+            const lblPaid = document.getElementById('lbl-my-paid');
+            const valShare = document.getElementById('dash-my-share');
+            const valPaid = document.getElementById('dash-my-paid');
+
+            if (groupMembers.length === 0 || !selectedMemberId) {
+                lblShare.textContent = "MEMBER'S SHARE";
+                lblPaid.textContent = "MEMBER'S PAID";
+                valShare.textContent = '₹0';
+                valPaid.textContent = '₹0';
+                return;
+            }
+
+            const selectedMember = groupMembers.find(m => m.id === selectedMemberId);
+            const name = selectedMember ? selectedMember.name.toUpperCase() : "MEMBER";
+            const bal = currentBalances[selectedMemberId];
+
+            lblShare.textContent = `${name}'S SHARE`;
+            lblPaid.textContent = `${name}'S PAID`;
+            valShare.textContent = formatMoney(bal ? bal.share : 0);
+            valPaid.textContent = formatMoney(bal ? bal.paid : 0);
+        }
+
         function calculateBalances() {
             if(!currentGroup) return;
 
             currentBalances = {};
-            // Initialize from current roster
             groupMembers.forEach(m => currentBalances[m.id] = { name: m.name, paid: 0, share: 0, net: 0 });
 
-            // Calculate Paid vs Owed from Expenses
             groupExpenses.forEach(exp => {
-                // Add to Paid loop (if payer still in group)
                 if(currentBalances[exp.paidBy]) currentBalances[exp.paidBy].paid += Number(exp.amount);
                 
-                // Add to Share loop
                 Object.entries(exp.splits || {}).forEach(([mId, amt]) => {
                     if(currentBalances[mId]) currentBalances[mId].share += Number(amt);
                 });
             });
 
-            // Apply Settlements (Payments between members)
             groupSettlements.forEach(s => {
-                if(currentBalances[s.from]) currentBalances[s.from].paid += Number(s.amount); // "Paid" increases because they gave money
-                if(currentBalances[s.to]) currentBalances[s.to].share += Number(s.amount); // "Share" increases because they received money (effectively spent less)
+                if(currentBalances[s.from]) currentBalances[s.from].paid += Number(s.amount); 
+                if(currentBalances[s.to]) currentBalances[s.to].share += Number(s.amount); 
             });
 
             let displayHtml = '';
-            let myTotalShare = 0;
-            let myTotalPaid = 0;
 
             for(let id in currentBalances) {
                 const b = currentBalances[id];
@@ -1011,10 +1053,10 @@
                 let statusText = 'Settled up';
                 let absNet = Math.abs(b.net);
                 
-                if(b.net > 0.05) { // Gets back
+                if(b.net > 0.05) { 
                     statusColor = 'theme-text';
                     statusText = `Gets back ${formatMoney(b.net)}`;
-                } else if (b.net < -0.05) { // Owes
+                } else if (b.net < -0.05) { 
                     statusColor = 'text-pink-400';
                     statusText = `Owes ${formatMoney(absNet)}`;
                 }
@@ -1037,16 +1079,8 @@
                 </div>`;
             }
 
-            // Update user's personal summary cards (assuming 'You' is the first member for simplicity in this demo, usually mapped via Auth ID)
-            if(groupMembers.length > 0) {
-                const you = groupMembers[0]; // Logic placeholder
-                const youBal = currentBalances[you.id];
-                document.getElementById('dash-my-share').textContent = formatMoney(youBal ? youBal.share : 0);
-                document.getElementById('dash-my-paid').textContent = formatMoney(youBal ? youBal.paid : 0);
-            } else {
-                document.getElementById('dash-my-share').textContent = '₹0';
-                document.getElementById('dash-my-paid').textContent = '₹0';
-            }
+            // Immediately update the dynamic top cards after calculating
+            updatePersonalSummary();
 
             document.getElementById('balances-container').innerHTML = displayHtml || '<div class="text-center py-6 text-white/40 text-[10px] font-bold font-space uppercase tracking-widest">Add expenses to see balances.</div>';
             
@@ -1057,16 +1091,14 @@
             let debtors = [];
             let creditors = [];
 
-            // Separate who owes vs gets back
             for(let id in balances) {
                 if(balances[id].net < -0.05) debtors.push({id, name: balances[id].name, amt: Math.abs(balances[id].net)});
                 else if (balances[id].net > 0.05) creditors.push({id, name: balances[id].name, amt: balances[id].net});
             }
 
             let suggestions = [];
-            let iterations = 0; // Safety break
+            let iterations = 0; 
 
-            // Match highest debtor with highest creditor (Greedy approach for minimum transactions)
             while(debtors.length > 0 && creditors.length > 0 && iterations < 1000) {
                 iterations++;
                 debtors.sort((a,b) => b.amt - a.amt);
